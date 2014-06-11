@@ -1,0 +1,496 @@
+[
+  {
+    "attributes": {
+      "sources": [
+        {
+          "source": {
+            "type": "ColumnDataSource", 
+            "id": "c4c3d33a-1d10-4a24-956f-d5ff0ea4c518"
+          }, 
+          "columns": [
+            "y"
+          ]
+        }
+      ], 
+      "id": "38ed2c61-457d-429c-8eff-42a33f6e9bd1", 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b"
+    }, 
+    "type": "DataRange1d", 
+    "id": "38ed2c61-457d-429c-8eff-42a33f6e9bd1"
+  }, 
+  {
+    "attributes": {
+      "plot": {
+        "type": "Plot", 
+        "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+      }, 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "bounds": "auto", 
+      "id": "b24b6690-ee56-4fd4-be10-30a774247779", 
+      "location": "min", 
+      "formatter": {
+        "type": "BasicTickFormatter", 
+        "id": "0c47d651-01c3-4987-a204-889b3b2461f9"
+      }, 
+      "ticker": {
+        "type": "BasicTicker", 
+        "id": "ad0a8e90-1127-4109-b25c-ec6dc64741d0"
+      }, 
+      "dimension": 1
+    }, 
+    "type": "LinearAxis", 
+    "id": "b24b6690-ee56-4fd4-be10-30a774247779"
+  }, 
+  {
+    "attributes": {
+      "data_source": {
+        "type": "ColumnDataSource", 
+        "id": "c4c3d33a-1d10-4a24-956f-d5ff0ea4c518"
+      }, 
+      "server_data_source": null, 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "nonselection_glyphspec": {
+        "line_color": {
+          "value": "#1f77b4"
+        }, 
+        "line_alpha": {
+          "units": "data", 
+          "value": 0.1
+        }, 
+        "angle_units": "deg", 
+        "length_units": "screen", 
+        "type": "line", 
+        "y": {
+          "units": "data", 
+          "field": "y"
+        }, 
+        "line_width": {
+          "units": "data", 
+          "value": 2
+        }, 
+        "start_angle_units": "deg", 
+        "valign": null, 
+        "radius_units": "screen", 
+        "visible": null, 
+        "x": {
+          "units": "data", 
+          "field": "x"
+        }, 
+        "end_angle_units": "deg", 
+        "line_dash_offset": 0, 
+        "line_cap": "butt", 
+        "line_dash": [], 
+        "margin": null, 
+        "line_join": "miter", 
+        "halign": null
+      }, 
+      "xdata_range": null, 
+      "ydata_range": null, 
+      "glyphspec": {
+        "line_color": {
+          "value": "red"
+        }, 
+        "line_width": {
+          "units": "data", 
+          "value": 2
+        }, 
+        "line_alpha": {
+          "units": "data", 
+          "value": 1.0
+        }, 
+        "y": {
+          "units": "data", 
+          "field": "y"
+        }, 
+        "x": {
+          "units": "data", 
+          "field": "x"
+        }, 
+        "type": "line"
+      }, 
+      "id": "fa480e3f-68f0-4972-9bb5-3f0aac11a21f"
+    }, 
+    "type": "Glyph", 
+    "id": "fa480e3f-68f0-4972-9bb5-3f0aac11a21f"
+  }, 
+  {
+    "attributes": {
+      "column_names": [
+        "x", 
+        "y"
+      ], 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "selected": [], 
+      "discrete_ranges": {}, 
+      "cont_ranges": {}, 
+      "data": {
+        "y": [
+          0, 
+          1, 
+          4, 
+          9, 
+          16, 
+          25
+        ], 
+        "x": [
+          0, 
+          1, 
+          2, 
+          3, 
+          4, 
+          5
+        ]
+      }, 
+      "id": "c4c3d33a-1d10-4a24-956f-d5ff0ea4c518"
+    }, 
+    "type": "ColumnDataSource", 
+    "id": "c4c3d33a-1d10-4a24-956f-d5ff0ea4c518"
+  }, 
+  {
+    "attributes": {
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "children": [
+        {
+          "type": "Plot", 
+          "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+        }
+      ], 
+      "id": "901c9cd7-c873-4d46-a4d9-30102eaaf297"
+    }, 
+    "type": "PlotContext", 
+    "id": "901c9cd7-c873-4d46-a4d9-30102eaaf297"
+  }, 
+  {
+    "attributes": {
+      "outer_height": 600, 
+      "x_range": {
+        "type": "DataRange1d", 
+        "id": "2fc0154c-dd7e-4520-b466-b859bb4821b3"
+      }, 
+      "y_range": {
+        "type": "DataRange1d", 
+        "id": "38ed2c61-457d-429c-8eff-42a33f6e9bd1"
+      }, 
+      "outer_width": 600, 
+      "renderers": [
+        {
+          "type": "LinearAxis", 
+          "id": "91c86739-3a96-434d-b023-ffeff15392bc"
+        }, 
+        {
+          "type": "Grid", 
+          "id": "49c8a940-a64a-4879-b88f-efed0fba81a1"
+        }, 
+        {
+          "type": "LinearAxis", 
+          "id": "b24b6690-ee56-4fd4-be10-30a774247779"
+        }, 
+        {
+          "type": "Grid", 
+          "id": "cb787a4f-b320-4933-8483-be735be31831"
+        }, 
+        {
+          "type": "BoxSelection", 
+          "id": "9702408e-3e24-4586-956e-36e7afb13fb9"
+        }, 
+        {
+          "type": "BoxSelection", 
+          "id": "80d35125-9c5c-4808-b096-7b745ed03057"
+        }, 
+        {
+          "type": "Legend", 
+          "id": "41dd1708-9f3c-40dc-b128-356670f0af7e"
+        }, 
+        {
+          "type": "Glyph", 
+          "id": "fa480e3f-68f0-4972-9bb5-3f0aac11a21f"
+        }
+      ], 
+      "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147", 
+      "data_sources": [], 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "canvas_height": 600, 
+      "title": "Archimean", 
+      "tools": [
+        {
+          "type": "PanTool", 
+          "id": "64ec7aa7-29f1-4f7b-9354-2b51463c0a94"
+        }, 
+        {
+          "type": "WheelZoomTool", 
+          "id": "dc0c074c-11cc-4305-9758-b916b9ac1045"
+        }, 
+        {
+          "type": "BoxZoomTool", 
+          "id": "d5881697-e32f-40b7-b98b-ad079aca72b1"
+        }, 
+        {
+          "type": "PreviewSaveTool", 
+          "id": "c7185e9c-f1ba-47d0-bb2c-cbe2289fcd5e"
+        }, 
+        {
+          "type": "ResizeTool", 
+          "id": "3c0bff95-e444-4cff-bfad-1dc519d35d5f"
+        }, 
+        {
+          "type": "BoxSelectTool", 
+          "id": "5e407215-e8aa-429f-a132-1fda4cfa497a"
+        }, 
+        {
+          "type": "ResetTool", 
+          "id": "71c62969-9149-413a-a2de-f513704d6708"
+        }
+      ], 
+      "canvas_width": 600
+    }, 
+    "type": "Plot", 
+    "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+  }, 
+  {
+    "attributes": {
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "id": "0c4f3392-841a-4196-89b2-912de8dded76"
+    }, 
+    "type": "BasicTicker", 
+    "id": "0c4f3392-841a-4196-89b2-912de8dded76"
+  }, 
+  {
+    "attributes": {
+      "plot": {
+        "type": "Plot", 
+        "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+      }, 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "axis": {
+        "type": "LinearAxis", 
+        "id": "b24b6690-ee56-4fd4-be10-30a774247779"
+      }, 
+      "id": "cb787a4f-b320-4933-8483-be735be31831", 
+      "dimension": 1
+    }, 
+    "type": "Grid", 
+    "id": "cb787a4f-b320-4933-8483-be735be31831"
+  }, 
+  {
+    "attributes": {
+      "plot": {
+        "type": "Plot", 
+        "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+      }, 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "bounds": "auto", 
+      "id": "91c86739-3a96-434d-b023-ffeff15392bc", 
+      "location": "min", 
+      "formatter": {
+        "type": "BasicTickFormatter", 
+        "id": "6df5e94e-2a4e-4b0e-b941-cac833fc2695"
+      }, 
+      "ticker": {
+        "type": "BasicTicker", 
+        "id": "0c4f3392-841a-4196-89b2-912de8dded76"
+      }, 
+      "dimension": 0
+    }, 
+    "type": "LinearAxis", 
+    "id": "91c86739-3a96-434d-b023-ffeff15392bc"
+  }, 
+  {
+    "attributes": {
+      "plot": {
+        "type": "Plot", 
+        "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+      }, 
+      "dimensions": [
+        "width", 
+        "height"
+      ], 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "id": "dc0c074c-11cc-4305-9758-b916b9ac1045"
+    }, 
+    "type": "WheelZoomTool", 
+    "id": "dc0c074c-11cc-4305-9758-b916b9ac1045"
+  }, 
+  {
+    "attributes": {
+      "plot": null, 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "renderers": [
+        {
+          "type": "Glyph", 
+          "id": "fa480e3f-68f0-4972-9bb5-3f0aac11a21f"
+        }
+      ], 
+      "id": "5e407215-e8aa-429f-a132-1fda4cfa497a"
+    }, 
+    "type": "BoxSelectTool", 
+    "id": "5e407215-e8aa-429f-a132-1fda4cfa497a"
+  }, 
+  {
+    "attributes": {
+      "plot": {
+        "type": "Plot", 
+        "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+      }, 
+      "dimensions": [
+        "width", 
+        "height"
+      ], 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "id": "64ec7aa7-29f1-4f7b-9354-2b51463c0a94"
+    }, 
+    "type": "PanTool", 
+    "id": "64ec7aa7-29f1-4f7b-9354-2b51463c0a94"
+  }, 
+  {
+    "attributes": {
+      "plot": {
+        "type": "Plot", 
+        "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+      }, 
+      "id": "d5881697-e32f-40b7-b98b-ad079aca72b1", 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b"
+    }, 
+    "type": "BoxZoomTool", 
+    "id": "d5881697-e32f-40b7-b98b-ad079aca72b1"
+  }, 
+  {
+    "attributes": {
+      "plot": {
+        "type": "Plot", 
+        "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+      }, 
+      "legends": {
+        "Archimedean": [
+          {
+            "type": "Glyph", 
+            "id": "fa480e3f-68f0-4972-9bb5-3f0aac11a21f"
+          }
+        ]
+      }, 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "id": "41dd1708-9f3c-40dc-b128-356670f0af7e"
+    }, 
+    "type": "Legend", 
+    "id": "41dd1708-9f3c-40dc-b128-356670f0af7e"
+  }, 
+  {
+    "attributes": {
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "id": "ad0a8e90-1127-4109-b25c-ec6dc64741d0"
+    }, 
+    "type": "BasicTicker", 
+    "id": "ad0a8e90-1127-4109-b25c-ec6dc64741d0"
+  }, 
+  {
+    "attributes": {
+      "plot": {
+        "type": "Plot", 
+        "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+      }, 
+      "id": "71c62969-9149-413a-a2de-f513704d6708", 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b"
+    }, 
+    "type": "ResetTool", 
+    "id": "71c62969-9149-413a-a2de-f513704d6708"
+  }, 
+  {
+    "attributes": {
+      "sources": [
+        {
+          "source": {
+            "type": "ColumnDataSource", 
+            "id": "c4c3d33a-1d10-4a24-956f-d5ff0ea4c518"
+          }, 
+          "columns": [
+            "x"
+          ]
+        }
+      ], 
+      "id": "2fc0154c-dd7e-4520-b466-b859bb4821b3", 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b"
+    }, 
+    "type": "DataRange1d", 
+    "id": "2fc0154c-dd7e-4520-b466-b859bb4821b3"
+  }, 
+  {
+    "attributes": {
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "tool": {
+        "type": "BoxSelectTool", 
+        "id": "5e407215-e8aa-429f-a132-1fda4cfa497a"
+      }, 
+      "id": "80d35125-9c5c-4808-b096-7b745ed03057"
+    }, 
+    "type": "BoxSelection", 
+    "id": "80d35125-9c5c-4808-b096-7b745ed03057"
+  }, 
+  {
+    "attributes": {
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "tool": {
+        "type": "BoxZoomTool", 
+        "id": "d5881697-e32f-40b7-b98b-ad079aca72b1"
+      }, 
+      "id": "9702408e-3e24-4586-956e-36e7afb13fb9"
+    }, 
+    "type": "BoxSelection", 
+    "id": "9702408e-3e24-4586-956e-36e7afb13fb9"
+  }, 
+  {
+    "attributes": {
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "id": "0c47d651-01c3-4987-a204-889b3b2461f9"
+    }, 
+    "type": "BasicTickFormatter", 
+    "id": "0c47d651-01c3-4987-a204-889b3b2461f9"
+  }, 
+  {
+    "attributes": {
+      "plot": {
+        "type": "Plot", 
+        "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+      }, 
+      "id": "3c0bff95-e444-4cff-bfad-1dc519d35d5f", 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b"
+    }, 
+    "type": "ResizeTool", 
+    "id": "3c0bff95-e444-4cff-bfad-1dc519d35d5f"
+  }, 
+  {
+    "attributes": {
+      "plot": {
+        "type": "Plot", 
+        "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+      }, 
+      "id": "c7185e9c-f1ba-47d0-bb2c-cbe2289fcd5e", 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b"
+    }, 
+    "type": "PreviewSaveTool", 
+    "id": "c7185e9c-f1ba-47d0-bb2c-cbe2289fcd5e"
+  }, 
+  {
+    "attributes": {
+      "plot": {
+        "type": "Plot", 
+        "id": "40ee6613-c36e-4e25-998c-47a4cbd8f147"
+      }, 
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "axis": {
+        "type": "LinearAxis", 
+        "id": "91c86739-3a96-434d-b023-ffeff15392bc"
+      }, 
+      "id": "49c8a940-a64a-4879-b88f-efed0fba81a1", 
+      "dimension": 0
+    }, 
+    "type": "Grid", 
+    "id": "49c8a940-a64a-4879-b88f-efed0fba81a1"
+  }, 
+  {
+    "attributes": {
+      "doc": "adb22ca4-0330-4879-bce2-822426e69a6b", 
+      "id": "6df5e94e-2a4e-4b0e-b941-cac833fc2695"
+    }, 
+    "type": "BasicTickFormatter", 
+    "id": "6df5e94e-2a4e-4b0e-b941-cac833fc2695"
+  }
+]
