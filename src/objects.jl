@@ -9,6 +9,17 @@ abstract Renderer <: PlotObject
 
 const VALUE_TYPES = Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
 
+
+function typeiddict(name::String, id::UUID)
+	Dict{String, VALUE_TYPES}([
+		("type", name),
+		("id", string(id))])
+end
+
+function plotdict(plotid::UUID)
+	typeiddict("plot", plotid)
+end
+
 type ColumnDataSource <: PlotObject
 	uuid::UUID
 	column_names::Array{String, 1}
@@ -39,8 +50,18 @@ end
 
 type DataRange1d <: Range
 	uuid::UUID
-	DataRange1d() = new(uuid4())
+	sources::Dict{String, VALUE_TYPES}
+	DataRange1d(sources::Dict{String, VALUE_TYPES}) = new(
+		uuid4(), sources)
 end
+
+function DataRange1d(coldataid::UUID, columns::Array{String, 1})
+	sources = Dict{String, VALUE_TYPES}()
+	sources["columns"] = columns
+	sources["source"] = typeiddict("ColumnDataSource", coldataid)
+	DataRange1d(sources)
+end
+
 
 type Axis <: Renderer
 	uuid::UUID
@@ -54,12 +75,6 @@ type Axis <: Renderer
 		formatter, 
 		ticker,
 		plot)
-end
-
-function plotdict(plotid::UUID)
-	Dict{String, VALUE_TYPES}([
-		("type", "Plot"),
-		("id", string(plotid))])
 end
 
 function Axis(dimension::Int, plotid::UUID)
@@ -85,3 +100,4 @@ end
 function PlotContext(plotid::UUID)
 	PlotContext([plotdict(plotid)])
 end
+
