@@ -1,13 +1,15 @@
 uuid4 = Base.Random.uuid4
 UUID = Base.Random.UUID
 
+const VALUE_TYPES = Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
+
 abstract PlotObject
 
 abstract Range <: PlotObject
 
 abstract Renderer <: PlotObject
 
-const VALUE_TYPES = Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
+abstract Axis <: PlotObject
 
 
 function typeiddict(name::String, id::UUID)
@@ -47,7 +49,7 @@ function DataRange1d(coldata_id::UUID, columns::Array{String, 1})
 end
 
 
-type Axis <: Renderer
+type LinearAxis <: Axis
 	uuid::UUID
 	dimension::Int
 	formatter::Any
@@ -55,8 +57,8 @@ type Axis <: Renderer
 	plot::Dict{String, VALUE_TYPES}
 end
 
-function Axis(dimension::Int, plotid::UUID)
-	Axis(uuid4(), dimension, nothing, nothing, typeiddict("plot", plotid))
+function LinearAxis(dimension::Int, plotid::UUID)
+	LinearAxis(uuid4(), dimension, nothing, nothing, typeiddict("Plot", plotid))
 end
 
 type Glyph <: Renderer
@@ -93,10 +95,22 @@ function Glyph(coldata_id::UUID, xrange_id::UUID, yrange_id::UUID, glyphspec::Di
 	Glyph(uuid4(), data_source, server_data_source, xdata_range, ydata_range, glyphspec)
 end
 
+type Metatool <: PlotObject
+	uuid::UUID
+	_type_name::String
+	plot::Dict{String, VALUE_TYPES}
+	dimensions::Union(Array{String, 1}, Nothing)
+end
+
+function Metatool(typename::String, plotid::UUID, dimensions)
+	plot = typeiddict("Plot", plotid)
+	Metatool(uuid4(), typename, plot, dimensions)
+end
+
 type Plot <: PlotObject
 	uuid::UUID
 	title::String
-	Tools::Array{VALUE_TYPES, 1}
+	tools::Array{VALUE_TYPES, 1}
 	outer_height::Int
 	canvas_height::Int
 	outer_width::Int
@@ -107,20 +121,23 @@ type Plot <: PlotObject
 	data_sources::Array{VALUE_TYPES, 1}
 end
 
-function Plot(coldata_id::UUID,
+function Plot(plotid::UUID,
+			  coldata_id::UUID,
 			  xrange_id::UUID, 
 			  yrange_id::UUID,
 			  renderers::Array{(ASCIIString, UUID),1},
+			  tools::Dict{String, UUID},
 			  title::String="Bokeh Plot",
 			  height::Int=600,
 			  width::Int=600)
-	data_sources = [typeiddict("ColumnDataSource", coldata_id)]
+	data_sources = VALUE_TYPES[]# [typeiddict("ColumnDataSource", coldata_id)]
 	xdata_range = typeiddict("DataRange1d", xrange_id)
 	ydata_range = typeiddict("DataRange1d", yrange_id)
 	renderers = [typeiddict(name, id) for (name, id) in renderers]
-	Plot(uuid4(),
+	tools = [typeiddict(name, id) for (name, id) in tools]
+	Plot(plotid,
 		 title,
-		 VALUE_TYPES[],
+		 tools,
 		 height,
 		 height,
 		 width,
@@ -137,5 +154,5 @@ type PlotContext <: PlotObject
 end
 
 function PlotContext(plotid::UUID)
-	PlotContext(uuid4(),[typeiddict("plot", plotid)])
+	PlotContext(uuid4(),[typeiddict("Plot", plotid)])
 end
