@@ -26,9 +26,9 @@ module Bokeh
 		obs = Any[]
 		pid= uuid4()
 
-		p = PlotContext(pid)
+		plotcontext = PlotContext(pid)
 		doc = uuid4()
-		push!(obs, obdict(p, doc))
+		push!(obs, obdict(plotcontext, doc))
 
 		axis0 = LinearAxis(0, pid)
 		push!(obs, obdict(axis0, doc))
@@ -71,7 +71,7 @@ module Bokeh
 					tools)
 		push!(obs, obdict(plot, doc))
 
-		json(obs, indent)
+		(json(obs, indent), plotcontext.uuid)
 	end
 
 	get_resources_dir() = Pkg.dir("Bokeh", "deps", "resources")
@@ -92,10 +92,11 @@ module Bokeh
 
 	function rendertemplate(fname::String="bokeh_plot.html")
 		template = gettemplate()
-		(jspath, csspath) = bokehjs_paths(false)
+		jspath, csspath = bokehjs_paths(false)
+		allmodels, pid = genmodels(2)
 		context = Dict{String, String}([
-			"model_id" => string(uuid4()),
-			"all_models" => genmodels(2),
+			"model_id" => string(pid),
+			"all_models" => allmodels,
 			"div_id" => string(uuid4()),
 			"js_path" => jspath,
 			"css_path" => csspath
