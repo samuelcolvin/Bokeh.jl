@@ -78,7 +78,7 @@ function Glyph(coldata_id::UUID,
 			   colour::String="blue")
 	glyphspec = Dict{String, VALUE_TYPES}([
 		"line_color" => ["value" => colour],
-		"line_width" => ["units" => "data", "field" => "line_width"],
+		"line_width" => ["units" => "data", "field" => 2],
 		"line_alpha" => ["units" => "data", "field" => alpha],
 		"y" => ["units" => "data", "field" => "y"],
 		"x" => ["units" => "data", "field" => "x"],
