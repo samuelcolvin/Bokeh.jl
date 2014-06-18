@@ -87,8 +87,8 @@ module Bokeh
 		push!(obs, obdict(tickform1, doc))
 		push!(obs, obdict(grid1, doc))
 		push!(obs, obdict(ticker1, doc))
-
-		(json(obs, indent), plotcontext.uuid)
+		method_exists(json, (Dict, Int))? (json(obs, indent), plotcontext.uuid): 
+										  (json(obs), plotcontext.uuid)
 	end
 
 	get_resources_dir() = Pkg.dir("Bokeh", "deps", "resources")
