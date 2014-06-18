@@ -23,26 +23,24 @@ module Bokeh
 	end
 
 	function genmodels(indent::Int=0)
-		pid= uuid4()
-
-		plotcontext = PlotContext(pid)
+		plot = Plot()
+		plotcontext = PlotContext(plot)
 		doc = uuid4()
-
 		ticker0 = BasicTicker()
 
 		tickform0 = BasicTickFormatter()
 
-		axis0 = LinearAxis(0, tickform0, ticker0, pid)
+		axis0 = LinearAxis(0, tickform0, ticker0, plot)
 
-		grid0 = Grid(0, pid, axis0)
+		grid0 = Grid(0, plot, axis0)
 
 		ticker1 = BasicTicker()
 
 		tickform1 = BasicTickFormatter()
 
-		axis1 = LinearAxis(1, tickform1, ticker1, pid)
+		axis1 = LinearAxis(1, tickform1, ticker1, plot)
 
-		grid1 = Grid(1, pid, axis1)
+		grid1 = Grid(1, plot, axis1)
 
 		column_names = String["x", "y"]
 		data = Dict{String, Array{Number, 1}}()
@@ -50,28 +48,26 @@ module Bokeh
 		data["y"] = data["x"].^2
 		column = ColumnDataSource(column_names, data)
 
-		dr1y = DataRange1d(column.uuid, String["y"])
+		dr1y = DataRange1d(column, String["y"])
 
-		dr1x = DataRange1d(column.uuid, String["x"])
+		dr1x = DataRange1d(column, String["x"])
 
-		glyph = Glyph(column.uuid, dr1x.uuid, dr1y.uuid)
+		glyph = Glyph(column, dr1x, dr1y)
 
-		pantool = Metatool("PanTool", pid, String["width", "height"])
+		pantool = Metatool("PanTool", plot, String["width", "height"])
 
-		renderers = [
-			("Glyph", glyph.uuid),
-			("LinearAxis", axis0.uuid),
-			("LinearAxis", axis1.uuid),
-			("Grid", grid0.uuid),
-			("Grid", grid1.uuid)
+		renderers = PlotObject[
+			glyph,
+			axis0,
+			axis1,
+			grid0,
+			grid1
 		]
-		tools = Dict{String, UUID}([
-			"PanTool" => pantool.uuid
-		])
-		plot = Plot(pid,
-					column.uuid,
-					dr1x.uuid,
-					dr1y.uuid,
+		tools = PlotObject[pantool]
+		plot = Plot(plot,
+					column,
+					dr1x,
+					dr1y,
 					renderers,
 					tools)
 		obs = Any[]

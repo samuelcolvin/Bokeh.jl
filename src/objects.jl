@@ -15,16 +15,26 @@ abstract Ticker <: PlotObject
 
 abstract TickFormatter <: PlotObject
 
-function typeiddict(name::String, id::UUID)
+function typid(plotob::PlotObject)
+	attrs = typeof(plotob).names
+	obtype = in(:_type_name, attrs) ? plotob._type_name : typeof(plotob)
 	Dict{String, VALUE_TYPES}([
-		"type" => name,
-		"id" => string(id)])
+		"type" => obtype,
+		"id" => string(plotob.uuid)])
 end
 
-function typeiddict(plotob::PlotObject)
-	Dict{String, VALUE_TYPES}([
-		"type" => typeof(plotob),
-		"id" => string(plotob.uuid)])
+type Plot <: PlotObject
+	uuid::UUID
+	title::String
+	tools::Array{VALUE_TYPES, 1}
+	outer_height::Int
+	canvas_height::Int
+	outer_width::Int
+	canvas_width::Int
+	x_range::Dict{String, VALUE_TYPES}
+	y_range::Dict{String, VALUE_TYPES}
+	renderers::Array{VALUE_TYPES, 1}
+	data_sources::Array{VALUE_TYPES, 1}
 end
 
 type ColumnDataSource <: PlotObject
@@ -50,10 +60,10 @@ type DataRange1d <: Range
 	sources::Array{VALUE_TYPES, 1}
 end
 
-function DataRange1d(coldata_id::UUID, columns::Array{String, 1})
+function DataRange1d(coldata::ColumnDataSource, columns::Array{String, 1})
 	sources = Dict{String, VALUE_TYPES}()
 	sources["columns"] = columns
-	sources["source"] = typeiddict("ColumnDataSource", coldata_id)
+	sources["source"] = typid(coldata)
 	DataRange1d(uuid4(), [sources])
 end
 
@@ -77,14 +87,14 @@ type LinearAxis <: Axis
 	plot::Dict{String, VALUE_TYPES}
 end
 
-function LinearAxis(dimension::Int, tf::TickFormatter, t::Ticker, plotid::UUID)
+function LinearAxis(dimension::Int, tf::TickFormatter, t::Ticker, plot::Plot)
 	LinearAxis(uuid4(), 
 			   dimension, 
 			   "auto",
 			   "min",
-			   typeiddict(tf), 
-			   typeiddict(t), 
-			   typeiddict("Plot", plotid))
+			   typid(tf), 
+			   typid(t), 
+			   typid(plot))
 end
 
 type Grid <: Renderer
@@ -94,8 +104,8 @@ type Grid <: Renderer
 	axis::Dict{String, VALUE_TYPES}
 end
 
-function Grid(dimension::Int, plotid::UUID, axis::Axis)
-	Grid(uuid4(), dimension, typeiddict("Plot", plotid), typeiddict(axis))
+function Grid(dimension::Int, plot::Plot, axis::Axis)
+	Grid(uuid4(), dimension, typid(plot), typid(axis))
 end
 
 type Glyph <: Renderer
@@ -107,9 +117,9 @@ type Glyph <: Renderer
 	glyphspec::Dict{String, VALUE_TYPES}
 end
 
-function Glyph(coldata_id::UUID, 
-			   xrange_id::UUID, 
-			   yrange_id::UUID, 
+function Glyph(coldata::ColumnDataSource, 
+			   xrange::Range, 
+			   yrange::Range, 
 			   alpha::Float64=1.0,
 			   _type::String="line", 
 			   colour::String="blue")
@@ -121,14 +131,14 @@ function Glyph(coldata_id::UUID,
 		"x" => ["units" => "data", "field" => "x"],
 		"type" => "line"
 		])
-	Glyph(coldata_id, xrange_id, yrange_id, glyphspec)
+	Glyph(coldata, xrange, yrange, glyphspec)
 end
 
-function Glyph(coldata_id::UUID, xrange_id::UUID, yrange_id::UUID, glyphspec::Dict{String, VALUE_TYPES})
-	data_source = typeiddict("ColumnDataSource", coldata_id)
+function Glyph(coldata::ColumnDataSource, xrange::Range, yrange::Range, glyphspec::Dict{String, VALUE_TYPES})
+	data_source = typid(coldata)
 	server_data_source = nothing
-	xdata_range = typeiddict("DataRange1d", xrange_id)
-	ydata_range = typeiddict("DataRange1d", yrange_id)
+	xdata_range = typid(xrange)
+	ydata_range = typid(yrange)
 	Glyph(uuid4(), data_source, server_data_source, xdata_range, ydata_range, glyphspec)
 end
 
@@ -139,40 +149,42 @@ type Metatool <: PlotObject
 	dimensions::Union(Array{String, 1}, Nothing)
 end
 
-function Metatool(typename::String, plotid::UUID, dimensions)
-	plot = typeiddict("Plot", plotid)
+function Metatool(typename::String, plot::Plot, dimensions)
+	plot = typid(plot)
 	Metatool(uuid4(), typename, plot, dimensions)
 end
 
-type Plot <: PlotObject
-	uuid::UUID
-	title::String
-	tools::Array{VALUE_TYPES, 1}
-	outer_height::Int
-	canvas_height::Int
-	outer_width::Int
-	canvas_width::Int
-	x_range::Dict{String, VALUE_TYPES}
-	y_range::Dict{String, VALUE_TYPES}
-	renderers::Array{VALUE_TYPES, 1}
-	data_sources::Array{VALUE_TYPES, 1}
+DEFAULT_HEIGHT = 600
+DEFAULT_WIDTH = 600
+function Plot()
+	Plot(uuid4(),
+		 "",
+		 Nothing[],
+		 DEFAULT_HEIGHT,
+		 DEFAULT_HEIGHT,
+		 DEFAULT_WIDTH,
+		 DEFAULT_WIDTH,
+		 Dict{String, VALUE_TYPES}(),
+		 Dict{String, VALUE_TYPES}(),
+		 Nothing[],
+		 Nothing[])
 end
 
-function Plot(plotid::UUID,
-			  coldata_id::UUID,
-			  xrange_id::UUID, 
-			  yrange_id::UUID,
-			  renderers::Array{(ASCIIString, UUID),1},
-			  tools::Dict{String, UUID},
+function Plot(plot::Plot,
+			  coldata::ColumnDataSource,
+			  xrange::Range, 
+			  yrange::Range,
+			  renderers::Array{PlotObject,1},
+			  tools::Array{PlotObject,1},
 			  title::String="Bokeh Plot",
-			  height::Int=600,
-			  width::Int=600)
-	data_sources = VALUE_TYPES[]# [typeiddict("ColumnDataSource", coldata_id)]
-	xdata_range = typeiddict("DataRange1d", xrange_id)
-	ydata_range = typeiddict("DataRange1d", yrange_id)
-	renderers = [typeiddict(name, id) for (name, id) in renderers]
-	tools = [typeiddict(name, id) for (name, id) in tools]
-	Plot(plotid,
+			  height::Int=DEFAULT_HEIGHT,
+			  width::Int=DEFAULT_WIDTH)
+	data_sources = VALUE_TYPES[]# [typid(coldata)]
+	xdata_range = typid(xrange)
+	ydata_range = typid(yrange)
+	renderers = map(typid, renderers)
+	tools = map(typid, tools)
+	Plot(plot.uuid,
 		 title,
 		 tools,
 		 height,
@@ -190,6 +202,6 @@ type PlotContext <: PlotObject
 	children::Array{Dict{String, VALUE_TYPES}, 1}
 end
 
-function PlotContext(plotid::UUID)
-	PlotContext(uuid4(),[typeiddict("Plot", plotid)])
+function PlotContext(plot::Plot)
+	PlotContext(uuid4(),[typid(plot)])
 end
