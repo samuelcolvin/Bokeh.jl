@@ -23,42 +23,47 @@ module Bokeh
 	end
 
 	function genmodels(indent::Int=0)
-		obs = Any[]
 		pid= uuid4()
 
 		plotcontext = PlotContext(pid)
 		doc = uuid4()
-		push!(obs, obdict(plotcontext, doc))
 
-		axis0 = LinearAxis(0, pid)
-		push!(obs, obdict(axis0, doc))
+		ticker0 = BasicTicker()
 
-		axis1 = LinearAxis(1, pid)
-		push!(obs, obdict(axis1, doc))
+		tickform0 = BasicTickFormatter()
+
+		axis0 = LinearAxis(0, tickform0, ticker0, pid)
+
+		grid0 = Grid(0, pid, axis0)
+
+		ticker1 = BasicTicker()
+
+		tickform1 = BasicTickFormatter()
+
+		axis1 = LinearAxis(1, tickform1, ticker1, pid)
+
+		grid1 = Grid(1, pid, axis1)
 
 		column_names = String["x", "y"]
 		data = Dict{String, Array{Number, 1}}()
-		data["x"] = [1, 2, 3, 4, 5]
-		data["y"] = [1, 4, 9, 16, 25]
+		data["x"] = [0, 1, 2, 3, 4, 5]
+		data["y"] = data["x"].^2
 		column = ColumnDataSource(column_names, data)
-		push!(obs, obdict(column, doc))
 
 		dr1y = DataRange1d(column.uuid, String["y"])
-		push!(obs, obdict(dr1y, doc))
 
 		dr1x = DataRange1d(column.uuid, String["x"])
-		push!(obs, obdict(dr1x, doc))
 
 		glyph = Glyph(column.uuid, dr1x.uuid, dr1y.uuid)
-		push!(obs, obdict(glyph, doc))
 
 		pantool = Metatool("PanTool", pid, String["width", "height"])
-		push!(obs, obdict(pantool, doc))
 
 		renderers = [
 			("Glyph", glyph.uuid),
 			("LinearAxis", axis0.uuid),
 			("LinearAxis", axis1.uuid),
+			("Grid", grid0.uuid),
+			("Grid", grid1.uuid)
 		]
 		tools = Dict{String, UUID}([
 			"PanTool" => pantool.uuid
@@ -69,7 +74,23 @@ module Bokeh
 					dr1y.uuid,
 					renderers,
 					tools)
+		obs = Any[]
+
+		push!(obs, obdict(grid0, doc))
+		push!(obs, obdict(dr1y, doc))
+		push!(obs, obdict(column, doc))
+		push!(obs, obdict(pantool, doc))
+		push!(obs, obdict(dr1x, doc))
+		push!(obs, obdict(axis0, doc))
+		push!(obs, obdict(glyph, doc))
+		push!(obs, obdict(plotcontext, doc))
+		push!(obs, obdict(ticker0, doc))
 		push!(obs, obdict(plot, doc))
+		push!(obs, obdict(axis1, doc))
+		push!(obs, obdict(tickform0, doc))
+		push!(obs, obdict(tickform1, doc))
+		push!(obs, obdict(grid1, doc))
+		push!(obs, obdict(ticker1, doc))
 
 		(json(obs, indent), plotcontext.uuid)
 	end
@@ -94,6 +115,9 @@ module Bokeh
 		template = gettemplate()
 		jspath, csspath = bokehjs_paths(false)
 		allmodels, pid = genmodels(2)
+		open("models.json", "w") do f
+			print(f, allmodels)
+		end
 		context = Dict{String, String}([
 			"model_id" => string(pid),
 			"all_models" => allmodels,
@@ -105,7 +129,6 @@ module Bokeh
 		open(fname, "w") do f
 			print(f, result)
 		end
-		result
 	end
 end
 

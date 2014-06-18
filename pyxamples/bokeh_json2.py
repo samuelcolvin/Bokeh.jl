@@ -14,7 +14,7 @@ output_file("simple_line.html")
 # Plot the Archimedean spiral using the `line` renderer. Note how we set the
 # color, line thickness, title, and legend value.
 plot = line(x, y, color="red", line_width=2,
-     title="line title", legend="line legend")
+     title="line title", tools="pan")
 
 # EXERCISE: reproduce the above plot for one of the other spirals
 

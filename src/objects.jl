@@ -11,11 +11,20 @@ abstract Renderer <: PlotObject
 
 abstract Axis <: PlotObject
 
+abstract Ticker <: PlotObject
+
+abstract TickFormatter <: PlotObject
 
 function typeiddict(name::String, id::UUID)
 	Dict{String, VALUE_TYPES}([
 		"type" => name,
 		"id" => string(id)])
+end
+
+function typeiddict(plotob::PlotObject)
+	Dict{String, VALUE_TYPES}([
+		"type" => typeof(plotob),
+		"id" => string(plotob.uuid)])
 end
 
 type ColumnDataSource <: PlotObject
@@ -38,27 +47,55 @@ end
 
 type DataRange1d <: Range
 	uuid::UUID
-	sources::Dict{String, VALUE_TYPES}
+	sources::Array{VALUE_TYPES, 1}
 end
 
 function DataRange1d(coldata_id::UUID, columns::Array{String, 1})
 	sources = Dict{String, VALUE_TYPES}()
 	sources["columns"] = columns
 	sources["source"] = typeiddict("ColumnDataSource", coldata_id)
-	DataRange1d(uuid4(), sources)
+	DataRange1d(uuid4(), [sources])
 end
 
+type BasicTickFormatter <: TickFormatter
+	uuid::UUID
+	BasicTickFormatter() = new(uuid4())
+end
+
+type BasicTicker <: Ticker
+	uuid::UUID
+	BasicTicker() = new(uuid4())
+end
 
 type LinearAxis <: Axis
 	uuid::UUID
 	dimension::Int
-	formatter::Any
-	ticker::Any
+	bounds::String
+	location::String
+	formatter::Dict{String, VALUE_TYPES}
+	ticker::Dict{String, VALUE_TYPES}
 	plot::Dict{String, VALUE_TYPES}
 end
 
-function LinearAxis(dimension::Int, plotid::UUID)
-	LinearAxis(uuid4(), dimension, nothing, nothing, typeiddict("Plot", plotid))
+function LinearAxis(dimension::Int, tf::TickFormatter, t::Ticker, plotid::UUID)
+	LinearAxis(uuid4(), 
+			   dimension, 
+			   "auto",
+			   "min",
+			   typeiddict(tf), 
+			   typeiddict(t), 
+			   typeiddict("Plot", plotid))
+end
+
+type Grid <: Renderer
+	uuid::UUID
+	dimension::Int
+	plot::Dict{String, VALUE_TYPES}
+	axis::Dict{String, VALUE_TYPES}
+end
+
+function Grid(dimension::Int, plotid::UUID, axis::Axis)
+	Grid(uuid4(), dimension, typeiddict("Plot", plotid), typeiddict(axis))
 end
 
 type Glyph <: Renderer
@@ -78,8 +115,8 @@ function Glyph(coldata_id::UUID,
 			   colour::String="blue")
 	glyphspec = Dict{String, VALUE_TYPES}([
 		"line_color" => ["value" => colour],
-		"line_width" => ["units" => "data", "field" => 2],
-		"line_alpha" => ["units" => "data", "field" => alpha],
+		"line_width" => ["units" => "data", "value" => 2],
+		"line_alpha" => ["units" => "data", "value" => alpha],
 		"y" => ["units" => "data", "field" => "y"],
 		"x" => ["units" => "data", "field" => "x"],
 		"type" => "line"
