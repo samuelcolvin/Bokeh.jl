@@ -3,7 +3,7 @@ Creating new bindings for Bokeh
 
 [Bokeh](http://bokeh.pydata.org/) is a plotting library which allows you generate web based visualisations.
 
-Unlike other Javascript & HTML5 plotting libraries Bokehjs is designed to allow visualisations to be created from other languages. The primary bindings for Bokeh are written in Python however it should be possible to use Bokeh from any language.
+Unlike other JavaScript & HTML5 plotting libraries Bokehjs is designed to allow visualisations to be created from other languages. The primary bindings for Bokeh are written in Python however it should be possible to use Bokeh from any language.
 
 As well as Python there are currently [Julia](https://github.com/samuelcolvin/Bokeh.jl) and [Scala](https://github.com/mattpap/bokeh-scala) bindings being developed. 
 
@@ -63,7 +63,7 @@ The following variables have to be defined:
 
 ## UUIDs
 
-Bokeh relies heavily on [UUIDs](http://en.wikipedia.org/wiki/Universally_unique_identifier) to identify different objects, in Python and Julia these are generated using standard UUID libaries, however as long as they are unique within a given context they can be strings of any sort.
+Bokeh relies heavily on [UUIDs](http://en.wikipedia.org/wiki/Universally_unique_identifier) to identify different objects, in Python and Julia these are generated using standard UUID libraries, however as long as they are unique within a given context they can be strings of any sort.
 
 ## JSON Models
 
@@ -75,9 +75,9 @@ Each object is a dictionary with three items:
 * **type** a string of the name of the type of the object, this corresponds to the titles in the object definitions below.
 * **attributes** a dictionary containing further information about the object, all objects have the following fields in attributes:
   * **id** the same as `id` above
-  * ** doc** a UUID which is teh same for all objects (TODO: what's the meaning/use of `doc`???)
+  * **doc** a UUID which is the same for all objects (TODO: what's the meaning/use of `doc`???)
 
-Extra fields within `attributes` define the behavior of that object.
+Extra fields within `attributes` define the behaviour of that object.
 
 The list below shows the the extra fields for each type of object.
 
@@ -85,7 +85,7 @@ The list below shows the the extra fields for each type of object.
 
 These objects are required for a plot to be viewable, an extremely simple example these objects in a plot is shown [here](simplest_bokeh_plot.html).
 
-Bokehjs commonly uses a simple dict containing two items to reference another object of the form `{"id": "<UUID>", "type": "<name of object>"}`, in the below definitions these dicts are refered to as `id-type-dict`s.
+Bokehjs commonly uses a simple dict containing two items to reference another object of the form `{"id": "<UUID>", "type": "<name of object>"}`, in the below definitions these dicts are referred to as `id-type-dict`s.
 
 #### ColumnDataSource
 
@@ -101,7 +101,7 @@ Extra fields:
 
 #### DataRange1d
 
-What's the actual purpse of a `DataRange1d`? It doesn't actually contain (in it's simplest form) any extra information.
+What's the actual purpose of a `DataRange1d`? It doesn't actually contain (in it's simplest form) any extra information.
 
 Extra fields:
 
@@ -111,12 +111,30 @@ Extra fields:
 
 #### Glyph
 
-a glyph.
+...
 
 #### Plot
 
-plot def.
+...
 
 #### PlotContext
 
-plot context def.
+...
+
+### More Objects
+
+The objects above can be used to create a very simple plot, however it only using a tiny proportion of that Bokeh can do. Below Are a number of other objects which can be defined to enrich plots.
+
+#### BasicTicker
+
+...
+
+#### BasicTickFormatter
+
+...
+
+#### PanTool
+
+...
+
+other tools ...
