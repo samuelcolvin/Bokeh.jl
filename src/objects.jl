@@ -1,7 +1,7 @@
 uuid4 = Base.Random.uuid4
 UUID = Base.Random.UUID
 
-const VALUE_TYPES = Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
+typealias VALUE_TYPES Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
 
 abstract PlotObject
 
