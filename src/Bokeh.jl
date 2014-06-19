@@ -26,6 +26,7 @@ module Bokeh
 		plot = Plot()
 		plotcontext = PlotContext(plot)
 		doc = uuid4()
+
 		ticker0 = BasicTicker()
 
 		tickform0 = BasicTickFormatter()
@@ -44,7 +45,7 @@ module Bokeh
 
 		column_names = String["x", "y"]
 		data = Dict{String, Array{Number, 1}}()
-		data["x"] = [0, 1, 2, 3, 4, 5]
+		data["x"] = [1, 2, 3, 4]
 		data["y"] = data["x"].^2
 		column = ColumnDataSource(column_names, data)
 
@@ -72,16 +73,16 @@ module Bokeh
 					tools)
 		obs = Any[]
 
-		push!(obs, obdict(grid0, doc))
-		push!(obs, obdict(dr1y, doc))
 		push!(obs, obdict(column, doc))
-		push!(obs, obdict(pantool, doc))
 		push!(obs, obdict(dr1x, doc))
-		push!(obs, obdict(axis0, doc))
+		push!(obs, obdict(dr1y, doc))
 		push!(obs, obdict(glyph, doc))
-		push!(obs, obdict(plotcontext, doc))
-		push!(obs, obdict(ticker0, doc))
 		push!(obs, obdict(plot, doc))
+		push!(obs, obdict(plotcontext, doc))
+		push!(obs, obdict(grid0, doc))
+		push!(obs, obdict(pantool, doc))
+		push!(obs, obdict(axis0, doc))
+		push!(obs, obdict(ticker0, doc))
 		push!(obs, obdict(axis1, doc))
 		push!(obs, obdict(tickform0, doc))
 		push!(obs, obdict(tickform1, doc))
