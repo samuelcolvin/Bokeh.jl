@@ -154,16 +154,16 @@ function Metatool(typename::String, plot::Plot, dimensions)
 	Metatool(uuid4(), typename, plot, dimensions)
 end
 
-DEFAULT_HEIGHT = 600
-DEFAULT_WIDTH = 600
+_DEFAULT_HEIGHT = 600
+_DEFAULT_WIDTH = 600
 function Plot()
 	Plot(uuid4(),
 		 "",
 		 Nothing[],
-		 DEFAULT_HEIGHT,
-		 DEFAULT_HEIGHT,
-		 DEFAULT_WIDTH,
-		 DEFAULT_WIDTH,
+		 _DEFAULT_HEIGHT,
+		 _DEFAULT_HEIGHT,
+		 _DEFAULT_WIDTH,
+		 _DEFAULT_WIDTH,
 		 Dict{String, VALUE_TYPES}(),
 		 Dict{String, VALUE_TYPES}(),
 		 Nothing[],
@@ -177,8 +177,8 @@ function Plot(plot::Plot,
 			  renderers::Array{PlotObject,1},
 			  tools::Array{PlotObject,1},
 			  title::String="Bokeh Plot",
-			  height::Int=DEFAULT_HEIGHT,
-			  width::Int=DEFAULT_WIDTH)
+			  height::Int=_DEFAULT_HEIGHT,
+			  width::Int=_DEFAULT_WIDTH)
 	data_sources = VALUE_TYPES[]# [typid(coldata)]
 	xdata_range = typid(xrange)
 	ydata_range = typid(yrange)

@@ -1,8 +1,8 @@
 module Bokeh
-	debug = false
-	set_debug(b::Bool) = (global debug = b)
-	autoopen = true
-	set_autoopen(b::Bool) = (global autoopen = b)
+	DEBUG = false
+	set_debug(b::Bool) = (global DEBUG = b)
+	AUTOOPEN = true
+	set_autoopen(b::Bool) = (global AUTOOPEN = b)
 	include("objects.jl")
 	include("browser.jl")
 	include("generate.jl")

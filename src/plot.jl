@@ -3,7 +3,7 @@ function plot(x::Array, y::Array;
               fname::String="bokeh_plot.html")
 	models, plotcon = genmodels(x, y)
 	rendertemplate(models, plotcon, fname)
-	autoopen && openhtml(fname)
+	AUTOOPEN && openhtml(fname)
 end
 
 # function plot(data::Array, start::Real=-10, stop::Real=10;

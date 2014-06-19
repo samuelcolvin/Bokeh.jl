@@ -86,7 +86,7 @@ function genmodels(x::Array, y::Array)
 	plotcontext = PlotContext(plot)
 	pushdict!(obs, plotcontext, doc)
 
-	indent = debug ? 2 : 0
+	indent = DEBUG ? 2 : 0
 	method_exists(json, (Dict, Int)) ? (json(obs, indent), plotcontext): 
 									   (json(obs), plotcontext)
 end
@@ -109,8 +109,8 @@ end
 
 function rendertemplate(models::String, plotcon::PlotContext, fname::String)
 	template = gettemplate()
-	jspath, csspath = bokehjs_paths(!debug)
-	if debug
+	jspath, csspath = bokehjs_paths(!DEBUG)
+	if DEBUG
 		open("bokeh_models.json", "w") do f
 			print(f, allmodels)
 		end
