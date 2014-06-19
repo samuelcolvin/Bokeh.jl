@@ -1,9 +1,9 @@
 function plot(x::Array, y::Array;
-              title::String="Bokeh Plot", width::Int=800, height::Int=600,
-              fname::String="bokeh_plot.html")
-	models, plotcon = genmodels(x, y)
-	rendertemplate(models, plotcon, fname)
-	AUTOOPEN && openhtml(fname)
+              title::String="Bokeh Plot", width::Int=WIDTH, height::Int=HEIGHT,
+              filename::String=FILENAME, autoopen::Bool=AUTOOPEN)
+	models, plotcon = genmodels(x, y, title, width, height)
+	rendertemplate(models, plotcon, filename)
+	autoopen && openhtml(filename)
 end
 
 # function plot(data::Array, start::Real=-10, stop::Real=10;

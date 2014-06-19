@@ -21,7 +21,7 @@ function obdict(ob::PlotObject, doc::UUID)
 	return d
 end
 
-function genmodels(x::Array, y::Array)
+function genmodels(x::Array, y::Array, title::String, width::Int, height::Int)
 	plot = Plot()
 	doc = uuid4()
 
@@ -80,7 +80,10 @@ function genmodels(x::Array, y::Array)
 				dr1x,
 				dr1y,
 				renderers,
-				tools)
+				tools,
+				title,
+				height,
+				width)
 	pushdict!(obs, plot, doc)
 
 	plotcontext = PlotContext(plot)
@@ -112,7 +115,7 @@ function rendertemplate(models::String, plotcon::PlotContext, fname::String)
 	jspath, csspath = bokehjs_paths(!DEBUG)
 	if DEBUG
 		open("bokeh_models.json", "w") do f
-			print(f, allmodels)
+			print(f, models)
 		end
 	end
 	context = Dict{String, String}([
