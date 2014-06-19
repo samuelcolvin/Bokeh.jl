@@ -3,6 +3,8 @@ UUID = Base.Random.UUID
 
 typealias VALUE_TYPES Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
 
+typealias Real1d Union(AbstractArray{Int, 1}, AbstractArray{Float64, 1})
+
 abstract PlotObject
 
 abstract Range <: PlotObject
@@ -43,10 +45,10 @@ type ColumnDataSource <: PlotObject
 	selected::Array{Any, 1}
 	discrete_ranges::Dict{String, VALUE_TYPES}
 	cont_ranges::Dict{String, VALUE_TYPES}
-	data::Dict{String, Array{Number, 1}}
+	data::Dict{String, Real1d}
 end
 
-function ColumnDataSource(column_names::Array{String, 1}, data::Dict{String, Array{Number, 1}})
+function ColumnDataSource(column_names::Array{String, 1}, data::Dict{String, Real1d})
 	ColumnDataSource(uuid4(),
 					 column_names,
 					 VALUE_TYPES[],

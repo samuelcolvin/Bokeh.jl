@@ -11,6 +11,15 @@ set_height(300)
 set_filename("testing_bokeh_plot.html")
 set_title("Testing Bokeh Plot")
 
-x = [1:10]
+x = 1:10
 y = x.^2
 plot(x, y)
+
+plot(y)
+
+plot(cos)
+
+Bokeh._parse_spec("r--") |> println
+
+Bokeh._parse_spec("r:") |> println
+

@@ -21,7 +21,7 @@ function obdict(ob::PlotObject, doc::UUID)
 	return d
 end
 
-function genmodels(x::Array, y::Array, title::String, width::Int, height::Int)
+function genmodels(x::Real1d, y::Real1d, title::String, width::Int, height::Int)
 	plot = Plot()
 	doc = uuid4()
 
@@ -30,9 +30,9 @@ function genmodels(x::Array, y::Array, title::String, width::Int, height::Int)
 	obs = Any[]
 
 	column_names = String["x", "y"]
-	data = Dict{String, Array{Number, 1}}()
-	data["x"] = x
-	data["y"] = y
+	data = Dict{String, Real1d}([
+		"x" => x,
+		"y" => y])
 	column = ColumnDataSource(column_names, data)
 	pushdict!(obs, column, doc)
 

@@ -9,7 +9,7 @@ x = range(6)
 y = [xx**2 for xx in x]
 
 # output to static HTML file
-output_file("simple_line.html")
+output_file("line.html")
 
 # Plot the Archimedean spiral using the `line` renderer. Note how we set the
 # color, line thickness, title, and legend value.
@@ -44,7 +44,7 @@ doc = Document()
 doc.add(plot)
 json = serialize_json(doc.dump(), indent=2)
 print json
-fn = 'bokeh_example2.json'
+fn = 'line.json'
 open(fn, 'w').write(json)
 print '\n================================'
 print 'json written to %s' % fn

@@ -17,6 +17,9 @@ module Bokeh
 	# default plot title
 	TITLE = "Bokeh Plot"
 	set_title(t::String) = (global TITLE = t)
+	# number of points at which to evaluate functions
+	COUNTEVAL = 100
+	set_counteval(count::Int) = (global COUNTEVAL = count)
 
 	include("objects.jl")
 	include("browser.jl")
