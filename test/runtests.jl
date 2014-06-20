@@ -19,7 +19,6 @@ plot(y)
 
 plot(cos)
 
-Bokeh._parse_spec("r--") |> println
+Bokeh.parse_spec("r--") |> println
 
-Bokeh._parse_spec("r:") |> println
-
+Bokeh.parse_spec("r:") |> println

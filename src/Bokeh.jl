@@ -1,5 +1,5 @@
 module Bokeh
-	# displays indented JSON and unminified js and save the raw JSON to "bokeh_models.json" if true
+	# displays indented JSON, uses unminified js and saves the raw JSON to "bokeh_models.json" if true
 	DEBUG = false
 	set_debug(b::Bool) = (global DEBUG = b)
 	# whether or not to show the plot immediately after `plot`
@@ -9,7 +9,7 @@ module Bokeh
 	WIDTH = 800
 	set_width(w::Int) = (global WIDTH = w)
 	# default height of plot
-	HEIGHT = 800
+	HEIGHT = 600
 	set_height(h::Int) = (global HEIGHT = h)
 	# default filename 
 	FILENAME = "bokeh_plot.html"
@@ -18,7 +18,7 @@ module Bokeh
 	TITLE = "Bokeh Plot"
 	set_title(t::String) = (global TITLE = t)
 	# number of points at which to evaluate functions
-	COUNTEVAL = 100
+	COUNTEVAL = 500
 	set_counteval(count::Int) = (global COUNTEVAL = count)
 
 	include("objects.jl")

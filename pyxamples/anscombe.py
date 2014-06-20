@@ -1,18 +1,17 @@
 from __future__ import print_function
 
-import os
-
 import numpy as np
 import pandas as pd
 
+from bokeh.browserlib import view
+from bokeh.document import Document
+from bokeh.protocol import serialize_json
+from bokeh.embed import file_html
+from bokeh.glyphs import Circle, Line
 from bokeh.objects import (
     ColumnDataSource, Glyph, Grid, GridPlot, LinearAxis, Plot, Range1d
 )
-from bokeh.glyphs import Circle, Line
-from bokeh.plotting import *
-from bokeh.document import Document
-from bokeh.protocol import serialize_json
-
+from bokeh.resources import INLINE
 
 raw_columns=[
 [10.0,   8.04,   10.0,   9.14,   10.0,   7.46,   8.0,    6.58],
@@ -54,17 +53,7 @@ ydr = Range1d(start=-0.5, end=20.5)
 def make_plot(title, xname, yname):
     plot = Plot(
         x_range=xdr, y_range=ydr, data_sources=[lines_source, circles_source],
-        title=title, border_fill='white', background_fill='#e9e0db')
-
-# outline_line_join, min_border_bottom, title_text_align, title_text_baseline, outer_width, 
-# plot_width, border_fill, plot_height, session, title_text_font_size, tools, canvas_width, 
-# outline_line_dash, outline_line_dash_offset, border_symmetry, title, background_fill, 
-# outline_line_width, x_range, title_text_font_style, title_text_alpha, data_sources, 
-# outline_line_color, title_text_font, canvas_height, min_border_left, title_text_color, 
-# min_border_right, y_range, min_border, png, outer_height, outline_line_alpha, 
-# script_inject_snippet, renderers, min_border_top or outline_line_cap
-
-
+        title=title, plot_width=400, plot_height=400, border_fill='white', background_fill='#e9e0db')
     xaxis = LinearAxis(plot=plot, dimension=0, location="bottom", axis_line_color=None)
     yaxis = LinearAxis(plot=plot, dimension=1, location="left", axis_line_color=None)
     xgrid = Grid(plot=plot, dimension=0, axis=xaxis)
@@ -92,14 +81,17 @@ II  = make_plot('II',  'xii',  'yii')
 III = make_plot('III', 'xiii', 'yiii')
 IV  = make_plot('IV',  'xiv',  'yiv')
 
-grid = GridPlot(children=[[I, II], [III, IV]])
+grid = GridPlot(children=[[I, II], [III, IV]], plot_width=800)
 
-output_file("direct_glyphs.html")
-show()
-# sess = session.HTMLFileSession("anscombe.html")
-# grid.add_plot(grid)
+doc = Document( )
+doc.add(grid)
+json = serialize_json(doc.dump(), indent=2)
+fn = 'anscombe.json'
+open(fn, 'w').write(json)
+print 'json written to %s' % fn
 
-# if __name__ == "__main__":
-#     sess.save()
-#     print("Wrote %s" % sess.filename)
-#     sess.view()
+filename = "anscombe.html"
+with open(filename, "w") as f:
+    f.write(file_html(doc, INLINE, "Anscombe's Quartet"))
+print("Wrote %s" % filename)
+view(filename)

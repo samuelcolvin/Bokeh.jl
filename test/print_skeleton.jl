@@ -1,14 +1,17 @@
 using JSON
+using ArgParse
 
-text = open(readall, "bokeh_example2.json", "r")
+s = ArgParseSettings()
+@add_arg_table s begin
+    "jons_file"
+        help = "json file path"
+        required = true
+end
+parsed_args = parse_args(ARGS, s)
+text = open(readall, parsed_args["jons_file"], "r")
 js = JSON.parse(text)
 for ob in js
 	println(ob["type"], ":")
-	for (k, v) in ob
-		println(" "^4, k)
-	end
-	println(" "^2, "attrs:")
-	for (k2, v2) in ob["attributes"]
-		println(" "^6, k2)
-	end
+	k = keys(ob["attributes"])
+	println("  attributes: ", join(k, ", "))
 end

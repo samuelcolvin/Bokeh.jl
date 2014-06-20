@@ -18,7 +18,7 @@ function plot(f::Function, start::Real=-10, stop::Real=10, args...;
     plot(x, y, args...; kwargs...)
 end
 
-function plot(f::Function, rng::Range, args...;kwargs...)
+function plot(f::Function, rng::Union(Range, UnitRange), args...;kwargs...)
 	stop = isdefined(rng, :stop) ? rng.stop : rng.len
     plot(f, rng.start, stop, args...; kwargs...)
 end
@@ -48,7 +48,7 @@ const chartokens = [
     'k' => {:color => "black"},
 ]
 
-function _parse_spec(spec::String)
+function parse_spec(spec::String)
     try
         return { :color => Color.color(spec) }
     end
