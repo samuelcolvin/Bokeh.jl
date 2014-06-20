@@ -1,7 +1,14 @@
+include("browser.jl")
+include("generate.jl")
+
+typealias URange Union(Union(Range, UnitRange))
+
 function plot(x::Real1d, y::Real1d;
               title::String="Bokeh Plot", width::Int=WIDTH, height::Int=HEIGHT,
               filename::String=FILENAME, autoopen::Bool=AUTOOPEN)
-	models, plotcon = genmodels(x, y, title, width, height)
+    glyph = Glyph("line", linewidth=1, linecolor="blue")
+    dcs = DataColumn[DataColumn(x, y, glyph)]
+	models, plotcon = genmodels(dcs, title, width, height)
 	rendertemplate(models, plotcon, filename)
 	autoopen && openhtml(filename)
 end
@@ -18,7 +25,7 @@ function plot(f::Function, start::Real=-10, stop::Real=10, args...;
     plot(x, y, args...; kwargs...)
 end
 
-function plot(f::Function, rng::Union(Range, UnitRange), args...;kwargs...)
+function plot(f::Function, rng::URange, args...;kwargs...)
 	stop = isdefined(rng, :stop) ? rng.stop : rng.len
     plot(f, rng.start, stop, args...; kwargs...)
 end

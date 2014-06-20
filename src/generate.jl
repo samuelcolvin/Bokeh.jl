@@ -1,39 +1,91 @@
-using JSON
+include("bokehjs.jl")
 using Mustache
 
-function obdict(ob::Bokehjs.PlotObject, doc::Bokehjs.UUID)
-	d = Dict{String, Bokehjs.VALUE_TYPES}()
-	d["id"] = string(ob.uuid)
-	extra_attrs = typeof(ob).names
-	d["type"] = in(:_type_name, extra_attrs) ? ob._type_name : typeof(ob)
-	attrs = Dict{String, Any}()
-	attrs["id"] = d["id"]
-	attrs["doc"] = string(doc)
-	special = [:_type_name]
-	for name in extra_attrs[2:end]
-		in(name, special) && continue
-		key = string(name)
-		# key = begingswith(key, "_") ? key[2:end] : key
-		attrs[key] = ob.(name)
-	end
-	d["attributes"] = attrs
-	return d
+typealias NullString Union(String, Nothing)
+typealias NullFloat Union(Float64, Nothing)
+typealias NullInt Union(Int, Nothing)
+typealias NullRange Union(Range, Nothing)
+
+type Glyph
+    gtype::String
+    linewidth::NullInt
+    linecolor::NullString
+    fillcolor::NullString
+    linealpha::NullFloat
+    fillalpha::NullFloat
+    size::NullInt
+    dash::Union(Nothing, Array{Int, 1})
 end
 
-pushdict!(obs::Any, ob::Bokehjs.PlotObject, doc::Bokehjs.UUID) = push!(obs, obdict(ob, doc))
+function Glyph(gtype::String; 
+	linewidth=nothing, linecolor=nothing, fillcolor=nothing, linealpha=nothing, fillalpha=nothing, size=nothing, dash=nothing)
+	Glyph(gtype, linewidth, linecolor, fillcolor, linealpha, fillalpha, size, dash)
+end
 
-function genmodels(x::Real1d, y::Real1d, title::String, width::Int, height::Int)
+type DataColumn
+    columns::Array{String, 1}
+    data::Dict{String, Real1d}
+    glyph::Glyph
+    xrange::NullRange
+    yrange::NullRange
+end
+
+function DataColumn(xdata::Real1d, ydata::Real1d, glyph::Glyph)
+	data = ["x" => xdata, "y" => ydata]
+	DataColumn(["x", "y"], data, glyph, nothing, nothing)
+end
+
+type Plot
+    columns::Array{DataColumn, 1}
+end
+
+
+function Bokehjs.Glyph(glyph::Glyph,
+					   coldata::Bokehjs.ColumnDataSource, 
+					   xrange::Bokehjs.NullBkRange=nothing, 
+					   yrange::Bokehjs.NullBkRange=nothing)
+	glyphspec = Dict{String, BkAny}([
+		"type" => glyph.gtype,
+		"y" => ["units" => "data", "field" => "y"],
+		"x" => ["units" => "data", "field" => "x"],
+		])
+	if glyph.linewidth != nothing
+		glyphspec["line_width"] = ["units" => "data", "value" => glyph.linewidth]
+	end
+	if glyph.linecolor != nothing
+		glyphspec["line_color"] = ["value" => glyph.linecolor]
+	end
+	if glyph.fillcolor != nothing
+		glyphspec["fill_color"] = ["value" => glyph.fillcolor]
+	end
+	if glyph.linealpha != nothing
+		glyphspec["line_alpha"] = ["value" => glyph.linealpha]
+	end
+	if glyph.size != nothing
+		glyphspec["size"] = ["units" => "screen", "value" => glyph.size]
+	end
+	Bokehjs.Glyph(coldata, xrange, yrange, glyphspec)
+end
+
+function genmodels(datacolumns::Array{DataColumn, 1}, title::String, width::Int, height::Int)
 	plot = Bokehjs.Plot()
 	doc = Bokehjs.uuid4()
+	obs = Dict{String, BkAny}[]
 
-	obs = Any[]
-
-	column_names = String["x", "y"]
-	data = Dict{String, Real1d}([
-		"x" => x,
-		"y" => y])
-	column = Bokehjs.ColumnDataSource(column_names, data)
-	pushdict!(obs, column, doc)
+	cdss = Bokehjs.ColumnDataSource[]
+	bkglyphs = Bokehjs.PlotObject[]
+	for datacolumn in datacolumns
+		cds = Bokehjs.ColumnDataSource(datacolumn.columns, datacolumn.data)
+		pushdict!(obs, cds, doc)
+		bg = Bokehjs.Glyph(datacolumn.glyph, cds)
+		push!(cdss, cds)
+		push!(bkglyphs, bg)
+		pushdict!(obs, bg, doc)
+	end
+	dr1x = Bokehjs.DataRange1d(cdss, String["x"])
+	dr1y = Bokehjs.DataRange1d(cdss, String["y"])
+	pushdict!(obs, dr1x, doc)
+	pushdict!(obs, dr1y, doc)
 
 	ticker0 = Bokehjs.BasicTicker()
 	ticker1 = Bokehjs.BasicTicker()
@@ -49,12 +101,6 @@ function genmodels(x::Real1d, y::Real1d, title::String, width::Int, height::Int)
 	axis1 = Bokehjs.LinearAxis(1, tickform1, ticker1, plot)
 	pushdict!(obs, axis0, doc)
 	pushdict!(obs, axis1, doc)
-
-	dr1x = Bokehjs.DataRange1d(column, String["x"])
-	dr1y = Bokehjs.DataRange1d(column, String["y"])
-	pushdict!(obs, dr1x, doc)
-	pushdict!(obs, dr1y, doc)
-
 	grid0 = Bokehjs.Grid(0, plot, axis0)
 	grid1 = Bokehjs.Grid(1, plot, axis1)
 	pushdict!(obs, grid0, doc)
@@ -63,19 +109,15 @@ function genmodels(x::Real1d, y::Real1d, title::String, width::Int, height::Int)
 	pantool = Bokehjs.Metatool("PanTool", plot, String["width", "height"])
 	pushdict!(obs, pantool, doc)
 
-	glyph = Bokehjs.Glyph(column, dr1x, dr1y)
-	pushdict!(obs, glyph, doc)
-
 	renderers = Bokehjs.PlotObject[
-		glyph,
 		axis0,
 		axis1,
 		grid0,
 		grid1
 	]
+	append!(renderers, bkglyphs)
 	tools = Bokehjs.PlotObject[pantool]
 	plot = Bokehjs.Plot(plot,
-				column,
 				dr1x,
 				dr1y,
 				renderers,
@@ -92,6 +134,27 @@ function genmodels(x::Real1d, y::Real1d, title::String, width::Int, height::Int)
 	method_exists(json, (Dict, Int)) ? (json(obs, indent), plotcontext): 
 									   (json(obs), plotcontext)
 end
+
+function obdict(ob::Bokehjs.PlotObject, doc::Bokehjs.UUID)
+	d = Dict{String, BkAny}()
+	d["id"] = ob.uuid
+	extra_attrs = typeof(ob).names
+	d["type"] = in(:_type_name, extra_attrs) ? ob._type_name : typeof(ob)
+	attrs = Dict{String, Any}()
+	attrs["id"] = d["id"]
+	attrs["doc"] = doc
+	special = [:_type_name]
+	for name in extra_attrs[2:end]
+		in(name, special) && continue
+		key = string(name)
+		# key = begingswith(key, "_") ? key[2:end] : key
+		attrs[key] = ob.(name)
+	end
+	d["attributes"] = attrs
+	return d
+end
+
+pushdict!(obs::Any, ob::Bokehjs.PlotObject, doc::Bokehjs.UUID) = push!(obs, obdict(ob, doc))
 
 get_resources_dir() = Pkg.dir("Bokeh", "deps", "resources")
 

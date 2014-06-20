@@ -21,9 +21,6 @@ module Bokeh
 	COUNTEVAL = 500
 	set_counteval(count::Int) = (global COUNTEVAL = count)
 
-	include("objects.jl")
-	include("browser.jl")
-	include("generate.jl")
 	include("plot.jl")
 	export plot, 
 		   set_debug, 

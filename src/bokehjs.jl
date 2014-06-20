@@ -1,14 +1,18 @@
-typealias Real1d Union(AbstractArray{Int, 1}, AbstractArray{Float64, 1})
+using JSON
 
 module Bokehjs
 	typealias Real1d Union(AbstractArray{Int, 1}, AbstractArray{Float64, 1})
-	typealias VALUE_TYPES Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
+	# increase we want to restrict it in future:
+	typealias BkAny Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
+	typealias NullDict Union(Nothing, Dict{String, BkAny})
 	uuid4 = Base.Random.uuid4
 	UUID = Base.Random.UUID
 
 	abstract PlotObject
 
-	abstract Range <: PlotObject
+	abstract BkRange <: PlotObject
+
+	typealias NullBkRange Union(Nothing, BkRange)
 
 	abstract Renderer <: PlotObject
 
@@ -21,53 +25,54 @@ module Bokehjs
 	function typid(plotob::PlotObject)
 		attrs = typeof(plotob).names
 		obtype = in(:_type_name, attrs) ? plotob._type_name : typeof(plotob)
-		Dict{String, VALUE_TYPES}([
+		Dict{String, BkAny}([
 			"type" => obtype,
-			"id" => string(plotob.uuid)])
+			"id" => plotob.uuid])
 	end
+
+	typid(plotob::Nothing) = nothing
 
 	type Plot <: PlotObject
 		uuid::UUID
 		title::String
-		tools::Array{VALUE_TYPES, 1}
+		tools::Array{BkAny, 1}
 		outer_height::Int
 		canvas_height::Int
 		outer_width::Int
 		canvas_width::Int
-		x_range::Dict{String, VALUE_TYPES}
-		y_range::Dict{String, VALUE_TYPES}
-		renderers::Array{VALUE_TYPES, 1}
-		data_sources::Array{VALUE_TYPES, 1}
+		x_range::Dict{String, BkAny}
+		y_range::Dict{String, BkAny}
+		renderers::Array{BkAny, 1}
+		data_sources::Array{BkAny, 1}
 	end
 
 	type ColumnDataSource <: PlotObject
 		uuid::UUID
 		column_names::Array{String, 1}
 		selected::Array{Any, 1}
-		discrete_ranges::Dict{String, VALUE_TYPES}
-		cont_ranges::Dict{String, VALUE_TYPES}
+		discrete_ranges::Dict{String, BkAny}
+		cont_ranges::Dict{String, BkAny}
 		data::Dict{String, Real1d}
 	end
 
 	function ColumnDataSource(column_names::Array{String, 1}, data::Dict{String, Real1d})
 		ColumnDataSource(uuid4(),
 						 column_names,
-						 VALUE_TYPES[],
-						 Dict{String, VALUE_TYPES}(), 
-						 Dict{String, VALUE_TYPES}(), 
+						 BkAny[],
+						 Dict{String, BkAny}(), 
+						 Dict{String, BkAny}(), 
 						 data)
 	end
 
-	type DataRange1d <: Range
+	type DataRange1d <: BkRange
 		uuid::UUID
-		sources::Array{VALUE_TYPES, 1}
+		sources::Array{BkAny, 1}
 	end
 
-	function DataRange1d(coldata::ColumnDataSource, columns::Array{String, 1})
-		sources = Dict{String, VALUE_TYPES}()
-		sources["columns"] = columns
-		sources["source"] = typid(coldata)
-		DataRange1d(uuid4(), [sources])
+	function DataRange1d(cdss::Array{ColumnDataSource, 1}, columns::Array{String, 1})
+		source(cds) = Dict{String, BkAny}(["columns" => columns, "source" => typid(cds)])
+		sources = map(source, cdss)
+		DataRange1d(uuid4(), sources)
 	end
 
 	type BasicTickFormatter <: TickFormatter
@@ -85,9 +90,9 @@ module Bokehjs
 		dimension::Int
 		bounds::String
 		location::String
-		formatter::Dict{String, VALUE_TYPES}
-		ticker::Dict{String, VALUE_TYPES}
-		plot::Dict{String, VALUE_TYPES}
+		formatter::Dict{String, BkAny}
+		ticker::Dict{String, BkAny}
+		plot::Dict{String, BkAny}
 	end
 
 	function LinearAxis(dimension::Int, tf::TickFormatter, t::Ticker, plot::Plot)
@@ -103,8 +108,8 @@ module Bokehjs
 	type Grid <: Renderer
 		uuid::UUID
 		dimension::Int
-		plot::Dict{String, VALUE_TYPES}
-		axis::Dict{String, VALUE_TYPES}
+		plot::Dict{String, BkAny}
+		axis::Dict{String, BkAny}
 	end
 
 	function Grid(dimension::Int, plot::Plot, axis::Axis)
@@ -113,31 +118,14 @@ module Bokehjs
 
 	type Glyph <: Renderer
 		uuid::UUID
-		data_source::Dict{String, VALUE_TYPES}
-		server_data_source::Any
-		xdata_range::Dict{String, VALUE_TYPES}
-		ydata_range::Dict{String, VALUE_TYPES}
-		glyphspec::Dict{String, VALUE_TYPES}
+		data_source::Dict{String, BkAny}
+		server_data_source::NullDict
+		xdata_range::NullDict
+		ydata_range::NullDict
+		glyphspec::Dict{String, BkAny}
 	end
 
-	function Glyph(coldata::ColumnDataSource, 
-				   xrange::Range, 
-				   yrange::Range, 
-				   alpha::Float64=1.0,
-				   _type::String="line", 
-				   colour::String="blue")
-		glyphspec = Dict{String, VALUE_TYPES}([
-			"line_color" => ["value" => colour],
-			"line_width" => ["units" => "data", "value" => 2],
-			"line_alpha" => ["units" => "data", "value" => alpha],
-			"y" => ["units" => "data", "field" => "y"],
-			"x" => ["units" => "data", "field" => "x"],
-			"type" => "line"
-			])
-		Glyph(coldata, xrange, yrange, glyphspec)
-	end
-
-	function Glyph(coldata::ColumnDataSource, xrange::Range, yrange::Range, glyphspec::Dict{String, VALUE_TYPES})
+	function Glyph(coldata::ColumnDataSource, xrange::NullBkRange, yrange::NullBkRange, glyphspec::Dict{String, BkAny})
 		data_source = typid(coldata)
 		server_data_source = nothing
 		xdata_range = typid(xrange)
@@ -148,7 +136,7 @@ module Bokehjs
 	type Metatool <: PlotObject
 		uuid::UUID
 		_type_name::String
-		plot::Dict{String, VALUE_TYPES}
+		plot::Dict{String, BkAny}
 		dimensions::Union(Array{String, 1}, Nothing)
 	end
 
@@ -167,22 +155,21 @@ module Bokehjs
 			 _DEFAULT_HEIGHT,
 			 _DEFAULT_WIDTH,
 			 _DEFAULT_WIDTH,
-			 Dict{String, VALUE_TYPES}(),
-			 Dict{String, VALUE_TYPES}(),
+			 Dict{String, BkAny}(),
+			 Dict{String, BkAny}(),
 			 Nothing[],
 			 Nothing[])
 	end
 
 	function Plot(plot::Plot,
-				  coldata::ColumnDataSource,
-				  xrange::Range, 
-				  yrange::Range,
+				  xrange::BkRange, 
+				  yrange::BkRange,
 				  renderers::Array{PlotObject,1},
 				  tools::Array{PlotObject,1},
 				  title::String="Bokeh Plot",
 				  height::Int=_DEFAULT_HEIGHT,
 				  width::Int=_DEFAULT_WIDTH)
-		data_sources = VALUE_TYPES[]# [typid(coldata)]
+		data_sources = BkAny[]# [typid(coldata)]
 		xdata_range = typid(xrange)
 		ydata_range = typid(yrange)
 		renderers = map(typid, renderers)
@@ -202,10 +189,21 @@ module Bokehjs
 
 	type PlotContext <: PlotObject
 		uuid::UUID
-		children::Array{Dict{String, VALUE_TYPES}, 1}
+		children::Array{Dict{String, BkAny}, 1}
 	end
 
 	function PlotContext(plot::Plot)
 		PlotContext(uuid4(),[typid(plot)])
 	end
+end
+typealias Real1d Bokehjs.Real1d
+typealias BkAny Bokehjs.BkAny
+
+# implement correct UUID printing for both old and new JSON.jl
+function JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID)
+    JSON._print(io, state, string(uuid))
+end
+
+function JSON.print(io::IO, uuid::Bokehjs.UUID)
+    JSON.print(io, string(uuid))
 end
