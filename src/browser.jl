@@ -1,4 +1,3 @@
-
 function openhtml(filepath::String)
 	os = Sys.OS_NAME 
 	open = os == :Linux ? "xdg-open" :

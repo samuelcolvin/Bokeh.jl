@@ -3,14 +3,26 @@ include("generate.jl")
 
 typealias URange Union(Union(Range, UnitRange))
 
-function plot(x::Real1d, y::Real1d;
-              title::String="Bokeh Plot", width::Int=WIDTH, height::Int=HEIGHT,
+function show(plot::Plot)
+    openhtml(plot.filename)
+end
+
+function plot(columns::Array{DataColumn, 1};
+              title::String=TITLE, width::Int=WIDTH, height::Int=HEIGHT,
               filename::String=FILENAME, autoopen::Bool=AUTOOPEN)
+    plt = Plot(columns, filename, title, width, height)
+    if autoopen
+        models, plotcon = genmodels(plt)
+        rendertemplate(models, plotcon, plt.filename)
+        show(plt)
+    end
+    return plt
+end
+
+function plot(x::Real1d, y::Real1d, args...; kwargs...)
     glyph = Glyph("line", linewidth=1, linecolor="blue")
     dcs = DataColumn[DataColumn(x, y, glyph)]
-	models, plotcon = genmodels(dcs, title, width, height)
-	rendertemplate(models, plotcon, filename)
-	autoopen && openhtml(filename)
+	plot(dcs, args...; kwargs...)
 end
 
 function plot(y::Real1d, args...; kwargs...)

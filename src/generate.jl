@@ -1,44 +1,6 @@
 include("bokehjs.jl")
+include("glyphs.jl")
 using Mustache
-
-typealias NullString Union(String, Nothing)
-typealias NullFloat Union(Float64, Nothing)
-typealias NullInt Union(Int, Nothing)
-typealias NullRange Union(Range, Nothing)
-
-type Glyph
-    gtype::String
-    linewidth::NullInt
-    linecolor::NullString
-    fillcolor::NullString
-    linealpha::NullFloat
-    fillalpha::NullFloat
-    size::NullInt
-    dash::Union(Nothing, Array{Int, 1})
-end
-
-function Glyph(gtype::String; 
-	linewidth=nothing, linecolor=nothing, fillcolor=nothing, linealpha=nothing, fillalpha=nothing, size=nothing, dash=nothing)
-	Glyph(gtype, linewidth, linecolor, fillcolor, linealpha, fillalpha, size, dash)
-end
-
-type DataColumn
-    columns::Array{String, 1}
-    data::Dict{String, Real1d}
-    glyph::Glyph
-    xrange::NullRange
-    yrange::NullRange
-end
-
-function DataColumn(xdata::Real1d, ydata::Real1d, glyph::Glyph)
-	data = ["x" => xdata, "y" => ydata]
-	DataColumn(["x", "y"], data, glyph, nothing, nothing)
-end
-
-type Plot
-    columns::Array{DataColumn, 1}
-end
-
 
 function Bokehjs.Glyph(glyph::Glyph,
 					   coldata::Bokehjs.ColumnDataSource, 
@@ -67,14 +29,14 @@ function Bokehjs.Glyph(glyph::Glyph,
 	Bokehjs.Glyph(coldata, xrange, yrange, glyphspec)
 end
 
-function genmodels(datacolumns::Array{DataColumn, 1}, title::String, width::Int, height::Int)
-	plot = Bokehjs.Plot()
+function genmodels(plot::Plot)
+	bkplot = Bokehjs.Plot()
 	doc = Bokehjs.uuid4()
 	obs = Dict{String, BkAny}[]
 
 	cdss = Bokehjs.ColumnDataSource[]
 	bkglyphs = Bokehjs.PlotObject[]
-	for datacolumn in datacolumns
+	for datacolumn in plot.datacolumns
 		cds = Bokehjs.ColumnDataSource(datacolumn.columns, datacolumn.data)
 		pushdict!(obs, cds, doc)
 		bg = Bokehjs.Glyph(datacolumn.glyph, cds)
@@ -97,16 +59,16 @@ function genmodels(datacolumns::Array{DataColumn, 1}, title::String, width::Int,
 	pushdict!(obs, tickform0, doc)
 	pushdict!(obs, tickform1, doc)
 
-	axis0 = Bokehjs.LinearAxis(0, tickform0, ticker0, plot)
-	axis1 = Bokehjs.LinearAxis(1, tickform1, ticker1, plot)
+	axis0 = Bokehjs.LinearAxis(0, tickform0, ticker0, bkplot)
+	axis1 = Bokehjs.LinearAxis(1, tickform1, ticker1, bkplot)
 	pushdict!(obs, axis0, doc)
 	pushdict!(obs, axis1, doc)
-	grid0 = Bokehjs.Grid(0, plot, axis0)
-	grid1 = Bokehjs.Grid(1, plot, axis1)
+	grid0 = Bokehjs.Grid(0, bkplot, axis0)
+	grid1 = Bokehjs.Grid(1, bkplot, axis1)
 	pushdict!(obs, grid0, doc)
 	pushdict!(obs, grid1, doc)
 
-	pantool = Bokehjs.Metatool("PanTool", plot, String["width", "height"])
+	pantool = Bokehjs.Metatool("PanTool", bkplot, String["width", "height"])
 	pushdict!(obs, pantool, doc)
 
 	renderers = Bokehjs.PlotObject[
@@ -117,17 +79,17 @@ function genmodels(datacolumns::Array{DataColumn, 1}, title::String, width::Int,
 	]
 	append!(renderers, bkglyphs)
 	tools = Bokehjs.PlotObject[pantool]
-	plot = Bokehjs.Plot(plot,
+	bkplot = Bokehjs.Plot(bkplot,
 				dr1x,
 				dr1y,
 				renderers,
 				tools,
-				title,
-				height,
-				width)
-	pushdict!(obs, plot, doc)
+				plot.title,
+				plot.height,
+				plot.width)
+	pushdict!(obs, bkplot, doc)
 
-	plotcontext = Bokehjs.PlotContext(plot)
+	plotcontext = Bokehjs.PlotContext(bkplot)
 	pushdict!(obs, plotcontext, doc)
 
 	indent = DEBUG ? 2 : 0
