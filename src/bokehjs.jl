@@ -199,11 +199,13 @@ end
 typealias Real1d Bokehjs.Real1d
 typealias BkAny Bokehjs.BkAny
 
-# implement correct UUID printing for both old and new JSON.jl
-function JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID)
-    JSON._print(io, state, string(uuid))
-end
-
-function JSON.print(io::IO, uuid::Bokehjs.UUID)
-    JSON.print(io, string(uuid))
+if in(:_print, names(JSON, true))
+	# implement correct UUID printing for both old and new JSON.jl
+	function JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID)
+	    JSON._print(io, state, string(uuid))
+	end
+else
+	function JSON.print(io::IO, uuid::Bokehjs.UUID)
+	    JSON.print(io, string(uuid))
+	end	
 end
