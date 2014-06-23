@@ -24,10 +24,6 @@ Methods:
 	# same
 	plot(cos, 0:5)
 
-	# ======================
-	# not yet implemented:
-	# ======================
-
 	# as above with a red dashed line
 	plot(y, "r--")
 
@@ -39,6 +35,10 @@ Methods:
 
     # x .vs ys[:,1] and x vs. ys[:,2] where x is 1:size(y,1)
     plot(ys)
+
+	# ======================
+	# not yet implemented:
+	# ======================
 
 	# as above with a red dashed line for ys[:,1] and a blue dotted line for ys[:,2]
 	plot(ys, "r--|b:")

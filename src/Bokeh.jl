@@ -14,6 +14,8 @@ module Bokeh
 	height(h::Int) = (global HEIGHT = h)
 	# default filename 
 	DEFAULT_LINE = Glyphs.Line()
+	# this could be done better?
+	DEFAULT_LINE_STR = "dft"
 	default_line(g::Glyph) = (global DEFAULT_LINE = g)
 	FILENAME = "bokeh_plot.html"
 	filename(fn::String) = (global FILENAME = fn)

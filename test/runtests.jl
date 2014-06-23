@@ -11,13 +11,19 @@ height(300)
 filename("testing_bokeh_plot.html")
 title("Testing Bokeh Plot")
 
-x = 1:10
-y = x.^2
-plot(x, y)
 
+x = linspace(0, 2pi, 5)
+y = sin(x)
+ys = [sin(x) cos(x)]
+
+plot(x, y)
+plot(x, ys)
 plot(y)
+plot(ys)
 
 plot(cos)
+
+plot([sin, cos])
 
 # check they're correct:
 # Bokeh.parse_spec("r--") |> println

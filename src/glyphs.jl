@@ -42,13 +42,13 @@ typealias NullRange Union(Range, Nothing)
 
 type DataColumn
     columns::Array{String, 1}
-    data::Dict{String, Real1d}
+    data::Dict{String, RealVect}
     glyph::Glyph
     xrange::NullRange
     yrange::NullRange
 end
 
-function DataColumn(xdata::Real1d, ydata::Real1d, glyph::Glyph)
+function DataColumn(xdata::RealVect, ydata::RealVect, glyph::Glyph)
 	data = ["x" => xdata, "y" => ydata]
 	DataColumn(["x", "y"], data, glyph, nothing, nothing)
 end
@@ -89,6 +89,7 @@ const chartokens = [
 ]
 
 function Base.convert(::Type{Glyph}, style::String)
+    style == DEFAULT_LINE_STR && return DEFAULT_LINE
     styd = Dict{Symbol, Any}([:glyphtype => "line"])
 
     for (k,v) in [ "--" => [4, 4], "-." => [1, 4, 2], ".-" => [1, 4, 2] ]
@@ -113,6 +114,6 @@ function Base.convert(::Type{Glyph}, style::String)
     if in(styd[:glyphtype], filledglyphs)
         styd[:fillcolor] = styd[:linecolor]
     end
-    @show styd
+    # @show styd
     Glyph(;styd...)
 end

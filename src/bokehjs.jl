@@ -1,7 +1,12 @@
 using JSON
 
 module Bokehjs
-	typealias Real1d Union(AbstractArray{Int, 1}, AbstractArray{Float64, 1})
+	typealias RealVect Union(AbstractVector{Int}, AbstractVector{Float64})
+	typealias RealMat Union(AbstractMatrix{Int}, AbstractMatrix{Float64})
+	typealias RealMatVect Union(RealMat, RealVect)
+	# would be nice to parameterize, but more important to constrain dims to 1 or 2
+	# typealias RealMatVect{N} Union(AbstractArray{Int, N}, AbstractArray{Float64, N})
+	
 	# in case we want to restrict value types in future:
 	typealias BkAny Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
 	typealias NullDict Union(Nothing, Dict{String, BkAny})
@@ -52,10 +57,10 @@ module Bokehjs
 		selected::Array{Any, 1}
 		discrete_ranges::Dict{String, BkAny}
 		cont_ranges::Dict{String, BkAny}
-		data::Dict{String, Real1d}
+		data::Dict{String, RealVect}
 	end
 
-	function ColumnDataSource(column_names::Array{String, 1}, data::Dict{String, Real1d})
+	function ColumnDataSource(column_names::Array{String, 1}, data::Dict{String, RealVect})
 		ColumnDataSource(uuid4(),
 						 column_names,
 						 BkAny[],
@@ -196,7 +201,9 @@ module Bokehjs
 		PlotContext(uuid4(),[typid(plot)])
 	end
 end
-typealias Real1d Bokehjs.Real1d
+typealias RealVect Bokehjs.RealVect
+typealias RealMat Bokehjs.RealMat
+typealias RealMatVect Bokehjs.RealMatVect
 typealias BkAny Bokehjs.BkAny
 
 if in(:_print, names(JSON, true))
