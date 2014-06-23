@@ -26,6 +26,9 @@ function Bokehjs.Glyph(glyph::Glyph,
 	if glyph.size != nothing
 		glyphspec["size"] = ["units" => "screen", "value" => glyph.size]
 	end
+	if glyph.dash != nothing
+		glyphspec["line_dash"] = glyph.dash
+	end
 	Bokehjs.Glyph(coldata, xrange, yrange, glyphspec)
 end
 

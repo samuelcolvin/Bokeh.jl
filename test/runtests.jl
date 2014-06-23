@@ -3,13 +3,13 @@ using Base.Test
 
 # try setting all possible params
 # some lime autoopen actually need to be set for travis
-set_debug(true)
-set_debug(false)
-set_autoopen(false)
-set_width(600)
-set_height(300)
-set_filename("testing_bokeh_plot.html")
-set_title("Testing Bokeh Plot")
+debug(true)
+debug(false)
+autoopen(false)
+width(600)
+height(300)
+filename("testing_bokeh_plot.html")
+title("Testing Bokeh Plot")
 
 x = 1:10
 y = x.^2
@@ -19,6 +19,7 @@ plot(y)
 
 plot(cos)
 
-Bokeh.parse_spec("r--") |> println
+# check they're correct:
+# Bokeh.parse_spec("r--") |> println
 
-Bokeh.parse_spec("r:") |> println
+# Bokeh.parse_spec("r:") |> println

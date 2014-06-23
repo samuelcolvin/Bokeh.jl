@@ -2,7 +2,7 @@ using JSON
 
 module Bokehjs
 	typealias Real1d Union(AbstractArray{Int, 1}, AbstractArray{Float64, 1})
-	# increase we want to restrict it in future:
+	# in case we want to restrict value types in future:
 	typealias BkAny Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
 	typealias NullDict Union(Nothing, Dict{String, BkAny})
 	uuid4 = Base.Random.uuid4

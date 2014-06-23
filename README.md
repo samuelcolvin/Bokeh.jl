@@ -46,14 +46,14 @@ Methods:
 	y2 = map(xv -> xv^3 - 2xv^2 + 3xv, x)
 
 	# x vs. y and x vs. y2 on the same plot, will require autoopen set to false
-	set_autoopen(false)
+	autoopen(false)
 	plot(x, y)
 	hold()
 	plot(x, y2)
 	show()
 
 	# grid of plots
-	set_autoopen(false)
+	autoopen(false)
 
 	p1 = plot(x, y)
 

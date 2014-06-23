@@ -14,13 +14,25 @@ module Glyphs
         dash::Union(Nothing, Array{Int, 1})
     end
 
-    function Glyph(gtype::String; 
-    	linewidth=nothing, linecolor=nothing, fillcolor=nothing, linealpha=nothing, fillalpha=nothing, size=nothing, dash=nothing)
-    	Glyph(gtype, linewidth, linecolor, fillcolor, linealpha, fillalpha, size, dash)
+    function Glyph(;glyphtype=nothing,
+    	            linewidth=nothing, 
+                    linecolor=nothing, 
+                    fillcolor=nothing, 
+                    linealpha=nothing, 
+                    fillalpha=nothing, 
+                    size=nothing, 
+                    dash=nothing)
+        glyphtype == nothing && error("glyphtype is required in Glyph definitions")
+    	Glyph(glyphtype, linewidth, linecolor, fillcolor, linealpha, fillalpha, size, dash)
     end
 
     function Circle(;linewidth=1, linecolor="blue", fillcolor="blue", linealpha=1, fillalpha=0.5, size=4)
-        Glyph("circle",linewidth, linecolor, fillcolor, linealpha, fillalpha, size)
+        Glyph(glyphtype="circle", linewidth=linewidth, linecolor=linecolor, 
+            fillcolor=fillcolor, linealpha=linealpha, fillalpha=fillalpha, size=size)
+    end
+
+    function Line(;linewidth=1, linecolor="blue", linealpha=1.0, dash=nothing)
+        Glyph(glyphtype="line", linewidth=linewidth, linecolor=linecolor, linealpha=linealpha, dash=dash)
     end
 end
 
@@ -47,4 +59,60 @@ type Plot
     title::String
     width::Int
     height::Int
+end
+
+# heavily borrowed from Winston, thanks Winston!
+
+const chartokens = [
+    '-' => {:dash => nothing},
+    ':' => {:dash => [1, 4]},
+    ';' => {:dash => [1, 4, 2]},
+    # '+' => {:glyphtype => "plus"},
+    'o' => {:glyphtype => "circle"},
+    # '*' => {:glyphtype => "asterisk"},
+    # '.' => {:glyphtype => "dot"},
+    # 'x' => {:glyphtype => "cross"},
+    # 's' => {:glyphtype => "square"},
+    # 'd' => {:glyphtype => "diamond"},
+    # '^' => {:glyphtype => "triangle"},
+    # 'v' => {:glyphtype => "down-triangle"},
+    # '>' => {:glyphtype => "right-triangle"},
+    # '<' => {:glyphtype => "left-triangle"},
+    'y' => {:linecolor => "yellow"},
+    'm' => {:linecolor => "magenta"},
+    'c' => {:linecolor => "cyan"},
+    'r' => {:linecolor => "red"},
+    'g' => {:linecolor => "green"},
+    'b' => {:linecolor => "blue"},
+    'w' => {:linecolor => "white"},
+    'k' => {:linecolor => "black"},
+]
+
+function Base.convert(::Type{Glyph}, style::String)
+    styd = Dict{Symbol, Any}([:glyphtype => "line"])
+
+    for (k,v) in [ "--" => [4, 4], "-." => [1, 4, 2], ".-" => [1, 4, 2] ]
+        splitstyle = split(style, k)
+        if length(splitstyle) > 1
+            styd[:dash] = v
+            style = join(splitstyle)
+        end
+    end
+
+    for char in style
+        if haskey(chartokens, char)
+            for (k,v) in chartokens[char]
+                styd[k] = v
+            end
+        else
+            warn("unrecognized char '$char'")
+        end
+    end
+
+    filledglyphs = ["circle"]
+    if in(styd[:glyphtype], filledglyphs)
+        styd[:fillcolor] = styd[:linecolor]
+    end
+    @show styd
+    Glyph(;styd...)
 end
