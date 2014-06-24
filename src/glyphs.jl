@@ -99,7 +99,7 @@ const chartokens = [
 ]
 
 function Base.convert(::Type{Array{Glyph, 1}}, styles::String)
-    map(style -> Base.convert(Glyph, style), split(styles, '|'))
+    map(style -> convert(Glyph, style), split(styles, '|'))
 end
 
 function Base.convert(::Type{Glyph}, style::String)
@@ -126,6 +126,11 @@ function Base.convert(::Type{Glyph}, style::String)
     filledglyphs = ["circle"]
     if in(styd[:glyphtype], filledglyphs)
         styd[:fillcolor] = styd[:linecolor]
+        styd[:fillalpha] = DEFAULT_FILL_ALPHA
+    end
+    sizeglyphs = ["circle"]
+    if in(styd[:glyphtype], sizeglyphs)
+        !haskey(styd, :size) && (styd[:size] = DEFAULT_SIZE)
     end
     # @show styd
     Glyph(;styd...)

@@ -11,24 +11,18 @@ function Bokehjs.Glyph(glyph::Glyph,
 		"y" => ["units" => "data", "field" => "y"],
 		"x" => ["units" => "data", "field" => "x"],
 		])
-	if glyph.linewidth != nothing
-		glyphspec["line_width"] = ["units" => "data", "value" => glyph.linewidth]
-	end
-	if glyph.linecolor != nothing
-		glyphspec["line_color"] = ["value" => glyph.linecolor]
-	end
-	if glyph.fillcolor != nothing
-		glyphspec["fill_color"] = ["value" => glyph.fillcolor]
-	end
-	if glyph.linealpha != nothing
-		glyphspec["line_alpha"] = ["value" => glyph.linealpha]
-	end
-	if glyph.size != nothing
-		glyphspec["size"] = ["units" => "screen", "value" => glyph.size]
-	end
-	if glyph.dash != nothing
-		glyphspec["line_dash"] = glyph.dash
-	end
+	glyph.linewidth != nothing && (glyphspec["line_width"] = ["units" => "data", "value" => glyph.linewidth])
+
+	glyph.linecolor != nothing && (glyphspec["line_color"] = ["value" => glyph.linecolor])
+	glyph.fillcolor != nothing && (glyphspec["fill_color"] = ["value" => glyph.fillcolor])
+
+	glyph.linealpha != nothing && (glyphspec["line_alpha"] = ["value" => glyph.linealpha])
+	glyph.fillalpha != nothing && (glyphspec["fill_alpha"] = ["value" => glyph.fillalpha])
+
+	glyph.size != nothing && (glyphspec["size"] = ["units" => "screen", "value" => glyph.size])
+
+	glyph.dash != nothing && (glyphspec["line_dash"] = glyph.dash)
+	
 	Bokehjs.Glyph(coldata, xrange, yrange, glyphspec)
 end
 
