@@ -14,6 +14,16 @@ module Glyphs
         dash::Union(Nothing, Array{Int, 1})
     end
 
+    function Base.show(io::IO, g::Glyph)
+        names = Glyph.names
+        features = String[]
+        for name in Glyph.names
+            showname = name == :gtype ? :type : name
+            g.(name) != nothing && push!(features, "$showname: $(g.(name))")
+        end
+        print(io, "<Glyph ", join(features, ", "), ">")
+    end
+
     function Glyph(;glyphtype=nothing,
     	            linewidth=nothing, 
                     linecolor=nothing, 
@@ -88,8 +98,11 @@ const chartokens = [
     'k' => {:linecolor => "black"},
 ]
 
+function Base.convert(::Type{Array{Glyph, 1}}, styles::String)
+    map(style -> Base.convert(Glyph, style), split(styles, '|'))
+end
+
 function Base.convert(::Type{Glyph}, style::String)
-    style == DEFAULT_LINE_STR && return DEFAULT_LINE
     styd = Dict{Symbol, Any}([:glyphtype => "line"])
 
     for (k,v) in [ "--" => [4, 4], "-." => [1, 4, 2], ".-" => [1, 4, 2] ]

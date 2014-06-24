@@ -43,10 +43,13 @@ function plot(x::RealVect, y::RealVect, args...; kwargs...)
     # this seems ugly but is apparently pretty quick even for big mats
     plot(reshape(x, length(x), 1), reshape(y, length(y), 1), args...; kwargs...)
 end
-function plot(x::RealMat, y::RealMat, style::String=DEFAULT_LINE_STR; glyph=DEFAULT_LINE, kwargs...)
+
+function plot(x::RealMat, y::RealMat, styles::String=DEFAULT_GLYPHS_STR; glyphs::Vector{Glyph}=DEFAULT_GLYPHS, kwargs...)
     size(x) != size(y) && error("size of x and y are not equal: x: $(size(x)), y: $(size(y))")
-    glyph = glyph == DEFAULT_LINE ? convert(Glyph, style) : glyph
-    dcs = DataColumn[DataColumn(x[:,i], y[:,i], glyph) for i in 1:size(x,2)]
+    glyphs = glyphs == DEFAULT_GLYPHS ? convert(Vector{Glyph}, styles) : glyphs
+    cols = size(x,2)
+    glyphs = repmat(glyphs, int(ceil(cols / length(glyphs))))
+    dcs = DataColumn[DataColumn(x[:,i], y[:,i], glyphs[i]) for i in 1:cols]
     plot(dcs; kwargs...)
 end
 

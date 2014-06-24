@@ -12,11 +12,13 @@ module Bokeh
 	# default height of plot
 	HEIGHT = 600
 	height(h::Int) = (global HEIGHT = h)
+	# default glyph type
+	DEFAULT_GLYPHS_STR = "b|r|g|k|y|c|m|b--|r--|g--|k--|y--|c--|m--|--"
+	DEFAULT_GLYPHS = convert(Vector{Glyph}, DEFAULT_GLYPHS_STR)
+	default_glyphs(gs::Vector{Glyph}) = (global DEFAULT_GLYPHS = gs)
+	default_glyphs(s::String) = (global DEFAULT_GLYPHS = convert(Vector{Glyph},s))
+	default_glyphs() = DEFAULT_GLYPHS
 	# default filename 
-	DEFAULT_LINE = Glyphs.Line()
-	# this could be done better?
-	DEFAULT_LINE_STR = "dft"
-	default_line(g::Glyph) = (global DEFAULT_LINE = g)
 	FILENAME = "bokeh_plot.html"
 	filename(fn::String) = (global FILENAME = fn)
 	# default plot title
@@ -35,7 +37,7 @@ module Bokeh
 		   autoopen, 
 		   width,
 		   height,
-		   default_line,
+		   default_glyphs,
 		   filename,
 		   title
 end
