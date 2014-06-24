@@ -147,6 +147,7 @@ function rendertemplate(models::String, plotcon::Bokehjs.PlotContext, fname::Str
 		"css_path" => csspath
 	])
 	result = render(template, context)
+	ispath(fname) && warn("$fname already exists, overwriting")
 	open(fname, "w") do f
 		print(f, result)
 	end

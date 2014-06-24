@@ -12,7 +12,7 @@ dft_glyphs = glyphs()
 glyphs(dft_glyphs)
 dft_size = glyphsize()
 glyphsize(dft_size)
-filename("testing_bokeh_plot.html")
+plotfile("testing_bokeh_plot.html")
 title("Testing Bokeh Plot")
 
 

@@ -21,7 +21,7 @@ module Glyphs
             showname = name == :gtype ? :type : name
             g.(name) != nothing && push!(features, "$showname: $(g.(name))")
         end
-        print(io, "<Glyph ", join(features, ", "), ">")
+        print(io, "Glyph(", join(features, ", "), ")")
     end
 
     function Glyph(;glyphtype=nothing,
@@ -69,6 +69,10 @@ type Plot
     title::String
     width::Int
     height::Int
+end
+
+function Base.show(io::IO, p::Plot)
+    print(io, "Plot(\"$(p.title)\" with $(length(p.datacolumns)) datacolumns)")
 end
 
 # heavily borrowed from Winston, thanks Winston!

@@ -3,7 +3,7 @@ include("generate.jl")
 
 typealias URange Union(Union(Range, UnitRange))
 
-function show(plot::Plot)
+function Base.show(plot::Plot)
     openhtml(plot.filename)
 end
 
