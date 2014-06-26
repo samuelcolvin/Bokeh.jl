@@ -50,10 +50,6 @@ function plot(columns::Array{DataColumn, 1};
               title::String=TITLE, width::Int=WIDTH, height::Int=HEIGHT,
               filename::String=FILENAME, autoopen::Bool=AUTOOPEN)
     plt = Plot(columns, filename, title, width, height)
-    if autoopen
-        models, plotcon = genmodels(plt)
-        rendertemplate(models, plotcon, plt.filename)
-        showplot(plt)
-    end
+    !isinteractive() && autoopen && display(plt)
     return plt
 end
