@@ -18,6 +18,9 @@ function Base.writemime(io::IO, ::MIME"text/plain", p::Plot)
     print(io, _basic(p))
 end
 
+# seems we have to override show as well as writemime
+Base.show(io::IO, p::Plot) = print(io, _basic(p))
+
 if !isdefined(Main, :IJulia)
 	type BokehDisplay <: Display
 	end    

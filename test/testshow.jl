@@ -8,4 +8,4 @@ y = sin(x)#[sin(x) cos(x)]
 debug(true)
 # plot(y, "k--")
 ys = [sin(x) cos(x)]
-plot(ys, "ko|bo")
+p=plot(ys, "ko|bo")
