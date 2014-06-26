@@ -6,6 +6,10 @@ Bokeh is a work in progress, but it's getting there, the examples below start to
 
 It works with IJulia, an example can be found in [doc](doc).
 
+Install with:
+    
+    Pkg.add("Bokeh")
+
 Methods: 
 
 	x = 1:10
