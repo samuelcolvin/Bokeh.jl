@@ -1,11 +1,4 @@
-include("browser.jl")
-include("generate.jl")
-
 typealias URange Union(Union(Range, UnitRange))
-
-function Base.show(plot::Plot)
-    openhtml(plot.filename)
-end
 
 function plot(f::Function, args...;kwargs...)
     plot([f], args...; kwargs...)
@@ -60,7 +53,7 @@ function plot(columns::Array{DataColumn, 1};
     if autoopen
         models, plotcon = genmodels(plt)
         rendertemplate(models, plotcon, plt.filename)
-        show(plt)
+        showplot(plt)
     end
     return plt
 end

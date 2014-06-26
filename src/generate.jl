@@ -1,5 +1,3 @@
-include("bokehjs.jl")
-include("glyphs.jl")
 using Mustache
 
 function Bokehjs.Glyph(glyph::Glyph,

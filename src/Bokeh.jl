@@ -1,5 +1,10 @@
 module Bokeh
+	include("bokehjs.jl")
+	include("objects.jl")
+	include("generate.jl")
 	include("plot.jl")
+	include("browser.jl")
+	import Base: display
 
 	# displays indented JSON, uses unminified js and saves the raw JSON to "bokeh_models.json" if true
 	DEBUG = false
@@ -36,7 +41,7 @@ module Bokeh
 	# default filename 
 	FILENAME = "bokeh_plot.html"
 	warn_overwrite() = ispath(FILENAME) && isinteractive() && warn(
-	"$FILENAME already exists, it will be overwritten when a plot is generated.\nChange it with plotfile(<new file name>)")
+	"$FILENAME already exists, it will be overwritten when a plot is generated.\nChange the output file with plotfile(<new file name>)")
 	warn_overwrite()
 	function plotfile(fn::String) 
 		global FILENAME = fn
@@ -59,7 +64,8 @@ module Bokeh
 		   Glyphs,
 		   Glyph,
 		   Plot,
-		   DataColumn, 
+		   DataColumn,
+		   showplot,
 		   debug, 
 		   autoopen, 
 		   width,
@@ -68,4 +74,18 @@ module Bokeh
 		   glyphsize,
 		   plotfile,
 		   title
+
+	# type BokehDisplay <: Display
+	#     figs::Dict{Int,Plot}
+	#     figs::Vector{Int}
+	#     current_fig::Int
+	#     next_fig::Int
+	#     BokehDisplay() = new(Dict{Int,Plot}(), Int[], 0, 1)
+	# end
+
+	# # function Base.writemime(io::IO, ::MIME"image/png", plot::Plot)
+	# #     openhtml(plot.filename)
+	# # end
+	# display(p::Plot) = openhtml(plot.filename)
+	# pushdisplay(BokehDisplay())
 end

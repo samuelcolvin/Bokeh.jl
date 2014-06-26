@@ -75,6 +75,10 @@ function Base.show(io::IO, p::Plot)
     print(io, "Plot(\"$(p.title)\" with $(length(p.datacolumns)) datacolumns)")
 end
 
+function showplot(plot::Plot)
+    openhtml(plot.filename)
+end
+
 # heavily borrowed from Winston, thanks Winston!
 
 const chartokens = [
