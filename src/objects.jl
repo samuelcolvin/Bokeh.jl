@@ -65,6 +65,7 @@ end
 
 type Plot
     datacolumns::Array{DataColumn, 1}
+    tools::Vector{Symbol}
     filename::String
     title::String
     width::Int

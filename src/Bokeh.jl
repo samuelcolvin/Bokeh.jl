@@ -75,6 +75,11 @@ module Bokeh
 	curplot(cp::Plot) = (global CURPLOT = cp)
 	curplot() = CURPLOT
 
+	# tools to add to display
+	TOOLS = [:pan, :wheelzoom, :boxzoom, :resize, :reset]
+	tools(t::Vector{Symbol}) = (global TOOLS = t)
+	tools() = TOOLS
+
 	export plot,
 		   setupnotebook,
 		   Glyphs,
@@ -92,5 +97,6 @@ module Bokeh
 		   title,
 		   counteval,
 		   hold,
-		   curplot
+		   curplot,
+		   tools
 end

@@ -63,8 +63,26 @@ function _genmodels(plot::Plot)
 	pushdict!(obs, grid0, doc)
 	pushdict!(obs, grid1, doc)
 
-	pantool = Bokehjs.Metatool("PanTool", bkplot, String["width", "height"])
-	pushdict!(obs, pantool, doc)
+	if in(:pan, plot.tools)
+		pantool = Bokehjs.Metatool("PanTool", bkplot, String["width", "height"])
+		pushdict!(obs, pantool, doc)
+	end
+	if in(:wheelzoom, plot.tools)
+		wheelzoomtool = Bokehjs.Metatool("WheelZoomTool", bkplot, String["width", "height"])
+		pushdict!(obs, wheelzoomtool, doc)
+	end
+	if in(:boxzoom, plot.tools)
+		boxzoomtool = Bokehjs.Metatool("BoxZoomTool", bkplot)
+		pushdict!(obs, boxzoomtool, doc)
+	end
+	if in(:resize, plot.tools)
+		resizetool = Bokehjs.Metatool("ResizeTool", bkplot)
+		pushdict!(obs, resizetool, doc)
+	end
+	if in(:reset, plot.tools)
+		resettool = Bokehjs.Metatool("ResetTool", bkplot)
+		pushdict!(obs, resettool, doc)
+	end
 
 	renderers = Bokehjs.PlotObject[
 		axis0,
@@ -73,7 +91,7 @@ function _genmodels(plot::Plot)
 		grid1
 	]
 	append!(renderers, bkglyphs)
-	tools = Bokehjs.PlotObject[pantool]
+	tools = Bokehjs.PlotObject[pantool, wheelzoomtool, boxzoomtool, resizetool, resettool]
 	bkplot = Bokehjs.Plot(bkplot,
 				dr1x,
 				dr1y,

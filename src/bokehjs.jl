@@ -27,15 +27,13 @@ module Bokehjs
 
 	abstract TickFormatter <: PlotObject
 
-	function typid(plotob::PlotObject)
-		attrs = typeof(plotob).names
-		obtype = in(:_type_name, attrs) ? plotob._type_name : typeof(plotob)
-		Dict{String, BkAny}([
-			"type" => obtype,
-			"id" => plotob.uuid])
+	type TypeID
+		plotob::Union(PlotObject, Nothing)
 	end
 
-	typid(plotob::Nothing) = nothing
+	function TypeID()
+		TypeID(nothing)
+	end
 
 	type Plot <: PlotObject
 		uuid::UUID
@@ -45,8 +43,8 @@ module Bokehjs
 		canvas_height::Int
 		outer_width::Int
 		canvas_width::Int
-		x_range::Dict{String, BkAny}
-		y_range::Dict{String, BkAny}
+		x_range::TypeID
+		y_range::TypeID
 		renderers::Array{BkAny, 1}
 		data_sources::Array{BkAny, 1}
 	end
@@ -75,7 +73,7 @@ module Bokehjs
 	end
 
 	function DataRange1d(cdss::Array{ColumnDataSource, 1}, columns::Array{String, 1})
-		source(cds) = Dict{String, BkAny}(["columns" => columns, "source" => typid(cds)])
+		source(cds) = Dict{String, BkAny}(["columns" => columns, "source" => TypeID(cds)])
 		sources = map(source, cdss)
 		DataRange1d(uuid4(), sources)
 	end
@@ -95,9 +93,9 @@ module Bokehjs
 		dimension::Int
 		bounds::String
 		location::String
-		formatter::Dict{String, BkAny}
-		ticker::Dict{String, BkAny}
-		plot::Dict{String, BkAny}
+		formatter::TypeID
+		ticker::TypeID
+		plot::TypeID
 	end
 
 	function LinearAxis(dimension::Int, tf::TickFormatter, t::Ticker, plot::Plot)
@@ -105,49 +103,53 @@ module Bokehjs
 				   dimension, 
 				   "auto",
 				   "min",
-				   typid(tf), 
-				   typid(t), 
-				   typid(plot))
+				   TypeID(tf), 
+				   TypeID(t), 
+				   TypeID(plot))
 	end
 
 	type Grid <: Renderer
 		uuid::UUID
 		dimension::Int
-		plot::Dict{String, BkAny}
-		axis::Dict{String, BkAny}
+		plot::TypeID
+		axis::TypeID
 	end
 
 	function Grid(dimension::Int, plot::Plot, axis::Axis)
-		Grid(uuid4(), dimension, typid(plot), typid(axis))
+		Grid(uuid4(), dimension, TypeID(plot), TypeID(axis))
 	end
 
 	type Glyph <: Renderer
 		uuid::UUID
-		data_source::Dict{String, BkAny}
+		data_source::TypeID
 		server_data_source::NullDict
-		xdata_range::NullDict
-		ydata_range::NullDict
+		xdata_range::TypeID
+		ydata_range::TypeID
 		glyphspec::Dict{String, BkAny}
 	end
 
 	function Glyph(coldata::ColumnDataSource, xrange::NullBkRange, yrange::NullBkRange, glyphspec::Dict{String, BkAny})
-		data_source = typid(coldata)
+		data_source = TypeID(coldata)
 		server_data_source = nothing
-		xdata_range = typid(xrange)
-		ydata_range = typid(yrange)
+		xdata_range = TypeID(xrange)
+		ydata_range = TypeID(yrange)
 		Glyph(uuid4(), data_source, server_data_source, xdata_range, ydata_range, glyphspec)
 	end
 
 	type Metatool <: PlotObject
 		uuid::UUID
 		_type_name::String
-		plot::Dict{String, BkAny}
+		plot::TypeID
 		dimensions::Union(Array{String, 1}, Nothing)
 	end
 
 	function Metatool(typename::String, plot::Plot, dimensions)
-		plot = typid(plot)
+		plot = TypeID(plot)
 		Metatool(uuid4(), typename, plot, dimensions)
+	end
+
+	function Metatool(typename::String, plot::Plot)
+		Metatool(typename, plot, nothing)
 	end
 
 	_DEFAULT_HEIGHT = 600
@@ -160,8 +162,8 @@ module Bokehjs
 			 _DEFAULT_HEIGHT,
 			 _DEFAULT_WIDTH,
 			 _DEFAULT_WIDTH,
-			 Dict{String, BkAny}(),
-			 Dict{String, BkAny}(),
+			 TypeID(),
+			 TypeID(),
 			 Nothing[],
 			 Nothing[])
 	end
@@ -174,11 +176,11 @@ module Bokehjs
 				  title::String="Bokeh Plot",
 				  height::Int=_DEFAULT_HEIGHT,
 				  width::Int=_DEFAULT_WIDTH)
-		data_sources = BkAny[]# [typid(coldata)]
-		xdata_range = typid(xrange)
-		ydata_range = typid(yrange)
-		renderers = map(typid, renderers)
-		tools = map(typid, tools)
+		data_sources = BkAny[]# [TypeID(coldata)]
+		xdata_range = TypeID(xrange)
+		ydata_range = TypeID(yrange)
+		renderers = map(TypeID, renderers)
+		tools = map(TypeID, tools)
 		Plot(plot.uuid,
 			 title,
 			 tools,
@@ -194,11 +196,11 @@ module Bokehjs
 
 	type PlotContext <: PlotObject
 		uuid::UUID
-		children::Array{Dict{String, BkAny}, 1}
+		children::Array{TypeID, 1}
 	end
 
 	function PlotContext(plot::Plot)
-		PlotContext(uuid4(),[typid(plot)])
+		PlotContext(uuid4(),[TypeID(plot)])
 	end
 end
 typealias RealVect Bokehjs.RealVect
@@ -211,8 +213,26 @@ if in(:_print, names(JSON, true))
 	function JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID)
 	    JSON._print(io, state, string(uuid))
 	end
+	function JSON._print(io::IO, state::JSON.State, tid::Bokehjs.TypeID)
+		tid.plotob == nothing && (return JSON._print(io, state, nothing))
+		attrs = typeof(tid.plotob).names
+		obtype = in(:_type_name, attrs) ? tid.plotob._type_name : typeof(tid.plotob)
+		d = Dict{String, BkAny}([
+			"type" => obtype,
+			"id" => tid.plotob.uuid])
+	    JSON._print(io, state, d)
+	end
 else
 	function JSON.print(io::IO, uuid::Bokehjs.UUID)
 	    JSON.print(io, string(uuid))
 	end	
+	function JSON.print(io::IO, tid::Bokehjs.TypeID)
+		tid.plotob == nothing && (return JSON.print(io, nothing))
+		attrs = typeof(tid.plotob).names
+		obtype = in(:_type_name, attrs) ? tid.plotob._type_name : typeof(tid.plotob)
+		d = Dict{String, BkAny}([
+			"type" => obtype,
+			"id" => tid.plotob.uuid])
+	    JSON.print(io, d)
+	end
 end

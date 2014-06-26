@@ -22,8 +22,7 @@ end
 Base.show(io::IO, p::Plot) = print(io, _basic(p))
 
 if !isdefined(Main, :IJulia)
-	type BokehDisplay <: Display
-	end
+	type BokehDisplay <: Display; end
     pushdisplay(BokehDisplay())
 
 	function Base.display(d::BokehDisplay, p::Plot)
