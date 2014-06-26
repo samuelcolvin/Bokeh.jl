@@ -23,22 +23,28 @@ Base.show(io::IO, p::Plot) = print(io, _basic(p))
 
 if !isdefined(Main, :IJulia)
 	type BokehDisplay <: Display
-	end    
+	end
+    pushdisplay(BokehDisplay())
 
 	function Base.display(d::BokehDisplay, p::Plot)
 		display("text/plain", p)
-	    html = renderplot(p, false)
-		if ispath(p.filename) 
-			println()
-			warn("$(p.filename) already exists, overwriting")
-		end
-		open(p.filename, "w") do f
-			print(f, html)
-		end
-	    openhtmldoc(p.filename)
+		AUTOOPEN && showplot(p)
     end
-    pushdisplay(BokehDisplay())
 end
+
+function showplot(p::Plot)
+    html = renderplot(p, false)
+	if ispath(p.filename) 
+		println()
+		warn("$(p.filename) already exists, overwriting")
+	end
+	open(p.filename, "w") do f
+		print(f, html)
+	end
+    openhtmldoc(p.filename)
+end
+
+showplot() = showplot(CURPLOT)
 
 function setupnotebook()
 	jspath, csspath = _bokehjs_paths(!DEBUG)

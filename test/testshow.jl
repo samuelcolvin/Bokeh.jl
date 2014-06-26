@@ -7,5 +7,9 @@ y = sin(x)#[sin(x) cos(x)]
 # with the plot file (which by default is "bokeh_plot.html")
 debug(true)
 # plot(y, "k--")
+hold(true)
+autoopen(false)
 ys = [sin(x) cos(x)]
-p=plot(ys, "ko|bo")
+plot(ys, "ko|bo")
+plot(sin)
+showplot()

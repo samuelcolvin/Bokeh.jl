@@ -60,7 +60,23 @@ module Bokeh
 	counteval(count::Int) = (global COUNTEVAL = count)
 	counteval() = COUNTEVAL
 
+	# hold on to plots
+	HOLD = false
+	function hold(h::Bool)
+		if !h
+			global CURPLOT = nothing
+		end
+		global HOLD = h
+	end
+	hold() = hold(!HOLD)
+
+	# current plot object
+	CURPLOT = nothing
+	curplot(cp::Plot) = (global CURPLOT = cp)
+	curplot() = CURPLOT
+
 	export plot,
+		   setupnotebook,
 		   Glyphs,
 		   Glyph,
 		   Plot,
@@ -74,5 +90,7 @@ module Bokeh
 		   glyphsize,
 		   plotfile,
 		   title,
-		   setupnotebook
+		   counteval,
+		   hold,
+		   curplot
 end

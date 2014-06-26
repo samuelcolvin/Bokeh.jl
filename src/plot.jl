@@ -49,7 +49,17 @@ end
 function plot(columns::Array{DataColumn, 1};
               title::String=TITLE, width::Int=WIDTH, height::Int=HEIGHT,
               filename::String=FILENAME, autoopen::Bool=AUTOOPEN)
-    plt = Plot(columns, filename, title, width, height)
+    if CURPLOT == nothing
+        plt = Plot(columns, filename, title, width, height)
+        HOLD && (global CURPLOT = plt)
+    else
+        append!(CURPLOT.datacolumns, columns)
+        filename != FILENAME && (CURPLOT.filename = filename)
+        title != TITLE && (CURPLOT.title = title)
+        width != WIDTH && (CURPLOT.width = width)
+        height != HEIGHT && (CURPLOT.height = height)
+        plt = CURPLOT
+    end
     !isinteractive() && autoopen && display(plt)
     return plt
 end

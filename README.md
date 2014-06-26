@@ -40,17 +40,16 @@ Methods:
 	plot(ys, "r--|b:")
 
 	y2 = map(xv -> xv^3 - 2xv^2 + 3xv, x)
-
-	# ======================
-	# not yet implemented:
-	# ======================
-
 	# x vs. y and x vs. y2 on the same plot, will require autoopen set to false
 	autoopen(false)
 	plot(x, y)
 	hold()
 	plot(x, y2)
-	show()
+	showplot()
+
+	# ======================
+	# not yet implemented:
+	# ======================
 
 	# grid of plots
 	autoopen(false)
@@ -60,4 +59,4 @@ Methods:
 	p2 = plot(x, y2)
 
 	plot(p1, p2)
-	show()
+	showplot()
