@@ -1,10 +1,7 @@
 function openhtmldoc(filepath::String)
-	os = Sys.OS_NAME 
-	open = os == :Linux ? "xdg-open" :
-		   os == :Darwin ? "open" :
-		   warn("Not Implemented: No idea how to open a browser in Windows, perhaps you could work it out and submit a pull request?")
-	open == nothing && return
-	run(`$open $filepath`)
+    @linux_only run(`xdg-open $filepath`)
+    @osx_only run(`open $filepath`)
+    @windows_only run(`cmd /c start $filepath`)
 end
 
 _basic(p::Plot) = "Plot(\"$(p.title)\" with $(length(p.datacolumns)) datacolumns)"
