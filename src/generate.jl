@@ -194,12 +194,16 @@ function renderplot(plot::Plot, isijulia::Bool=false)
     _rendertemplate(modelsjson, plotcontext, isijulia)
 end
 
+renderplot() = renderplot(CURPLOT)
+
 function genplot(p::Plot, filename::NullString=nothing)
 	filename = filename == nothing ? p.filename : filename
     html = renderplot(p, false)
-	if ispath(filename) 
-		println()
-		warn("$(p.filename) already exists, overwriting")
+	if ispath(filename)
+		if WARN_FILE != filename
+			warn("$(filename) already exists, overwriting")
+			global WARN_FILE = filename
+		end
 	end
 	open(filename, "w") do f
 		print(f, html)

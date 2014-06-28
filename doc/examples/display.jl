@@ -24,6 +24,10 @@ genplot(myplot)
 # you can also specify the filename directly to genplot:
 genplot(myplot, "display1.html")
 
+# underneither genplot there's renderplot which returns the actual html
+html = renderplot(myplot)
+println(html[1:100], "...")
+
 # however it also keeps a reference to the current plot, which you can access
 plot(x, cos(x))
 showplot(curplot())

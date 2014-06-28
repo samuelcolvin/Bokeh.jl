@@ -80,6 +80,10 @@ module Bokeh
 	tools(t::Vector{Symbol}) = (global TOOLS = t)
 	tools() = TOOLS
 
+	# to avoid giving the same warning lots of times remember the file we've
+	# just warned about overwriting
+	WARN_FILE = nothing
+
 	export plot,
 		   setupnotebook,
 		   GlyphBase,
