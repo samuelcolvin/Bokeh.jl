@@ -39,16 +39,16 @@ module Bokeh
 	DEFAULT_FILL_ALPHA = 0.7
 
 	# default filename 
-	FILENAME = "bokeh_plot.html"
-	warn_overwrite() = ispath(FILENAME) && isinteractive() && !isdefined(Main, :IJulia) && warn(
-	"$FILENAME already exists, it will be overwritten when a plot is generated.\nChange the output file with plotfile(<new file name>)")
+	PLOTFILE = "bokeh_plot.html"
+	warn_overwrite() = ispath(PLOTFILE) && isinteractive() && !isdefined(Main, :IJulia) && warn(
+	"$PLOTFILE already exists, it will be overwritten when a plot is generated.\nChange the output file with plotfile(<new file name>)")
 	warn_overwrite()
 	function plotfile(fn::String) 
-		global FILENAME = fn
+		global PLOTFILE = fn
 		warn_overwrite()
 		nothing
 	end
-	plotfile() = FILENAME
+	plotfile() = PLOTFILE
 	
 	# default plot title
 	TITLE = "Bokeh Plot"
@@ -82,7 +82,7 @@ module Bokeh
 
 	export plot,
 		   setupnotebook,
-		   Glyphs,
+		   GlyphBase,
 		   Glyph,
 		   Plot,
 		   DataColumn,

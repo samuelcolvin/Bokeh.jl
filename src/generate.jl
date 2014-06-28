@@ -63,25 +63,31 @@ function _genmodels(plot::Plot)
 	pushdict!(obs, grid0, doc)
 	pushdict!(obs, grid1, doc)
 
+	tools = Bokehjs.PlotObject[]
 	if in(:pan, plot.tools)
 		pantool = Bokehjs.Metatool("PanTool", bkplot, String["width", "height"])
 		pushdict!(obs, pantool, doc)
+		push!(tools, pantool)
 	end
 	if in(:wheelzoom, plot.tools)
 		wheelzoomtool = Bokehjs.Metatool("WheelZoomTool", bkplot, String["width", "height"])
 		pushdict!(obs, wheelzoomtool, doc)
+		push!(tools, wheelzoomtool)
 	end
 	if in(:boxzoom, plot.tools)
 		boxzoomtool = Bokehjs.Metatool("BoxZoomTool", bkplot)
 		pushdict!(obs, boxzoomtool, doc)
+		push!(tools, boxzoomtool)
 	end
 	if in(:resize, plot.tools)
 		resizetool = Bokehjs.Metatool("ResizeTool", bkplot)
 		pushdict!(obs, resizetool, doc)
+		push!(tools, resizetool)
 	end
 	if in(:reset, plot.tools)
 		resettool = Bokehjs.Metatool("ResetTool", bkplot)
 		pushdict!(obs, resettool, doc)
+		push!(tools, resettool)
 	end
 
 	renderers = Bokehjs.PlotObject[
@@ -91,7 +97,7 @@ function _genmodels(plot::Plot)
 		grid1
 	]
 	append!(renderers, bkglyphs)
-	tools = Bokehjs.PlotObject[pantool, wheelzoomtool, boxzoomtool, resizetool, resettool]
+	
 	bkplot = Bokehjs.Plot(bkplot,
 				dr1x,
 				dr1y,
@@ -164,7 +170,7 @@ function _rendertemplate(models::String, plotcon::Bokehjs.PlotContext, isijulia:
 	jspath, csspath = _bokehjs_paths(!DEBUG)
 	jscss = _render_jscss(jspath, csspath, isijulia)
 	if DEBUG
-		open("bokeh_models.json", "w") do f
+		open(replace(PLOTFILE, ".html", "") * ".json", "w") do f
 			print(f, models)
 		end
 	end

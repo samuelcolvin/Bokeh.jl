@@ -26,7 +26,8 @@ function plot(x::RealVect, y::RealMat, args...; kwargs...)
 end
 
 function plot(y::RealMatVect, args...; kwargs...)
-    x = 1:size(y, 1)
+    # use 0:(length - 1) so the x values are the sames as the indices of y
+    x = 0:(size(y, 1) - 1)
     x = ndims(y) > 1 ? repmat(x, 1, size(y, 2)) : x
     plot(x, y, args...; kwargs...)
 end
@@ -47,18 +48,24 @@ function plot(x::RealMat, y::RealMat, styles::String=DEFAULT_GLYPHS_STR; glyphs:
 end
 
 function plot(columns::Array{DataColumn, 1};
-              title::String=TITLE, width::Int=WIDTH, height::Int=HEIGHT,
-              filename::String=FILENAME, autoopen::Bool=AUTOOPEN, tools::Array{Symbol, 1}=TOOLS)
+              title::NullString = nothing, width::NullInt = nothing, height::NullInt = nothing,
+              plotfile::NullString = nothing, tools::Union(Nothing, Array{Symbol, 1}) = nothing, 
+              autoopen::Bool=AUTOOPEN)
     if CURPLOT == nothing
-        plt = Plot(columns, tools, filename, title, width, height)
+        plt = Plot(columns, 
+            tools == nothing ? TOOLS : tools, 
+            plotfile == nothing ? PLOTFILE : plotfile, 
+            title == nothing ? TITLE : title, 
+            width == nothing ? WIDTH : width, 
+            height == nothing ? HEIGHT : height)
         HOLD && (global CURPLOT = plt)
     else
         append!(CURPLOT.datacolumns, columns)
-        tools != TOOLS && (CURPLOT.tools = tools)
-        filename != FILENAME && (CURPLOT.filename = filename)
-        title != TITLE && (CURPLOT.title = title)
-        width != WIDTH && (CURPLOT.width = width)
-        height != HEIGHT && (CURPLOT.height = height)
+        tools != nothing && (CURPLOT.tools = tools)
+        plotfile != nothing && (CURPLOT.filename = plotfile)
+        title != nothing && (CURPLOT.title = title)
+        width != nothing && (CURPLOT.width = width)
+        height != nothing && (CURPLOT.height = height)
         plt = CURPLOT
     end
     !isinteractive() && autoopen && showplot(plt)

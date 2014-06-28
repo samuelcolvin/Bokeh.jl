@@ -1,4 +1,4 @@
-module Glyphs
+module GlyphBase
     typealias NullString Union(String, Nothing)
     typealias NullFloat Union(Float64, Nothing)
     typealias NullInt Union(Int, Nothing)
@@ -46,7 +46,10 @@ module Glyphs
     end
 end
 
-typealias Glyph Glyphs.Glyph
+typealias Glyph GlyphBase.Glyph
+typealias NullString GlyphBase.NullString
+typealias NullFloat GlyphBase.NullFloat
+typealias NullInt GlyphBase.NullInt
 
 typealias NullRange Union(Range, Nothing)
 
