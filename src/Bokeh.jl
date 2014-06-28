@@ -86,6 +86,8 @@ module Bokeh
 		   Glyph,
 		   Plot,
 		   DataColumn,
+		   renderplot,
+		   genplot,
 		   showplot,
 		   debug, 
 		   autoopen, 

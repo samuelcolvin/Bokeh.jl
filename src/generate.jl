@@ -97,7 +97,7 @@ function _genmodels(plot::Plot)
 		grid1
 	]
 	append!(renderers, bkglyphs)
-	
+
 	bkplot = Bokehjs.Plot(bkplot,
 				dr1x,
 				dr1y,
@@ -189,10 +189,22 @@ function _rendertemplate(models::String, plotcon::Bokehjs.PlotContext, isijulia:
 	result = render(base, maincontext)
 end
 
-function renderplot(plot::Plot, isijulia::Bool)
+function renderplot(plot::Plot, isijulia::Bool=false)
     modelsjson, plotcontext = _genmodels(plot)
     _rendertemplate(modelsjson, plotcontext, isijulia)
 end
 
+function genplot(p::Plot, filename::NullString=nothing)
+	filename = filename == nothing ? p.filename : filename
+    html = renderplot(p, false)
+	if ispath(filename) 
+		println()
+		warn("$(p.filename) already exists, overwriting")
+	end
+	open(filename, "w") do f
+		print(f, html)
+	end
+end
 
+genplot() = genplot(CURPLOT)
 

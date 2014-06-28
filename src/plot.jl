@@ -51,6 +51,7 @@ function plot(columns::Array{DataColumn, 1};
               title::NullString = nothing, width::NullInt = nothing, height::NullInt = nothing,
               plotfile::NullString = nothing, tools::Union(Nothing, Array{Symbol, 1}) = nothing, 
               autoopen::Bool=AUTOOPEN)
+    !HOLD && (global CURPLOT = nothing)
     if CURPLOT == nothing
         plt = Plot(columns, 
             tools == nothing ? TOOLS : tools, 
@@ -58,7 +59,7 @@ function plot(columns::Array{DataColumn, 1};
             title == nothing ? TITLE : title, 
             width == nothing ? WIDTH : width, 
             height == nothing ? HEIGHT : height)
-        HOLD && (global CURPLOT = plt)
+        global CURPLOT = plt
     else
         append!(CURPLOT.datacolumns, columns)
         tools != nothing && (CURPLOT.tools = tools)

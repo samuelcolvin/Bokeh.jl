@@ -28,16 +28,10 @@ if !isdefined(Main, :IJulia)
     end
 end
 
-function showplot(p::Plot)
-    html = renderplot(p, false)
-	if ispath(p.filename) 
-		println()
-		warn("$(p.filename) already exists, overwriting")
-	end
-	open(p.filename, "w") do f
-		print(f, html)
-	end
-    openhtmldoc(p.filename)
+function showplot(p::Plot, filename::NullString=nothing)
+	genplot(p, filename)
+	filename = filename == nothing ? p.filename : filename
+    openhtmldoc(filename)
 end
 
 showplot() = showplot(CURPLOT)
