@@ -1,4 +1,5 @@
 function openhtmldoc(filepath::String)
+	NOSHOW && return
     @linux_only run(`xdg-open $filepath`)
     @osx_only run(`open $filepath`)
     @windows_only run(`cmd /c start $filepath`)

@@ -15,6 +15,7 @@ dft_size = glyphsize()
 glyphsize(dft_size)
 t = title()
 title(t)
+Bokeh.noshow(true)
 
 # check they're correct:
 # Bokeh.parse_spec("r--") |> println

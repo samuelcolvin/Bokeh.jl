@@ -84,6 +84,12 @@ module Bokeh
 	# just warned about overwriting
 	WARN_FILE = nothing
 
+	# this overrides autoopen and disables opening html files
+	# used for travis CI, shouldn't be necessary elsewhere
+	NOSHOW = false
+	noshow(b::Bool) = (global NOSHOW = b)
+
+
 	export plot,
 		   setupnotebook,
 		   GlyphBase,
