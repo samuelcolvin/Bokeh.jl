@@ -211,4 +211,5 @@ function genplot(p::Plot, filename::NullString=nothing)
 end
 
 genplot() = genplot(CURPLOT)
+genplot(filename::String) = genplot(CURPLOT, filename)
 

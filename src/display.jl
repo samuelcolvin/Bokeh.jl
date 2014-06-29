@@ -30,11 +30,11 @@ end
 
 function showplot(p::Plot, filename::NullString=nothing)
 	genplot(p, filename)
-	filename = filename == nothing ? p.filename : filename
-    openhtmldoc(filename)
+    openhtmldoc(filename == nothing ? p.filename : filename)
 end
 
 showplot() = showplot(CURPLOT)
+showplot(filename::String) = showplot(CURPLOT, filename)
 
 function setupnotebook()
 	jspath, csspath = _bokehjs_paths(!DEBUG)

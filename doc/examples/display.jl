@@ -1,8 +1,3 @@
-
-# in scripts (eg. here) that's done by calling showplot inside plot
-
-# if interactive() == true (eg. in the shell or IJulia)
-
 using Bokeh
 
 plotfile("display.html")

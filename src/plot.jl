@@ -47,27 +47,35 @@ function plot(x::RealMat, y::RealMat, styles::String=DEFAULT_GLYPHS_STR; glyphs:
     plot(dcs; kwargs...)
 end
 
-function plot(columns::Array{DataColumn, 1};
+function plot(columns::Array{DataColumn, 1}; extend::Union(Nothing, Plot) = nothing,
               title::NullString = nothing, width::NullInt = nothing, height::NullInt = nothing,
               plotfile::NullString = nothing, tools::Union(Nothing, Array{Symbol, 1}) = nothing, 
               autoopen::Bool=AUTOOPEN)
-    !HOLD && (global CURPLOT = nothing)
-    if CURPLOT == nothing
+    extend == nothing && !HOLD && (global CURPLOT = nothing)
+    if extend == nothing && CURPLOT == nothing
         plt = Plot(columns, 
             tools == nothing ? TOOLS : tools, 
             plotfile == nothing ? PLOTFILE : plotfile, 
             title == nothing ? TITLE : title, 
             width == nothing ? WIDTH : width, 
             height == nothing ? HEIGHT : height)
-        global CURPLOT = plt
+        extend == nothing && (global CURPLOT = plt)
     else
-        append!(CURPLOT.datacolumns, columns)
-        tools != nothing && (CURPLOT.tools = tools)
-        plotfile != nothing && (CURPLOT.filename = plotfile)
-        title != nothing && (CURPLOT.title = title)
-        width != nothing && (CURPLOT.width = width)
-        height != nothing && (CURPLOT.height = height)
-        plt = CURPLOT
+        function add2plot!(p::Plot)
+            append!(p.datacolumns, columns)
+            tools != nothing && (p.tools = tools)
+            plotfile != nothing && (p.filename = plotfile)
+            title != nothing && (p.title = title)
+            width != nothing && (p.width = width)
+            height != nothing && (p.height = height)
+        end
+        if extend == nothing
+            add2plot!(CURPLOT)
+            plt = CURPLOT
+        else
+            add2plot!(extend)
+            plt = extend
+        end
     end
     !isinteractive() && autoopen && showplot(plt)
     return plt
