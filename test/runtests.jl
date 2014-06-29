@@ -5,31 +5,26 @@ using Base.Test
 # some lime autoopen actually need to be set for travis
 debug(true)
 debug(false)
-autoopen(false)
-width(600)
-height(300)
+w = width()
+width(w)
+h = height()
+height(h)
 dft_glyphs = glyphs()
 glyphs(dft_glyphs)
 dft_size = glyphsize()
 glyphsize(dft_size)
-plotfile("testing_bokeh_plot.html")
-title("Testing Bokeh Plot")
-
-
-x = linspace(0, 2pi, 5)
-y = sin(x)
-ys = [sin(x) cos(x)]
-
-plot(x, y)
-plot(x, ys)
-plot(y)
-plot(ys)
-
-plot(cos)
-
-plot([sin, cos])
+t = title()
+title(t)
 
 # check they're correct:
 # Bokeh.parse_spec("r--") |> println
 
 # Bokeh.parse_spec("r:") |> println
+
+exdir = Pkg.dir("Bokeh", "doc", "examples")
+testingdir = Pkg.dir("Bokeh", "test", "_testing")
+mkpath(testingdir)
+cd(testingdir)
+for ex in filter(f -> endswith(f, ".jl"), readdir(exdir))
+	evalfile(joinpath(exdir, ex))
+end
