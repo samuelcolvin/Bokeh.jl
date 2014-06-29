@@ -1,10 +1,6 @@
 using Bokeh
 
 plotfile("display.html")
-# by default Bokeh.jl opens a plot whenever the "plot" function is called
-# we can stop that by setting autoopen to false, that in turn can be done
-# using the autoopen function or setting the autoopen key word argument in plot
-autoopen(false)
 
 x = linspace(0, 2pi)
 

@@ -47,6 +47,10 @@ function plot(x::RealMat, y::RealMat, styles::String=DEFAULT_GLYPHS_STR; glyphs:
     plot(dcs; kwargs...)
 end
 
+# there a good if boring reason that we have to use nothing for width, height etc.
+# rather than set the default to WIDTH, HEIGHT etc.:
+# its because we wouldn't be able to specify a new width or height on an extending plot
+# if the new value happened to be the same as WIDTH or HEIGHT
 function plot(columns::Array{DataColumn, 1}; extend::Union(Nothing, Plot) = nothing,
               title::NullString = nothing, width::NullInt = nothing, height::NullInt = nothing,
               plotfile::NullString = nothing, tools::Union(Nothing, Array{Symbol, 1}) = nothing, 

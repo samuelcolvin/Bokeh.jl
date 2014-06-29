@@ -1,5 +1,4 @@
 using Bokeh
-autoopen(false)
 
 x = linspace(-3pi, 3pi)
 y1 = cos(x)
