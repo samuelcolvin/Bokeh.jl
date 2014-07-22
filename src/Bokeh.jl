@@ -12,7 +12,7 @@ module Bokeh
 	debug() = DEBUG
 
 	# whether or not to show the plot immediately after `plot`
-	AUTOOPEN = false
+	AUTOOPEN = isdefined(Main, :IJulia)
 	autoopen(b::Bool) = (global AUTOOPEN = b)
 	autoopen() = AUTOOPEN
 

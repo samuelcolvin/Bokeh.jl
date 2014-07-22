@@ -107,7 +107,7 @@ function Base.convert(::Type{Array{Glyph, 1}}, styles::String)
 end
 
 function Base.convert(::Type{Glyph}, style::String)
-    styd = Dict{Symbol, Any}([:glyphtype => "line"])
+    styd = Dict{Symbol, Any}([:glyphtype => "line", :linecolor => "blue"])
 
     for (k,v) in [ "--" => [4, 4], "-." => [1, 4, 2], ".-" => [1, 4, 2] ]
         splitstyle = split(style, k)

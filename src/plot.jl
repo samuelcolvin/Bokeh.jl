@@ -32,6 +32,16 @@ function plot(y::RealMatVect, args...; kwargs...)
     plot(x, y, args...; kwargs...)
 end
 
+# need to work with arrays of arrays as well as mats:
+# function plot{T}(y::Array{Array{T,1}, 1}; kwargs...)
+#     len = maximum(map(length, y))
+#     y2 = zeros(len, length(y))
+#     for (i, ar) in enumerate(y)
+#         y2[:, 1:length(ar)] = ar
+#     end
+#     plot(y2; kwargs...)
+# end
+
 function plot(x::RealVect, y::RealVect, args...; kwargs...)
     # is there a more efficient way of forcing a matrix ?
     # this seems ugly but is apparently pretty quick even for big mats
