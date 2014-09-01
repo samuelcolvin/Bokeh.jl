@@ -2,4 +2,5 @@ env
 *.DS_Store
 /*.html
 /*.json
+deps/bokehjs
 pyxamples

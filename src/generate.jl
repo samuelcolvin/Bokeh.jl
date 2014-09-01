@@ -147,8 +147,8 @@ end
 
 function _bokehjs_paths(minified::Bool=true)
 	dir = Pkg.dir("Bokeh", "deps", "bokehjs")
-	jspath = joinpath(dir, "js", minified ? "bokeh.min.js" : "bokeh.js")
-	csspath = joinpath(dir, "css", minified ? "bokeh.min.css" : "bokeh.css")
+	jspath = joinpath(dir, "js", minified ? "bokeh-0.5.2.min.js" : "bokeh-0.5.2.js")
+	csspath = joinpath(dir, "css", minified ? "bokeh-0.5.2.min.css" : "bokeh-0.5.2.css")
 	(jspath, csspath)
 end
 
