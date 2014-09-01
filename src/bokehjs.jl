@@ -35,6 +35,22 @@ module Bokehjs
 		TypeID(nothing)
 	end
 
+	# needs adding:
+
+      # "below": [
+      #   {
+      #     "type": "LinearAxis", 
+      #     "id": "5611d06b-e8f7-45a4-8be4-ad619a5a05e8"
+      #   }
+      # ], 
+      # "above": [], 
+      # "right": [],
+      # "left": [
+      #   {
+      #     "type": "LinearAxis", 
+      #     "id": "e0871fee-a23c-46b7-9f51-b5db1ce90a14"
+      #   }
+      # ],
 	type Plot <: PlotObject
 		uuid::UUID
 		title::String
@@ -45,7 +61,12 @@ module Bokehjs
 		canvas_width::Int
 		x_range::TypeID
 		y_range::TypeID
+		# could be Array{TypeID, 1}?:
 		renderers::Array{BkAny, 1}
+		above::Array{TypeID, 1}
+		below::Array{TypeID, 1}
+		left::Array{TypeID, 1}
+		right::Array{TypeID, 1}
 		data_sources::Array{BkAny, 1}
 	end
 
@@ -165,6 +186,12 @@ module Bokehjs
 			 TypeID(),
 			 TypeID(),
 			 Nothing[],
+
+			 Nothing[],
+			 Nothing[],
+			 Nothing[],
+			 Nothing[],
+			 
 			 Nothing[])
 	end
 
@@ -172,25 +199,27 @@ module Bokehjs
 				  xrange::BkRange, 
 				  yrange::BkRange,
 				  renderers::Array{PlotObject,1},
+				  axes,#::Dict{Symbol, Array{PlotObject,1}},
 				  tools::Array{PlotObject,1},
 				  title::String="Bokeh Plot",
 				  height::Int=_DEFAULT_HEIGHT,
 				  width::Int=_DEFAULT_WIDTH)
 		data_sources = BkAny[]# [TypeID(coldata)]
-		xdata_range = TypeID(xrange)
-		ydata_range = TypeID(yrange)
-		renderers = map(TypeID, renderers)
-		tools = map(TypeID, tools)
+
 		Plot(plot.uuid,
 			 title,
-			 tools,
+			 map(TypeID, tools),
 			 height,
 			 height,
 			 width,
 			 width,
-			 xdata_range,
-			 ydata_range,
-			 renderers,
+			 TypeID(xrange),
+			 TypeID(yrange),
+			 map(TypeID, renderers),
+			 map(TypeID, axes[:above]),
+			 map(TypeID, axes[:below]),
+			 map(TypeID, axes[:left]),
+			 map(TypeID, axes[:right]),
 			 data_sources)
 	end
 

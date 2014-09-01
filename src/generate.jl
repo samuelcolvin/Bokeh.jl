@@ -97,11 +97,18 @@ function _genmodels(plot::Plot)
 		grid1
 	]
 	append!(renderers, bkglyphs)
+	axes = [
+		:above => [],
+		:below => [axis0],
+		:left => [axis1],
+		:right => []
+	]
 
 	bkplot = Bokehjs.Plot(bkplot,
 				dr1x,
 				dr1y,
 				renderers,
+				axes,
 				tools,
 				plot.title,
 				plot.height,
@@ -147,8 +154,8 @@ end
 
 function _bokehjs_paths(minified::Bool=true)
 	dir = Pkg.dir("Bokeh", "deps", "bokehjs")
-	jspath = joinpath(dir, minified ? "bokeh-0.5.2.min.js" : "bokeh-0.5.2.js")
-	csspath = joinpath(dir, minified ? "bokeh-0.5.2.min.css" : "bokeh-0.5.2.css")
+	jspath = joinpath(dir, minified ? "bokeh.min.js" : "bokeh.js")
+	csspath = joinpath(dir, minified ? "bokeh.min.css" : "bokeh.css")
 	(jspath, csspath)
 end
 
