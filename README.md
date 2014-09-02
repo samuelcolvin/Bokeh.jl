@@ -1,9 +1,11 @@
 # Bokeh
 
-[![Build Status](https://travis-ci.org/samuelcolvin/Bokeh.jl.svg?branch=master)](https://travis-ci.org/samuelcolvin/Bokeh.jl)
+[![Build Status](https://travis-ci.org/bokeh/Bokeh.jl.svg?branch=master)](https://travis-ci.org/bokeh/Bokeh.jl)
 [![Bokeh](http://pkg.julialang.org/badges/Bokeh_0.3.svg)](http://pkg.julialang.org/?pkg=Bokeh&ver=0.3)
 
 Bokeh is a work in progress, but it's getting there, the examples below start to demonstrate its use.
+
+Note most of these require "master" rather than the released version.
 
 It works with IJulia, an example can be found in [doc](doc).
 
