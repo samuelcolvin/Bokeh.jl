@@ -4,7 +4,7 @@
 [![Bokeh](http://pkg.julialang.org/badges/Bokeh_release.svg)](http://pkg.julialang.org/?pkg=Bokeh&ver=release)
 [![Coverage Status](https://img.shields.io/coveralls/bokeh/Bokeh.jl.svg)](https://coveralls.io/r/bokeh/Bokeh.jl?branch=master)
 
-Bokeh is a work in progress, but it's getting there, the examples below start to demonstrate its use.
+Bokeh.jl is a work in progress, but it's getting there, the examples below start to demonstrate its use.
 
 Note most of these require "master" rather than the released version.
 
