@@ -35,22 +35,6 @@ module Bokehjs
 		TypeID(nothing)
 	end
 
-	# needs adding:
-
-      # "below": [
-      #   {
-      #     "type": "LinearAxis", 
-      #     "id": "5611d06b-e8f7-45a4-8be4-ad619a5a05e8"
-      #   }
-      # ], 
-      # "above": [], 
-      # "right": [],
-      # "left": [
-      #   {
-      #     "type": "LinearAxis", 
-      #     "id": "e0871fee-a23c-46b7-9f51-b5db1ce90a14"
-      #   }
-      # ],
 	type Plot <: PlotObject
 		uuid::UUID
 		title::String
@@ -133,11 +117,12 @@ module Bokehjs
 		uuid::UUID
 		dimension::Int
 		plot::TypeID
-		axis::TypeID
+		# axis::TypeID
+    ticker::TypeID
 	end
 
-	function Grid(dimension::Int, plot::Plot, axis::Axis)
-		Grid(uuid4(), dimension, TypeID(plot), TypeID(axis))
+	function Grid(dimension::Int, plot::Plot, ticker::BasicTicker)
+		Grid(uuid4(), dimension, TypeID(plot), TypeID(ticker))
 	end
 
 	type Glyph <: Renderer
