@@ -10,7 +10,7 @@ hold(true)
 y2 = sin(x)./x
 plot(x, y2, "r")
 showplot("holding.html")
-# under the hood it's just causing the plot function not to overwrite
+# under the bonnet it's just causing the plot function not to overwrite
 # CURPLOT but rather to extend it
 
 
