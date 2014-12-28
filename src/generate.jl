@@ -1,7 +1,9 @@
 using Mustache
 
 function Bokehjs.AnyGlyph(glyph::Glyph)
-	Bokehjs.AnyGlyph("Line",
+	# this is ugly as BaseGlyph.Glyph and Bokehjs.AnyGlyph are very simpler, but for now it makes
+	# sense to keep the twp types seperate.
+	Bokehjs.AnyGlyph(glyph.gtype,
 					 glyph.linecolor,
 					 glyph.linewidth,
 					 glyph.linealpha,

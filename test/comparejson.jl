@@ -3,12 +3,16 @@ using ArgParse
 
 function _comparesets(s1, s2, name::String, indent::Int)
 	diff1 = collect(setdiff(s1, s2))
-	if length(diff1) > 0 
-		println(" "^2indent, "$name only in ob1: ", diff1)
-	end
 	diff2 = collect(setdiff(s2, s1))
-	if length(diff2) > 0
-		println(" "^2indent, "$name only in ob2: ", diff2)
+	if length(diff1) > 0 || length(diff2) > 0
+		println("*******************************")
+		if length(diff1) > 0 
+			println(" "^2indent, "$name only in ob1: ", diff1)
+		end
+		if length(diff2) > 0
+			println(" "^2indent, "$name only in ob2: ", diff2)
+		end
+		println("*******************************")
 	end
 end
 
@@ -30,19 +34,30 @@ function compare(ob1::Array, ob2::Array, indent::Int)
 			print(" "^2(indent+1), "ob2: ")
 			println(ob2)
 		end
-		types1 = Set(map(e -> e["type"], ob1))
-		types2 = Set(map(e -> e["type"], ob2))
-		_comparesets(types1, types2, "types", indent + 1)
+		try
+			types1 = Set(map(e -> e["type"], ob1))
+			types2 = Set(map(e -> e["type"], ob2))
+			_comparesets(types1, types2, "types", indent + 1)
+		catch e
+			println("Error: $e")
+		end
 		println("####################################")
 	end
 	for i in 1:len
-		compare(ob1[i], ob2[i], indent + 1)
+		ob2_id = i
+		ob1_item = ob1[i]
+		if (method_exists(getindex, (typeof(ob1_item), String)) && haskey(ob1_item, "type"))
+			type_name = ob1_item["type"]
+			ob2_id = findfirst(item -> item["type"] == type_name, ob2)
+		end
+		ob2_id = ob2_id == 0 ? i : ob2_id
+		compare(ob1_item, ob2[ob2_id], indent + 1)
 	end
 end
 
 function compare(ob1::Dict, ob2::Dict, indent::Int)
 	if haskey(ob1, "type")
-		println(" "^2indent, "========================")
+		indent < 2 && println(" "^2indent, "\n========================")
 	 	println(" "^2indent, "dict: ", ob1["type"])
 	 end
 	k1 = Set(keys(ob1))

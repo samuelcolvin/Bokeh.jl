@@ -136,12 +136,12 @@ module Bokehjs
 	type AnyGlyph <: PlotObject
 		uuid::UUID
 		_type_name::String
-		line_color::Union(Nothing, Dict{String, String})
-		line_width::Union(Nothing, Dict{String, BkAny})
-		line_alpha::Union(Nothing, Dict{String, BkAny})
+		line_color::Union(Omit, Dict{String, String})
+		line_width::Union(Omit, Dict{String, BkAny})
+		line_alpha::Union(Omit, Dict{String, BkAny})
 		line_dash::Union(Omit, Array{Int64, 1})
-		fill_color::Union(Nothing, Dict{String, String})
-		fill_alpha::Union(Nothing, Dict{String, BkAny})
+		fill_color::Union(Omit, Dict{String, String})
+		fill_alpha::Union(Omit, Dict{String, BkAny})
 		x::Dict{String, String}
 		y::Dict{String, String}
 	end
@@ -154,12 +154,12 @@ module Bokehjs
 					  linedash::Union(Nothing, Array{Int64, 1}),
 					  fillcolor::Union(Nothing, String),
 					  fillalpha::Union(Nothing, Float64))
-		linecolor = linecolor == nothing ? nothing : Dict{String, String}({"value" => linecolor})
-		linewidth = linewidth == nothing ? nothing : Dict{String, BkAny}({"units" => "data", "value" => linewidth})
-		linealpha = linealpha == nothing ? nothing : Dict{String, BkAny}({"units" => "data", "value" => linealpha})
+		linecolor = linecolor == nothing ? omit : Dict{String, String}({"value" => linecolor})
+		linewidth = linewidth == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => linewidth})
+		linealpha = linealpha == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => linealpha})
 		linedash = linedash == nothing ? omit : linedash
-		fillcolor = fillcolor == nothing ? nothing : Dict{String, String}({"value" => fillcolor})
-		fillalpha = fillalpha == nothing ? nothing : Dict{String, BkAny}({"units" => "data", "value" => fillalpha})
+		fillcolor = fillcolor == nothing ? omit : Dict{String, String}({"value" => fillcolor})
+		fillalpha = fillalpha == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => fillalpha})
 		AnyGlyph(uuid4(), 
 				 glyph_name,
 			 	 linecolor,
@@ -200,7 +200,7 @@ module Bokehjs
 		uuid::UUID
 		_type_name::String
 		plot::TypeID
-		dimensions::Union(Array{String, 1}, Nothing)
+		dimensions::Union(Array{String, 1}, Nothing, Omit)
 	end
 
 	function Metatool(typename::String, plot::Plot, dimensions)
@@ -209,7 +209,7 @@ module Bokehjs
 	end
 
 	function Metatool(typename::String, plot::Plot)
-		Metatool(typename, plot, nothing)
+		Metatool(typename, plot, omit)
 	end
 
 	_DEFAULT_HEIGHT = 600

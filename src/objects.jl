@@ -36,13 +36,13 @@ module GlyphBase
     	Glyph(glyphtype, linewidth, linecolor, fillcolor, linealpha, fillalpha, size, dash)
     end
 
-    function Circle(;linewidth=1, linecolor="blue", fillcolor="blue", linealpha=1, fillalpha=0.5, size=4)
-        Glyph(glyphtype="circle", linewidth=linewidth, linecolor=linecolor, 
+    function Circle(;linewidth=1, linecolor="blue", fillcolor="blue", linealpha=1.0, fillalpha=0.5, size=4)
+        Glyph(glyphtype="Circle", linewidth=linewidth, linecolor=linecolor, 
             fillcolor=fillcolor, linealpha=linealpha, fillalpha=fillalpha, size=size)
     end
 
     function Line(;linewidth=1, linecolor="blue", linealpha=1.0, dash=nothing)
-        Glyph(glyphtype="line", linewidth=linewidth, linecolor=linecolor, linealpha=linealpha, dash=dash)
+        Glyph(glyphtype="Line", linewidth=linewidth, linecolor=linecolor, linealpha=linealpha, dash=dash)
     end
 end
 
@@ -107,7 +107,7 @@ function Base.convert(::Type{Array{Glyph, 1}}, styles::String)
 end
 
 function Base.convert(::Type{Glyph}, style::String)
-    styd = Dict{Symbol, Any}([:glyphtype => "line", :linecolor => "blue"])
+    styd = Dict{Symbol, Any}([:glyphtype => "Line", :linecolor => "blue", :linewidth => 1, :linealpha => 1.0])
 
     for (k,v) in [ "--" => [4, 4], "-." => [1, 4, 2], ".-" => [1, 4, 2] ]
         splitstyle = split(style, k)
@@ -127,12 +127,12 @@ function Base.convert(::Type{Glyph}, style::String)
         end
     end
 
-    filledglyphs = ["circle"]
+    filledglyphs = ["Circle"]
     if in(styd[:glyphtype], filledglyphs)
         styd[:fillcolor] = styd[:linecolor]
         styd[:fillalpha] = DEFAULT_FILL_ALPHA
     end
-    sizeglyphs = ["circle"]
+    sizeglyphs = ["Circle"]
     if in(styd[:glyphtype], sizeglyphs)
         !haskey(styd, :size) && (styd[:size] = DEFAULT_SIZE)
     end
