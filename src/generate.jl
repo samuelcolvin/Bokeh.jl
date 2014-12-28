@@ -1,27 +1,13 @@
 using Mustache
 
-function Bokehjs.Glyph(glyph::Glyph,
-					   coldata::Bokehjs.ColumnDataSource, 
-					   xrange::Bokehjs.NullBkRange=nothing, 
-					   yrange::Bokehjs.NullBkRange=nothing)
-	glyphspec = Dict{String, BkAny}([
-		"type" => glyph.gtype,
-		"y" => ["units" => "data", "field" => "y"],
-		"x" => ["units" => "data", "field" => "x"],
-		])
-	glyph.linewidth != nothing && (glyphspec["line_width"] = ["units" => "data", "value" => glyph.linewidth])
-
-	glyph.linecolor != nothing && (glyphspec["line_color"] = ["value" => glyph.linecolor])
-	glyph.fillcolor != nothing && (glyphspec["fill_color"] = ["value" => glyph.fillcolor])
-
-	glyph.linealpha != nothing && (glyphspec["line_alpha"] = ["value" => glyph.linealpha])
-	glyph.fillalpha != nothing && (glyphspec["fill_alpha"] = ["value" => glyph.fillalpha])
-
-	glyph.size != nothing && (glyphspec["size"] = ["units" => "screen", "value" => glyph.size])
-
-	glyph.dash != nothing && (glyphspec["line_dash"] = glyph.dash)
-	
-	Bokehjs.Glyph(coldata, xrange, yrange, glyphspec)
+function Bokehjs.AnyGlyph(glyph::Glyph)
+	Bokehjs.AnyGlyph("Line",
+					 glyph.linecolor,
+					 glyph.linewidth,
+					 glyph.linealpha,
+					 glyph.dash,
+					 glyph.fillcolor,
+					 glyph.fillalpha)
 end
 
 function _genmodels(plot::Plot)
@@ -30,14 +16,16 @@ function _genmodels(plot::Plot)
 	obs = Dict{String, BkAny}[]
 
 	cdss = Bokehjs.ColumnDataSource[]
-	bkglyphs = Bokehjs.PlotObject[]
+	glyphrenderers = Bokehjs.PlotObject[]
 	for datacolumn in plot.datacolumns
 		cds = Bokehjs.ColumnDataSource(datacolumn.columns, datacolumn.data)
-		pushdict!(obs, cds, doc)
-		bg = Bokehjs.Glyph(datacolumn.glyph, cds)
 		push!(cdss, cds)
-		push!(bkglyphs, bg)
-		pushdict!(obs, bg, doc)
+		pushdict!(obs, cds, doc)
+		glyph = Bokehjs.AnyGlyph(datacolumn.glyph)
+		pushdict!(obs, glyph, doc)
+		glyphrenderer = Bokehjs.GlyphRenderer(cds, glyph, nothing, glyph)
+		push!(glyphrenderers, glyphrenderer)
+		pushdict!(obs, glyphrenderer, doc)
 	end
 	dr1x = Bokehjs.DataRange1d(cdss, String["x"])
 	dr1y = Bokehjs.DataRange1d(cdss, String["y"])
@@ -96,7 +84,7 @@ function _genmodels(plot::Plot)
 		grid0,
 		grid1
 	]
-	append!(renderers, bkglyphs)
+	append!(renderers, glyphrenderers)
 	axes = [
 		:above => [],
 		:below => [axis0],
@@ -134,6 +122,7 @@ function _obdict(ob::Bokehjs.PlotObject, doc::Bokehjs.UUID)
 	special = [:_type_name]
 	for name in extra_attrs[2:end]
 		in(name, special) && continue
+		ob.(name) == Bokehjs.omit && continue
 		key = string(name)
 		# key = begingswith(key, "_") ? key[2:end] : key
 		attrs[key] = ob.(name)

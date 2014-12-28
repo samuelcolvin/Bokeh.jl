@@ -8,7 +8,7 @@
 # 	download(url, path)
 # end
 
-# bokehjs = "bokeh-0.5.2"
+# bokehjs = "bokeh-0.7.0"
 # getfile("$bokehjs.js")
 # getfile("$bokehjs.min.js")
 # getfile("$bokehjs.css")

@@ -10,8 +10,16 @@ module Bokehjs
 	# in case we want to restrict value types in future:
 	typealias BkAny Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
 	typealias NullDict Union(Nothing, Dict{String, BkAny})
+	typealias NullString Union(Nothing, String)
 	uuid4 = Base.Random.uuid4
 	UUID = Base.Random.UUID
+
+	# like nothing except omitted from json rather than being null
+	type Omit
+		v::String
+		Omit() = new("__omitted from json__")
+	end
+	const omit = Omit()
 
 	abstract PlotObject
 
@@ -118,28 +126,74 @@ module Bokehjs
 		dimension::Int
 		plot::TypeID
 		# axis::TypeID
-    ticker::TypeID
+    	ticker::TypeID
 	end
 
 	function Grid(dimension::Int, plot::Plot, ticker::BasicTicker)
 		Grid(uuid4(), dimension, TypeID(plot), TypeID(ticker))
 	end
 
-	type Glyph <: Renderer
+	type AnyGlyph <: PlotObject
 		uuid::UUID
-		data_source::TypeID
-		server_data_source::NullDict
-		xdata_range::TypeID
-		ydata_range::TypeID
-		glyphspec::Dict{String, BkAny}
+		_type_name::String
+		line_color::Union(Nothing, Dict{String, String})
+		line_width::Union(Nothing, Dict{String, BkAny})
+		line_alpha::Union(Nothing, Dict{String, BkAny})
+		line_dash::Union(Omit, Array{Int64, 1})
+		fill_color::Union(Nothing, Dict{String, String})
+		fill_alpha::Union(Nothing, Dict{String, BkAny})
+		x::Dict{String, String}
+		y::Dict{String, String}
 	end
 
-	function Glyph(coldata::ColumnDataSource, xrange::NullBkRange, yrange::NullBkRange, glyphspec::Dict{String, BkAny})
-		data_source = TypeID(coldata)
-		server_data_source = nothing
-		xdata_range = TypeID(xrange)
-		ydata_range = TypeID(yrange)
-		Glyph(uuid4(), data_source, server_data_source, xdata_range, ydata_range, glyphspec)
+
+	function AnyGlyph(glyph_name::String,
+					  linecolor::Union(Nothing, String), 
+					  linewidth::Union(Nothing, Int64), 
+					  linealpha::Union(Nothing, Float64), 
+					  linedash::Union(Nothing, Array{Int64, 1}),
+					  fillcolor::Union(Nothing, String),
+					  fillalpha::Union(Nothing, Float64))
+		linecolor = linecolor == nothing ? nothing : Dict{String, String}({"value" => linecolor})
+		linewidth = linewidth == nothing ? nothing : Dict{String, BkAny}({"units" => "data", "value" => linewidth})
+		linealpha = linealpha == nothing ? nothing : Dict{String, BkAny}({"units" => "data", "value" => linealpha})
+		linedash = linedash == nothing ? omit : linedash
+		fillcolor = fillcolor == nothing ? nothing : Dict{String, String}({"value" => fillcolor})
+		fillalpha = fillalpha == nothing ? nothing : Dict{String, BkAny}({"units" => "data", "value" => fillalpha})
+		AnyGlyph(uuid4(), 
+				 glyph_name,
+			 	 linecolor,
+				 linewidth,
+				 linealpha,
+				 linedash,
+				 fillcolor,
+				 fillalpha,
+				 Dict{String, String}({"units" => "data", "field" => "x"}),
+				 Dict{String, String}({"units" => "data", "field" => "y"}),
+		)
+	end
+
+	type GlyphRenderer <: Renderer
+		uuid::UUID
+		data_source::TypeID
+		nonselection_glyph::TypeID
+		selection_glyph::TypeID
+		glyph::TypeID
+		name::NullString
+		server_data_source::NullDict
+	end
+
+	typealias NullAnyGlyph Union(Nothing, AnyGlyph)
+
+	function GlyphRenderer(coldata::ColumnDataSource, nonsel_g::NullAnyGlyph, sel_g::NullAnyGlyph, glyph::AnyGlyph)
+		GlyphRenderer(uuid4(), 
+					  TypeID(coldata),
+					  TypeID(nonsel_g),
+					  TypeID(sel_g),
+					  TypeID(glyph),
+					  nothing,
+					  nothing
+		)
 	end
 
 	type Metatool <: PlotObject
