@@ -1,55 +1,18 @@
 module GlyphBase
-    typealias NullString Union(String, Nothing)
-    typealias NullFloat Union(Float64, Nothing)
-    typealias NullInt Union(Int, Nothing)
-
-    type Glyph
-        gtype::String
-        linewidth::NullInt
-        linecolor::NullString
-        fillcolor::NullString
-        linealpha::NullFloat
-        fillalpha::NullFloat
-        size::NullInt
-        dash::Union(Nothing, Array{Int, 1})
-    end
-
-    function Base.show(io::IO, g::Glyph)
-        names = Glyph.names
-        features = String[]
-        for name in Glyph.names
-            showname = name == :gtype ? :type : name
-            g.(name) != nothing && push!(features, "$showname: $(g.(name))")
-        end
-        print(io, "Glyph(", join(features, ", "), ")")
-    end
-
-    function Glyph(;glyphtype=nothing,
-    	            linewidth=nothing, 
-                    linecolor=nothing, 
-                    fillcolor=nothing, 
-                    linealpha=nothing, 
-                    fillalpha=nothing, 
-                    size=nothing, 
-                    dash=nothing)
-        glyphtype == nothing && error("glyphtype is required in Glyph definitions")
-    	Glyph(glyphtype, linewidth, linecolor, fillcolor, linealpha, fillalpha, size, dash)
-    end
-
     function Circle(;linewidth=1, linecolor="blue", fillcolor="blue", linealpha=1.0, fillalpha=0.5, size=4)
-        Glyph(glyphtype="Circle", linewidth=linewidth, linecolor=linecolor, 
+        Bokehjs.Glyph(glyphtype="Circle", linewidth=linewidth, linecolor=linecolor, 
             fillcolor=fillcolor, linealpha=linealpha, fillalpha=fillalpha, size=size)
     end
 
-    function Line(;linewidth=1, linecolor="blue", linealpha=1.0, dash=nothing)
-        Glyph(glyphtype="Line", linewidth=linewidth, linecolor=linecolor, linealpha=linealpha, dash=dash)
+    function Line(;linewidth=1, linecolor="blue", linealpha=1.0, linedash=nothing)
+        Bokehjs.Glyph(glyphtype="Line", linewidth=linewidth, linecolor=linecolor, linealpha=linealpha, linedash=linedash)
     end
 end
 
-typealias Glyph GlyphBase.Glyph
-typealias NullString GlyphBase.NullString
-typealias NullFloat GlyphBase.NullFloat
-typealias NullInt GlyphBase.NullInt
+typealias Glyph Bokehjs.Glyph
+typealias NullString Bokehjs.NullString
+typealias NullFloat Bokehjs.NullFloat
+typealias NullInt Bokehjs.NullInt
 
 typealias NullRange Union(Range, Nothing)
 

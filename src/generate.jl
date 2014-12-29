@@ -1,17 +1,5 @@
 using Mustache
 
-function Bokehjs.AnyGlyph(glyph::Glyph)
-	# this is ugly as BaseGlyph.Glyph and Bokehjs.AnyGlyph are very simpler, but for now it makes
-	# sense to keep the twp types seperate.
-	Bokehjs.AnyGlyph(glyph.gtype,
-					 glyph.linecolor,
-					 glyph.linewidth,
-					 glyph.linealpha,
-					 glyph.dash,
-					 glyph.fillcolor,
-					 glyph.fillalpha)
-end
-
 function _genmodels(plot::Plot)
 	bkplot = Bokehjs.Plot()
 	doc = Bokehjs.uuid4()
@@ -23,7 +11,7 @@ function _genmodels(plot::Plot)
 		cds = Bokehjs.ColumnDataSource(datacolumn.columns, datacolumn.data)
 		push!(cdss, cds)
 		pushdict!(obs, cds, doc)
-		glyph = Bokehjs.AnyGlyph(datacolumn.glyph)
+		glyph = datacolumn.glyph
 		pushdict!(obs, glyph, doc)
 		glyphrenderer = Bokehjs.GlyphRenderer(cds, glyph, nothing, glyph)
 		push!(glyphrenderers, glyphrenderer)

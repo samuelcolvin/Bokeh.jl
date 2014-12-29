@@ -6,13 +6,6 @@ module Bokehjs
 	typealias RealMatVect Union(RealMat, RealVect)
 	# would be nice to parameterize, but more important to constrain dims to 1 or 2
 	# typealias RealMatVect{N} Union(AbstractArray{Int, N}, AbstractArray{Float64, N})
-	
-	# in case we want to restrict value types in future:
-	typealias BkAny Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
-	typealias NullDict Union(Nothing, Dict{String, BkAny})
-	typealias NullString Union(Nothing, String)
-	uuid4 = Base.Random.uuid4
-	UUID = Base.Random.UUID
 
 	# like nothing except omitted from json rather than being null
 	type Omit
@@ -20,6 +13,17 @@ module Bokehjs
 		Omit() = new("__omitted from json__")
 	end
 	const omit = Omit()
+	
+	# in case we want to restrict value types in future:
+	typealias BkAny Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
+	typealias NullDict Union(Nothing, Dict{String, BkAny})
+	typealias OmitDict Union(Omit, Dict{String, BkAny})
+	typealias NullString Union(Nothing, String)
+    typealias NullFloat Union(Float64, Nothing)
+    typealias NullInt Union(Int, Nothing)
+
+	uuid4 = Base.Random.uuid4
+	UUID = Base.Random.UUID
 
 	abstract PlotObject
 
@@ -126,52 +130,68 @@ module Bokehjs
 		dimension::Int
 		plot::TypeID
 		# axis::TypeID
-    	ticker::TypeID
+		ticker::TypeID
 	end
 
 	function Grid(dimension::Int, plot::Plot, ticker::BasicTicker)
 		Grid(uuid4(), dimension, TypeID(plot), TypeID(ticker))
 	end
 
-	type AnyGlyph <: PlotObject
+	type Glyph <: PlotObject
 		uuid::UUID
 		_type_name::String
-		line_color::Union(Omit, Dict{String, String})
-		line_width::Union(Omit, Dict{String, BkAny})
-		line_alpha::Union(Omit, Dict{String, BkAny})
+		line_color::OmitDict
+		line_width::OmitDict
+		line_alpha::OmitDict
 		line_dash::Union(Omit, Array{Int64, 1})
-		fill_color::Union(Omit, Dict{String, String})
-		fill_alpha::Union(Omit, Dict{String, BkAny})
+		fill_color::OmitDict
+		fill_alpha::OmitDict
+		size::OmitDict
 		x::Dict{String, String}
 		y::Dict{String, String}
 	end
 
-
-	function AnyGlyph(glyph_name::String,
-					  linecolor::Union(Nothing, String), 
-					  linewidth::Union(Nothing, Int64), 
-					  linealpha::Union(Nothing, Float64), 
-					  linedash::Union(Nothing, Array{Int64, 1}),
-					  fillcolor::Union(Nothing, String),
-					  fillalpha::Union(Nothing, Float64))
-		linecolor = linecolor == nothing ? omit : Dict{String, String}({"value" => linecolor})
+	function Glyph(glyphtype::String,
+				   linecolor::NullString, 
+				   linewidth::NullInt, 
+				   linealpha::NullFloat, 
+				   dash::Union(Nothing, Array{Int64, 1}),
+				   fillcolor::NullString,
+				   fillalpha::NullFloat,
+				   size::NullInt)
+		linecolor = linecolor == nothing ? omit : Dict{String, BkAny}({"value" => linecolor})
 		linewidth = linewidth == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => linewidth})
 		linealpha = linealpha == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => linealpha})
-		linedash = linedash == nothing ? omit : linedash
-		fillcolor = fillcolor == nothing ? omit : Dict{String, String}({"value" => fillcolor})
+		dash = dash == nothing ? omit : dash
+		fillcolor = fillcolor == nothing ? omit : Dict{String, BkAny}({"value" => fillcolor})
 		fillalpha = fillalpha == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => fillalpha})
-		AnyGlyph(uuid4(), 
-				 glyph_name,
-			 	 linecolor,
-				 linewidth,
-				 linealpha,
-				 linedash,
-				 fillcolor,
-				 fillalpha,
-				 Dict{String, String}({"units" => "data", "field" => "x"}),
-				 Dict{String, String}({"units" => "data", "field" => "y"}),
-		)
+		size = size == nothing ? omit : Dict{String, BkAny}({"units" => "screen", "value" => size})
+		x = Dict{String, String}({"units" => "data", "field" => "x"})
+		y = Dict{String, String}({"units" => "data", "field" => "y"})
+		Glyph(uuid4(), glyphtype, linecolor, linewidth, linealpha, dash, fillcolor, fillalpha, size, x, y)
 	end
+
+	function Glyph(;glyphtype=nothing,
+				   linecolor=nothing, 
+				   linewidth=nothing, 
+				   linealpha=nothing, 
+				   dash=nothing,
+				   fillcolor=nothing, 
+				   fillalpha=nothing,
+				   size=nothing)
+		glyphtype == nothing && error("glyphtype is required in Glyph definitions")
+		Glyph(glyphtype, linecolor, linewidth, linealpha, dash, fillcolor, fillalpha, size)
+	end
+
+    function Base.show(io::IO, g::Glyph)
+        names = Glyph.names
+        features = String[]
+        for name in Glyph.names
+            showname = name == :_type_name ? :type : name
+            g.(name) != nothing && push!(features, "$showname: $(g.(name))")
+        end
+        print(io, "Glyph(", join(features, ", "), ")")
+    end
 
 	type GlyphRenderer <: Renderer
 		uuid::UUID
@@ -179,13 +199,13 @@ module Bokehjs
 		nonselection_glyph::TypeID
 		selection_glyph::TypeID
 		glyph::TypeID
-		name::NullString
+		name::Union(Nothing, String)
 		server_data_source::NullDict
 	end
 
-	typealias NullAnyGlyph Union(Nothing, AnyGlyph)
+	typealias NullGlyph Union(Nothing, Glyph)
 
-	function GlyphRenderer(coldata::ColumnDataSource, nonsel_g::NullAnyGlyph, sel_g::NullAnyGlyph, glyph::AnyGlyph)
+	function GlyphRenderer(coldata::ColumnDataSource, nonsel_g::NullGlyph, sel_g::NullGlyph, glyph::Glyph)
 		GlyphRenderer(uuid4(), 
 					  TypeID(coldata),
 					  TypeID(nonsel_g),
@@ -279,7 +299,7 @@ typealias BkAny Bokehjs.BkAny
 if in(:_print, names(JSON, true))
 	# implement correct UUID printing for both old and new JSON.jl
 	function JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID)
-	    JSON._print(io, state, string(uuid))
+		JSON._print(io, state, string(uuid))
 	end
 	function JSON._print(io::IO, state::JSON.State, tid::Bokehjs.TypeID)
 		tid.plotob == nothing && (return JSON._print(io, state, nothing))
@@ -288,11 +308,11 @@ if in(:_print, names(JSON, true))
 		d = Dict{String, BkAny}([
 			"type" => obtype,
 			"id" => tid.plotob.uuid])
-	    JSON._print(io, state, d)
+		JSON._print(io, state, d)
 	end
 else
 	function JSON.print(io::IO, uuid::Bokehjs.UUID)
-	    JSON.print(io, string(uuid))
+		JSON.print(io, string(uuid))
 	end	
 	function JSON.print(io::IO, tid::Bokehjs.TypeID)
 		tid.plotob == nothing && (return JSON.print(io, nothing))
@@ -301,6 +321,6 @@ else
 		d = Dict{String, BkAny}([
 			"type" => obtype,
 			"id" => tid.plotob.uuid])
-	    JSON.print(io, d)
+		JSON.print(io, d)
 	end
 end
