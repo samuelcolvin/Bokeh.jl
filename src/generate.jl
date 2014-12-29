@@ -21,6 +21,7 @@ function _genmodels(plot::Plot)
 			push!(legends, (datacolumn.legend, glyphrenderer))
 		end
 	end
+
 	if length(legends) > 0
 		legend = Bokehjs.Legend(bkplot, legends, plot.legendsgo)
 		push!(renderers, legend)
@@ -32,13 +33,23 @@ function _genmodels(plot::Plot)
 	pushdict!(obs, dr1x, doc)
 	pushdict!(obs, dr1y, doc)
 
-	ticker0 = Bokehjs.BasicTicker()
-	ticker1 = Bokehjs.BasicTicker()
+	# TODO: currently auto and log aren't implemented properly
+	axis_types = {
+		:auto =>     ("BasicTicker", "BasicTickFormatter"),
+		:linear =>   ("BasicTicker", "BasicTickFormatter"),
+		:log =>      ("BasicTicker", "BasicTickFormatter"),
+		:datetime => ("DatetimeTicker", "DatetimeTickFormatter"),
+	}
+	xticker_type, xtickform_type = axis_types[plot.x_axis_type]
+	yticker_type, ytickform_type = axis_types[plot.y_axis_type]
+
+	ticker0 = Bokehjs.Ticker(xticker_type)
+	ticker1 = Bokehjs.Ticker(yticker_type)
 	pushdict!(obs, ticker0, doc)
 	pushdict!(obs, ticker1, doc)
 
-	tickform0 = Bokehjs.BasicTickFormatter()
-	tickform1 = Bokehjs.BasicTickFormatter()
+	tickform0 = Bokehjs.TickFormatter(xtickform_type)
+	tickform1 = Bokehjs.TickFormatter(ytickform_type)
 	pushdict!(obs, tickform0, doc)
 	pushdict!(obs, tickform1, doc)
 

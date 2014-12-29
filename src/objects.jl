@@ -32,7 +32,9 @@ type Plot
     title::String
     width::Int
     height::Int
-    legendsgo::NullString
+    x_axis_type::NullSymbol
+    y_axis_type::NullSymbol
+    legendsgo::NullSymbol
 end
 
 # heavily borrowed from Winston, thanks Winston!

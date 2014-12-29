@@ -59,23 +59,27 @@ function plot(x::RealMat, y::RealMat, styles::String=DEFAULT_GLYPHS_STR;
     plot(dcs; kwargs...)
 end
 
-# there a good if boring reason that we have to use nothing for width, height etc.
-# rather than set the default to WIDTH, HEIGHT etc.:
-# its because we wouldn't be able to specify a new width or height on an extending plot
-# if the new value happened to be the same as WIDTH or HEIGHT
+# TODO: this "root" plot method is effectively figure, could be changed for clarity?
+
+# there a good if boring reason that we have to use nothing for width, height etc. rather than 
+# set the default to WIDTH, HEIGHT etc.: its because we wouldn't be able to specify a new width 
+# or height on an extending plot if the new value happened to be the same as WIDTH or HEIGHT
 function plot(columns::Array{DataColumn, 1}; extend::Union(Nothing, Plot)=nothing,
               title::NullString=nothing, width::NullInt=nothing, height::NullInt=nothing,
+              x_axis_type=nothing, y_axis_type=nothing, legendsgo::NullSymbol=nothing,
               plotfile::NullString=nothing, tools::Union(Nothing, Array{Symbol, 1})=nothing, 
-              autoopen::Bool=AUTOOPEN, legendsgo=nothing)
+              autoopen::Bool=AUTOOPEN)
     extend == nothing && !HOLD && (global CURPLOT = nothing)
     if extend == nothing && CURPLOT == nothing
         plt = Plot(columns, 
-            tools == nothing ? TOOLS : tools, 
-            plotfile == nothing ? PLOTFILE : plotfile, 
-            title == nothing ? TITLE : title, 
-            width == nothing ? WIDTH : width, 
-            height == nothing ? HEIGHT : height,
-            legendsgo)
+                   tools == nothing ? TOOLS : tools, 
+                   plotfile == nothing ? PLOTFILE : plotfile, 
+                   title == nothing ? TITLE : title, 
+                   width == nothing ? WIDTH : width, 
+                   height == nothing ? HEIGHT : height,
+                   x_axis_type == nothing ? X_AXIS_TYPE : x_axis_type,
+                   y_axis_type == nothing ? Y_AXIS_TYPE : y_axis_type,
+                   legendsgo)
         extend == nothing && (global CURPLOT = plt)
     else
         function add2plot!(p::Plot)

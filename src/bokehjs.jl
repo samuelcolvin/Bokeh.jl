@@ -22,6 +22,9 @@ module Bokehjs
 	typealias NullString Union(Nothing, String)
 	typealias OmitString Union(Omit, String)
 
+	typealias NullSymbol Union(Nothing, Symbol)
+	typealias OmitSymbol Union(Omit, Symbol)
+
     typealias NullFloat Union(Float64, Nothing)
 
     typealias NullInt Union(Int, Nothing)
@@ -38,10 +41,6 @@ module Bokehjs
 	abstract Renderer <: PlotObject
 
 	abstract Axis <: PlotObject
-
-	abstract Ticker <: PlotObject
-
-	abstract TickFormatter <: PlotObject
 
 	type TypeID
 		plotob::Union(PlotObject, Nothing)
@@ -99,14 +98,23 @@ module Bokehjs
 		DataRange1d(uuid4(), sources)
 	end
 
-	type BasicTickFormatter <: TickFormatter
+	type TickFormatter <: PlotObject
 		uuid::UUID
-		BasicTickFormatter() = new(uuid4())
+		_type_name::String
+		format::OmitDict
+		function TickFormatter(name::String)
+			@assert name in ("BasicTickFormatter", "DatetimeTickFormatter", "LogTickFormatter")
+			# format only seems to occur for DatetimeTickFormatter and even then is empty
+			format = name == "DatetimeTickFormatter" ? Dict{String, BkAny}() : omit
+			new(uuid4(), name, format)
+		end
 	end
 
-	type BasicTicker <: Ticker
+	type Ticker <: PlotObject
 		uuid::UUID
-		BasicTicker() = new(uuid4())
+		_type_name::String
+		num_minor_ticks::Int64
+		Ticker(name::String) = new(uuid4(), name, 5)
 	end
 
 	type LinearAxis <: Axis
@@ -136,7 +144,7 @@ module Bokehjs
 		ticker::TypeID
 	end
 
-	function Grid(dimension::Int, plot::Plot, ticker::BasicTicker)
+	function Grid(dimension::Int, plot::Plot, ticker::Ticker)
 		Grid(uuid4(), dimension, TypeID(plot), TypeID(ticker))
 	end
 
@@ -144,17 +152,18 @@ module Bokehjs
 		uuid::UUID
 		plot::TypeID
 		legends::Vector{Tuple}
-		orientation::OmitString
+		orientation::OmitSymbol
 	end
 
 	function Legend(plot::Plot, legends::Vector{Tuple})
-		Legend(plot, legends, omit)
+		Legend(plot, legends, nothing)
 	end
 
-	function Legend(plot::Plot, legends::Vector{Tuple}, orientation::OmitString)
-		@assert orientation in (omit, "top_left", "top_center", "top_right", 
-								"right_center", "bottom_right", "bottom_center", 
-								"bottom_left", "left_center", "center")
+	function Legend(plot::Plot, legends::Vector{Tuple}, orientation::NullSymbol)
+		orientation = orientation == nothing ? omit : orientation
+		@assert orientation in (omit, :top_left, :top_center, :top_right, 
+								:right_center, :bottom_right, :bottom_center, 
+								:bottom_left, :left_center, :center)
 		Legend(uuid4(),
 			   TypeID(plot),
 			   [(l, [TypeID(r)]) for (l, r) in legends],
@@ -322,6 +331,7 @@ typealias BkAny Bokehjs.BkAny
 
 typealias Glyph Bokehjs.Glyph
 typealias NullString Bokehjs.NullString
+typealias NullSymbol Bokehjs.NullSymbol
 typealias NullFloat Bokehjs.NullFloat
 typealias NullInt Bokehjs.NullInt
 
