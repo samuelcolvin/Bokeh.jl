@@ -4,15 +4,10 @@ module GlyphBase
             fillcolor=fillcolor, linealpha=linealpha, fillalpha=fillalpha, size=size)
     end
 
-    function Line(;linewidth=1, linecolor="blue", linealpha=1.0, linedash=nothing)
-        Bokehjs.Glyph(glyphtype="Line", linewidth=linewidth, linecolor=linecolor, linealpha=linealpha, linedash=linedash)
+    function Line(;linewidth=1, linecolor="blue", linealpha=1.0, dash=nothing)
+        Bokehjs.Glyph(glyphtype="Line", linewidth=linewidth, linecolor=linecolor, linealpha=linealpha, dash=dash)
     end
 end
-
-typealias Glyph Bokehjs.Glyph
-typealias NullString Bokehjs.NullString
-typealias NullFloat Bokehjs.NullFloat
-typealias NullInt Bokehjs.NullInt
 
 typealias NullRange Union(Range, Nothing)
 
@@ -20,13 +15,14 @@ type DataColumn
     columns::Array{String, 1}
     data::Dict{String, RealVect}
     glyph::Glyph
+    legend::NullString
     xrange::NullRange
     yrange::NullRange
 end
 
-function DataColumn(xdata::RealVect, ydata::RealVect, glyph::Glyph)
+function DataColumn(xdata::RealVect, ydata::RealVect, glyph::Glyph, legend::NullString=nothing)
 	data = ["x" => xdata, "y" => ydata]
-	DataColumn(["x", "y"], data, glyph, nothing, nothing)
+	DataColumn(["x", "y"], data, glyph, legend, nothing, nothing)
 end
 
 type Plot
@@ -36,6 +32,7 @@ type Plot
     title::String
     width::Int
     height::Int
+    legendsgo::NullString
 end
 
 # heavily borrowed from Winston, thanks Winston!

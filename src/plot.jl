@@ -48,12 +48,14 @@ function plot(x::RealVect, y::RealVect, args...; kwargs...)
     plot(reshape(x, length(x), 1), reshape(y, length(y), 1), args...; kwargs...)
 end
 
-function plot(x::RealMat, y::RealMat, styles::String=DEFAULT_GLYPHS_STR; glyphs::Vector{Glyph}=DEFAULT_GLYPHS, kwargs...)
+function plot(x::RealMat, y::RealMat, styles::String=DEFAULT_GLYPHS_STR; 
+              glyphs::Vector{Glyph}=DEFAULT_GLYPHS, legends::Union(Nothing, Vector)=nothing, kwargs...)
     size(x) != size(y) && error("size of x and y are not equal: x: $(size(x)), y: $(size(y))")
     glyphs = glyphs == DEFAULT_GLYPHS ? convert(Vector{Glyph}, styles) : glyphs
     cols = size(x,2)
     glyphs = repmat(glyphs, int(ceil(cols / length(glyphs))))
-    dcs = DataColumn[DataColumn(x[:,i], y[:,i], glyphs[i]) for i in 1:cols]
+    legends = legends == nothing ? [nothing for _ in 1:cols] : legends
+    dcs = DataColumn[DataColumn(x[:,i], y[:,i], glyphs[i], legends[i]) for i in 1:cols]
     plot(dcs; kwargs...)
 end
 
@@ -61,10 +63,10 @@ end
 # rather than set the default to WIDTH, HEIGHT etc.:
 # its because we wouldn't be able to specify a new width or height on an extending plot
 # if the new value happened to be the same as WIDTH or HEIGHT
-function plot(columns::Array{DataColumn, 1}; extend::Union(Nothing, Plot) = nothing,
-              title::NullString = nothing, width::NullInt = nothing, height::NullInt = nothing,
-              plotfile::NullString = nothing, tools::Union(Nothing, Array{Symbol, 1}) = nothing, 
-              autoopen::Bool=AUTOOPEN)
+function plot(columns::Array{DataColumn, 1}; extend::Union(Nothing, Plot)=nothing,
+              title::NullString=nothing, width::NullInt=nothing, height::NullInt=nothing,
+              plotfile::NullString=nothing, tools::Union(Nothing, Array{Symbol, 1})=nothing, 
+              autoopen::Bool=AUTOOPEN, legendsgo=nothing)
     extend == nothing && !HOLD && (global CURPLOT = nothing)
     if extend == nothing && CURPLOT == nothing
         plt = Plot(columns, 
@@ -72,7 +74,8 @@ function plot(columns::Array{DataColumn, 1}; extend::Union(Nothing, Plot) = noth
             plotfile == nothing ? PLOTFILE : plotfile, 
             title == nothing ? TITLE : title, 
             width == nothing ? WIDTH : width, 
-            height == nothing ? HEIGHT : height)
+            height == nothing ? HEIGHT : height,
+            legendsgo)
         extend == nothing && (global CURPLOT = plt)
     else
         function add2plot!(p::Plot)

@@ -6,7 +6,8 @@ function _genmodels(plot::Plot)
 	obs = Dict{String, BkAny}[]
 
 	cdss = Bokehjs.ColumnDataSource[]
-	glyphrenderers = Bokehjs.PlotObject[]
+	renderers = Bokehjs.PlotObject[]
+	legends = Tuple[]
 	for datacolumn in plot.datacolumns
 		cds = Bokehjs.ColumnDataSource(datacolumn.columns, datacolumn.data)
 		push!(cdss, cds)
@@ -14,9 +15,18 @@ function _genmodels(plot::Plot)
 		glyph = datacolumn.glyph
 		pushdict!(obs, glyph, doc)
 		glyphrenderer = Bokehjs.GlyphRenderer(cds, glyph, nothing, glyph)
-		push!(glyphrenderers, glyphrenderer)
+		push!(renderers, glyphrenderer)
 		pushdict!(obs, glyphrenderer, doc)
+		if datacolumn.legend != nothing
+			push!(legends, (datacolumn.legend, glyphrenderer))
+		end
 	end
+	if length(legends) > 0
+		legend = Bokehjs.Legend(bkplot, legends, plot.legendsgo)
+		push!(renderers, legend)
+		pushdict!(obs, legend, doc)
+	end
+
 	dr1x = Bokehjs.DataRange1d(cdss, String["x"])
 	dr1y = Bokehjs.DataRange1d(cdss, String["y"])
 	pushdict!(obs, dr1x, doc)
@@ -68,13 +78,11 @@ function _genmodels(plot::Plot)
 		push!(tools, resettool)
 	end
 
-	renderers = Bokehjs.PlotObject[
-		axis0,
-		axis1,
-		grid0,
-		grid1
-	]
-	append!(renderers, glyphrenderers)
+	push!(renderers, axis0)
+	push!(renderers, axis1)
+	push!(renderers, grid0)
+	push!(renderers, grid1)
+
 	axes = [
 		:above => [],
 		:below => [axis0],

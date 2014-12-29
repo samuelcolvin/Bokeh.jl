@@ -18,8 +18,12 @@ module Bokehjs
 	typealias BkAny Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
 	typealias NullDict Union(Nothing, Dict{String, BkAny})
 	typealias OmitDict Union(Omit, Dict{String, BkAny})
+
 	typealias NullString Union(Nothing, String)
+	typealias OmitString Union(Omit, String)
+
     typealias NullFloat Union(Float64, Nothing)
+
     typealias NullInt Union(Int, Nothing)
 
 	uuid4 = Base.Random.uuid4
@@ -50,32 +54,32 @@ module Bokehjs
 	type Plot <: PlotObject
 		uuid::UUID
 		title::String
-		tools::Array{BkAny, 1}
+		tools::Vector{BkAny}
 		outer_height::Int
 		canvas_height::Int
 		outer_width::Int
 		canvas_width::Int
 		x_range::TypeID
 		y_range::TypeID
-		# could be Array{TypeID, 1}?:
-		renderers::Array{BkAny, 1}
-		above::Array{TypeID, 1}
-		below::Array{TypeID, 1}
-		left::Array{TypeID, 1}
-		right::Array{TypeID, 1}
-		data_sources::Array{BkAny, 1}
+		# could be Vector{TypeID}?:
+		renderers::Vector{BkAny}
+		above::Vector{TypeID}
+		below::Vector{TypeID}
+		left::Vector{TypeID}
+		right::Vector{TypeID}
+		data_sources::Vector{BkAny}
 	end
 
 	type ColumnDataSource <: PlotObject
 		uuid::UUID
-		column_names::Array{String, 1}
-		selected::Array{Any, 1}
+		column_names::Vector{String}
+		selected::Vector{Any}
 		discrete_ranges::Dict{String, BkAny}
 		cont_ranges::Dict{String, BkAny}
 		data::Dict{String, RealVect}
 	end
 
-	function ColumnDataSource(column_names::Array{String, 1}, data::Dict{String, RealVect})
+	function ColumnDataSource(column_names::Vector{String}, data::Dict{String, RealVect})
 		ColumnDataSource(uuid4(),
 						 column_names,
 						 BkAny[],
@@ -86,10 +90,10 @@ module Bokehjs
 
 	type DataRange1d <: BkRange
 		uuid::UUID
-		sources::Array{BkAny, 1}
+		sources::Vector{BkAny}
 	end
 
-	function DataRange1d(cdss::Array{ColumnDataSource, 1}, columns::Array{String, 1})
+	function DataRange1d(cdss::Vector{ColumnDataSource}, columns::Vector{String})
 		source(cds) = Dict{String, BkAny}(["columns" => columns, "source" => TypeID(cds)])
 		sources = map(source, cdss)
 		DataRange1d(uuid4(), sources)
@@ -129,12 +133,32 @@ module Bokehjs
 		uuid::UUID
 		dimension::Int
 		plot::TypeID
-		# axis::TypeID
 		ticker::TypeID
 	end
 
 	function Grid(dimension::Int, plot::Plot, ticker::BasicTicker)
 		Grid(uuid4(), dimension, TypeID(plot), TypeID(ticker))
+	end
+
+	type Legend <: Renderer
+		uuid::UUID
+		plot::TypeID
+		legends::Vector{Tuple}
+		orientation::OmitString
+	end
+
+	function Legend(plot::Plot, legends::Vector{Tuple})
+		Legend(plot, legends, omit)
+	end
+
+	function Legend(plot::Plot, legends::Vector{Tuple}, orientation::OmitString)
+		@assert orientation in (omit, "top_left", "top_center", "top_right", 
+								"right_center", "bottom_right", "bottom_center", 
+								"bottom_left", "left_center", "center")
+		Legend(uuid4(),
+			   TypeID(plot),
+			   [(l, [TypeID(r)]) for (l, r) in legends],
+			   orientation)
 	end
 
 	type Glyph <: PlotObject
@@ -143,7 +167,7 @@ module Bokehjs
 		line_color::OmitDict
 		line_width::OmitDict
 		line_alpha::OmitDict
-		line_dash::Union(Omit, Array{Int64, 1})
+		line_dash::Union(Omit, Vector{Int64})
 		fill_color::OmitDict
 		fill_alpha::OmitDict
 		size::OmitDict
@@ -155,7 +179,7 @@ module Bokehjs
 				   linecolor::NullString, 
 				   linewidth::NullInt, 
 				   linealpha::NullFloat, 
-				   dash::Union(Nothing, Array{Int64, 1}),
+				   dash::Union(Nothing, Vector{Int64}),
 				   fillcolor::NullString,
 				   fillalpha::NullFloat,
 				   size::NullInt)
@@ -220,7 +244,7 @@ module Bokehjs
 		uuid::UUID
 		_type_name::String
 		plot::TypeID
-		dimensions::Union(Array{String, 1}, Nothing, Omit)
+		dimensions::Union(Vector{String}, Nothing, Omit)
 	end
 
 	function Metatool(typename::String, plot::Plot, dimensions)
@@ -284,7 +308,7 @@ module Bokehjs
 
 	type PlotContext <: PlotObject
 		uuid::UUID
-		children::Array{TypeID, 1}
+		children::Vector{TypeID}
 	end
 
 	function PlotContext(plot::Plot)
@@ -295,6 +319,11 @@ typealias RealVect Bokehjs.RealVect
 typealias RealMat Bokehjs.RealMat
 typealias RealMatVect Bokehjs.RealMatVect
 typealias BkAny Bokehjs.BkAny
+
+typealias Glyph Bokehjs.Glyph
+typealias NullString Bokehjs.NullString
+typealias NullFloat Bokehjs.NullFloat
+typealias NullInt Bokehjs.NullInt
 
 if in(:_print, names(JSON, true))
 	# implement correct UUID printing for both old and new JSON.jl
