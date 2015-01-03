@@ -158,13 +158,13 @@ function _bokehjs_paths(minified::Bool=true)
 end
 
 function _render_jscss(jspath::String, csspath::String, buildin::Bool)
-	if !buildin
-		return "<link rel=\"stylesheet\" href=\"$csspath\" type=\"text/css\" />\n"*
-				"<script type=\"text/javascript\" src=\"$jspath\"></script>\n"
+	if buildin
+		css = open(readall, csspath, "r")
+		js = open(readall, jspath, "r")
+		return "<style>\n$css\n</style>\n<script type=\"text/javascript\">\n$js\n</script>\n"
 	else
-		css = outfile_content = open(readall, csspath, "r")
-		js = outfile_content = open(readall, jspath, "r")
-		return "<style>\n$css\n</style><script type=\"text/javascript\">\n$js\n</script>\n"
+		return "<link rel=\"stylesheet\" href=\"$csspath\" type=\"text/css\" />\n"*
+			   "<script type=\"text/javascript\" src=\"$jspath\"></script>\n"
 	end
 end
 
@@ -173,7 +173,8 @@ function _rendertemplate(models::String, plotcon::Bokehjs.PlotContext, isijulia:
 	main = _gettemplate("main.html")
 	body = _gettemplate("body.html")
 	jspath, csspath = _bokehjs_paths(!DEBUG)
-	jscss = _render_jscss(jspath, csspath, isijulia)
+	builtin = isijulia || INCLUDE_JS
+	jscss = _render_jscss(jspath, csspath, builtin)
 	if DEBUG
 		open(replace(PLOTFILE, ".html", "") * ".json", "w") do f
 			print(f, models)
@@ -203,7 +204,7 @@ renderplot() = renderplot(CURPLOT)
 
 function genplot(p::Plot, filename::NullString=nothing)
 	filename = filename == nothing ? p.filename : filename
-    html = renderplot(p, false)
+    html = renderplot(p)
 	if ispath(filename)
 		if WARN_FILE != filename
 			warn("$(filename) already exists, overwriting")

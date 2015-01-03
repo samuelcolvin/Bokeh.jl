@@ -21,6 +21,7 @@ glyphsize(dft_size)
 t = title()
 title(t)
 Bokeh.noshow(true)
+Bokeh.includejs(true)
 
 # check they're correct:
 # Bokeh.parse_spec("r--") |> println
