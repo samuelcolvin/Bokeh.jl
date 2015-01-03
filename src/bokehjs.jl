@@ -6,10 +6,29 @@ module Bokehjs
 	typealias RealMatVect Union(RealMat, RealVect)
 	# would be nice to parameterize, but more important to constrain dims to 1 or 2
 	# typealias RealMatVect{N} Union(AbstractArray{Int, N}, AbstractArray{Float64, N})
+
+	# like nothing except omitted from json rather than being null
+	type Omit
+		v::String
+		Omit() = new("__omitted from json__")
+	end
+	const omit = Omit()
 	
 	# in case we want to restrict value types in future:
 	typealias BkAny Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
 	typealias NullDict Union(Nothing, Dict{String, BkAny})
+	typealias OmitDict Union(Omit, Dict{String, BkAny})
+
+	typealias NullString Union(Nothing, String)
+	typealias OmitString Union(Omit, String)
+
+	typealias NullSymbol Union(Nothing, Symbol)
+	typealias OmitSymbol Union(Omit, Symbol)
+
+    typealias NullFloat Union(Float64, Nothing)
+
+    typealias NullInt Union(Int, Nothing)
+
 	uuid4 = Base.Random.uuid4
 	UUID = Base.Random.UUID
 
@@ -23,10 +42,6 @@ module Bokehjs
 
 	abstract Axis <: PlotObject
 
-	abstract Ticker <: PlotObject
-
-	abstract TickFormatter <: PlotObject
-
 	type TypeID
 		plotob::Union(PlotObject, Nothing)
 	end
@@ -38,32 +53,32 @@ module Bokehjs
 	type Plot <: PlotObject
 		uuid::UUID
 		title::String
-		tools::Array{BkAny, 1}
+		tools::Vector{BkAny}
 		outer_height::Int
 		canvas_height::Int
 		outer_width::Int
 		canvas_width::Int
 		x_range::TypeID
 		y_range::TypeID
-		# could be Array{TypeID, 1}?:
-		renderers::Array{BkAny, 1}
-		above::Array{TypeID, 1}
-		below::Array{TypeID, 1}
-		left::Array{TypeID, 1}
-		right::Array{TypeID, 1}
-		data_sources::Array{BkAny, 1}
+		# could be Vector{TypeID}?:
+		renderers::Vector{BkAny}
+		above::Vector{TypeID}
+		below::Vector{TypeID}
+		left::Vector{TypeID}
+		right::Vector{TypeID}
+		data_sources::Vector{BkAny}
 	end
 
 	type ColumnDataSource <: PlotObject
 		uuid::UUID
-		column_names::Array{String, 1}
-		selected::Array{Any, 1}
+		column_names::Vector{String}
+		selected::Vector{Any}
 		discrete_ranges::Dict{String, BkAny}
 		cont_ranges::Dict{String, BkAny}
 		data::Dict{String, RealVect}
 	end
 
-	function ColumnDataSource(column_names::Array{String, 1}, data::Dict{String, RealVect})
+	function ColumnDataSource(column_names::Vector{String}, data::Dict{String, RealVect})
 		ColumnDataSource(uuid4(),
 						 column_names,
 						 BkAny[],
@@ -74,23 +89,32 @@ module Bokehjs
 
 	type DataRange1d <: BkRange
 		uuid::UUID
-		sources::Array{BkAny, 1}
+		sources::Vector{BkAny}
 	end
 
-	function DataRange1d(cdss::Array{ColumnDataSource, 1}, columns::Array{String, 1})
+	function DataRange1d(cdss::Vector{ColumnDataSource}, columns::Vector{String})
 		source(cds) = Dict{String, BkAny}(["columns" => columns, "source" => TypeID(cds)])
 		sources = map(source, cdss)
 		DataRange1d(uuid4(), sources)
 	end
 
-	type BasicTickFormatter <: TickFormatter
+	type TickFormatter <: PlotObject
 		uuid::UUID
-		BasicTickFormatter() = new(uuid4())
+		_type_name::String
+		format::OmitDict
+		function TickFormatter(name::String)
+			@assert name in ("BasicTickFormatter", "DatetimeTickFormatter", "LogTickFormatter")
+			# format only seems to occur for DatetimeTickFormatter and even then is empty
+			format = name == "DatetimeTickFormatter" ? Dict{String, BkAny}() : omit
+			new(uuid4(), name, format)
+		end
 	end
 
-	type BasicTicker <: Ticker
+	type Ticker <: PlotObject
 		uuid::UUID
-		BasicTicker() = new(uuid4())
+		_type_name::String
+		num_minor_ticks::Int64
+		Ticker(name::String) = new(uuid4(), name, 5)
 	end
 
 	type LinearAxis <: Axis
@@ -117,36 +141,119 @@ module Bokehjs
 		uuid::UUID
 		dimension::Int
 		plot::TypeID
-		# axis::TypeID
-    ticker::TypeID
+		ticker::TypeID
 	end
 
-	function Grid(dimension::Int, plot::Plot, ticker::BasicTicker)
+	function Grid(dimension::Int, plot::Plot, ticker::Ticker)
 		Grid(uuid4(), dimension, TypeID(plot), TypeID(ticker))
 	end
 
-	type Glyph <: Renderer
+	type Legend <: Renderer
 		uuid::UUID
-		data_source::TypeID
-		server_data_source::NullDict
-		xdata_range::TypeID
-		ydata_range::TypeID
-		glyphspec::Dict{String, BkAny}
+		plot::TypeID
+		legends::Vector{Tuple}
+		orientation::OmitSymbol
 	end
 
-	function Glyph(coldata::ColumnDataSource, xrange::NullBkRange, yrange::NullBkRange, glyphspec::Dict{String, BkAny})
-		data_source = TypeID(coldata)
-		server_data_source = nothing
-		xdata_range = TypeID(xrange)
-		ydata_range = TypeID(yrange)
-		Glyph(uuid4(), data_source, server_data_source, xdata_range, ydata_range, glyphspec)
+	function Legend(plot::Plot, legends::Vector{Tuple})
+		Legend(plot, legends, nothing)
+	end
+
+	function Legend(plot::Plot, legends::Vector{Tuple}, orientation::NullSymbol)
+		orientation = orientation == nothing ? omit : orientation
+		@assert orientation in (omit, :top_left, :top_center, :top_right, 
+								:right_center, :bottom_right, :bottom_center, 
+								:bottom_left, :left_center, :center)
+		Legend(uuid4(),
+			   TypeID(plot),
+			   [(l, [TypeID(r)]) for (l, r) in legends],
+			   orientation)
+	end
+
+	type Glyph <: PlotObject
+		uuid::UUID
+		_type_name::String
+		line_color::OmitDict
+		line_width::OmitDict
+		line_alpha::OmitDict
+		line_dash::Union(Omit, Vector{Int64})
+		fill_color::OmitDict
+		fill_alpha::OmitDict
+		size::OmitDict
+		x::Dict{String, String}
+		y::Dict{String, String}
+	end
+
+	function Glyph(glyphtype::String,
+				   linecolor::NullString, 
+				   linewidth::NullInt, 
+				   linealpha::NullFloat, 
+				   dash::Union(Nothing, Vector{Int64}),
+				   fillcolor::NullString,
+				   fillalpha::NullFloat,
+				   size::NullInt)
+		linecolor = linecolor == nothing ? omit : Dict{String, BkAny}({"value" => linecolor})
+		linewidth = linewidth == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => linewidth})
+		linealpha = linealpha == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => linealpha})
+		dash = dash == nothing ? omit : dash
+		fillcolor = fillcolor == nothing ? omit : Dict{String, BkAny}({"value" => fillcolor})
+		fillalpha = fillalpha == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => fillalpha})
+		size = size == nothing ? omit : Dict{String, BkAny}({"units" => "screen", "value" => size})
+		x = Dict{String, String}({"units" => "data", "field" => "x"})
+		y = Dict{String, String}({"units" => "data", "field" => "y"})
+		Glyph(uuid4(), glyphtype, linecolor, linewidth, linealpha, dash, fillcolor, fillalpha, size, x, y)
+	end
+
+	function Glyph(;glyphtype=nothing,
+				   linecolor=nothing, 
+				   linewidth=nothing, 
+				   linealpha=nothing, 
+				   dash=nothing,
+				   fillcolor=nothing, 
+				   fillalpha=nothing,
+				   size=nothing)
+		glyphtype == nothing && error("glyphtype is required in Glyph definitions")
+		Glyph(glyphtype, linecolor, linewidth, linealpha, dash, fillcolor, fillalpha, size)
+	end
+
+    function Base.show(io::IO, g::Glyph)
+        names = Glyph.names
+        features = String[]
+        for name in Glyph.names
+            showname = name == :_type_name ? :type : name
+            g.(name) != nothing && push!(features, "$showname: $(g.(name))")
+        end
+        print(io, "Glyph(", join(features, ", "), ")")
+    end
+
+	type GlyphRenderer <: Renderer
+		uuid::UUID
+		data_source::TypeID
+		nonselection_glyph::TypeID
+		selection_glyph::TypeID
+		glyph::TypeID
+		name::Union(Nothing, String)
+		server_data_source::NullDict
+	end
+
+	typealias NullGlyph Union(Nothing, Glyph)
+
+	function GlyphRenderer(coldata::ColumnDataSource, nonsel_g::NullGlyph, sel_g::NullGlyph, glyph::Glyph)
+		GlyphRenderer(uuid4(), 
+					  TypeID(coldata),
+					  TypeID(nonsel_g),
+					  TypeID(sel_g),
+					  TypeID(glyph),
+					  nothing,
+					  nothing
+		)
 	end
 
 	type Metatool <: PlotObject
 		uuid::UUID
 		_type_name::String
 		plot::TypeID
-		dimensions::Union(Array{String, 1}, Nothing)
+		dimensions::Union(Vector{String}, Nothing, Omit)
 	end
 
 	function Metatool(typename::String, plot::Plot, dimensions)
@@ -155,7 +262,7 @@ module Bokehjs
 	end
 
 	function Metatool(typename::String, plot::Plot)
-		Metatool(typename, plot, nothing)
+		Metatool(typename, plot, omit)
 	end
 
 	_DEFAULT_HEIGHT = 600
@@ -210,7 +317,7 @@ module Bokehjs
 
 	type PlotContext <: PlotObject
 		uuid::UUID
-		children::Array{TypeID, 1}
+		children::Vector{TypeID}
 	end
 
 	function PlotContext(plot::Plot)
@@ -222,10 +329,16 @@ typealias RealMat Bokehjs.RealMat
 typealias RealMatVect Bokehjs.RealMatVect
 typealias BkAny Bokehjs.BkAny
 
+typealias Glyph Bokehjs.Glyph
+typealias NullString Bokehjs.NullString
+typealias NullSymbol Bokehjs.NullSymbol
+typealias NullFloat Bokehjs.NullFloat
+typealias NullInt Bokehjs.NullInt
+
 if in(:_print, names(JSON, true))
 	# implement correct UUID printing for both old and new JSON.jl
 	function JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID)
-	    JSON._print(io, state, string(uuid))
+		JSON._print(io, state, string(uuid))
 	end
 	function JSON._print(io::IO, state::JSON.State, tid::Bokehjs.TypeID)
 		tid.plotob == nothing && (return JSON._print(io, state, nothing))
@@ -234,11 +347,11 @@ if in(:_print, names(JSON, true))
 		d = Dict{String, BkAny}([
 			"type" => obtype,
 			"id" => tid.plotob.uuid])
-	    JSON._print(io, state, d)
+		JSON._print(io, state, d)
 	end
 else
 	function JSON.print(io::IO, uuid::Bokehjs.UUID)
-	    JSON.print(io, string(uuid))
+		JSON.print(io, string(uuid))
 	end	
 	function JSON.print(io::IO, tid::Bokehjs.TypeID)
 		tid.plotob == nothing && (return JSON.print(io, nothing))
@@ -247,6 +360,6 @@ else
 		d = Dict{String, BkAny}([
 			"type" => obtype,
 			"id" => tid.plotob.uuid])
-	    JSON.print(io, d)
+		JSON.print(io, d)
 	end
 end

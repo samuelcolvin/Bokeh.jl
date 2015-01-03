@@ -1,56 +1,55 @@
 using Mustache
 
-function Bokehjs.Glyph(glyph::Glyph,
-					   coldata::Bokehjs.ColumnDataSource, 
-					   xrange::Bokehjs.NullBkRange=nothing, 
-					   yrange::Bokehjs.NullBkRange=nothing)
-	glyphspec = Dict{String, BkAny}([
-		"type" => glyph.gtype,
-		"y" => ["units" => "data", "field" => "y"],
-		"x" => ["units" => "data", "field" => "x"],
-		])
-	glyph.linewidth != nothing && (glyphspec["line_width"] = ["units" => "data", "value" => glyph.linewidth])
-
-	glyph.linecolor != nothing && (glyphspec["line_color"] = ["value" => glyph.linecolor])
-	glyph.fillcolor != nothing && (glyphspec["fill_color"] = ["value" => glyph.fillcolor])
-
-	glyph.linealpha != nothing && (glyphspec["line_alpha"] = ["value" => glyph.linealpha])
-	glyph.fillalpha != nothing && (glyphspec["fill_alpha"] = ["value" => glyph.fillalpha])
-
-	glyph.size != nothing && (glyphspec["size"] = ["units" => "screen", "value" => glyph.size])
-
-	glyph.dash != nothing && (glyphspec["line_dash"] = glyph.dash)
-	
-	Bokehjs.Glyph(coldata, xrange, yrange, glyphspec)
-end
-
 function _genmodels(plot::Plot)
 	bkplot = Bokehjs.Plot()
 	doc = Bokehjs.uuid4()
 	obs = Dict{String, BkAny}[]
 
 	cdss = Bokehjs.ColumnDataSource[]
-	bkglyphs = Bokehjs.PlotObject[]
+	renderers = Bokehjs.PlotObject[]
+	legends = Tuple[]
 	for datacolumn in plot.datacolumns
 		cds = Bokehjs.ColumnDataSource(datacolumn.columns, datacolumn.data)
-		pushdict!(obs, cds, doc)
-		bg = Bokehjs.Glyph(datacolumn.glyph, cds)
 		push!(cdss, cds)
-		push!(bkglyphs, bg)
-		pushdict!(obs, bg, doc)
+		pushdict!(obs, cds, doc)
+		glyph = datacolumn.glyph
+		pushdict!(obs, glyph, doc)
+		glyphrenderer = Bokehjs.GlyphRenderer(cds, glyph, nothing, glyph)
+		push!(renderers, glyphrenderer)
+		pushdict!(obs, glyphrenderer, doc)
+		if datacolumn.legend != nothing
+			push!(legends, (datacolumn.legend, glyphrenderer))
+		end
 	end
+
+	if length(legends) > 0
+		legend = Bokehjs.Legend(bkplot, legends, plot.legendsgo)
+		push!(renderers, legend)
+		pushdict!(obs, legend, doc)
+	end
+
 	dr1x = Bokehjs.DataRange1d(cdss, String["x"])
 	dr1y = Bokehjs.DataRange1d(cdss, String["y"])
 	pushdict!(obs, dr1x, doc)
 	pushdict!(obs, dr1y, doc)
 
-	ticker0 = Bokehjs.BasicTicker()
-	ticker1 = Bokehjs.BasicTicker()
+	# TODO: currently auto and log aren't implemented properly
+	axis_types = {
+		:auto =>     ("BasicTicker", "BasicTickFormatter"),
+		:linear =>   ("BasicTicker", "BasicTickFormatter"),
+		:log =>      ("BasicTicker", "BasicTickFormatter"),
+		:datetime => ("DatetimeTicker", "DatetimeTickFormatter"),
+	}
+	xticker_type, xtickform_type = axis_types[plot.x_axis_type]
+	yticker_type, ytickform_type = axis_types[plot.y_axis_type]
+
+	ticker0 = Bokehjs.Ticker(xticker_type)
+	ticker1 = Bokehjs.Ticker(yticker_type)
 	pushdict!(obs, ticker0, doc)
 	pushdict!(obs, ticker1, doc)
 
-	tickform0 = Bokehjs.BasicTickFormatter()
-	tickform1 = Bokehjs.BasicTickFormatter()
+	tickform0 = Bokehjs.TickFormatter(xtickform_type)
+	tickform1 = Bokehjs.TickFormatter(ytickform_type)
 	pushdict!(obs, tickform0, doc)
 	pushdict!(obs, tickform1, doc)
 
@@ -90,13 +89,11 @@ function _genmodels(plot::Plot)
 		push!(tools, resettool)
 	end
 
-	renderers = Bokehjs.PlotObject[
-		axis0,
-		axis1,
-		grid0,
-		grid1
-	]
-	append!(renderers, bkglyphs)
+	push!(renderers, axis0)
+	push!(renderers, axis1)
+	push!(renderers, grid0)
+	push!(renderers, grid1)
+
 	axes = [
 		:above => [],
 		:below => [axis0],
@@ -134,6 +131,7 @@ function _obdict(ob::Bokehjs.PlotObject, doc::Bokehjs.UUID)
 	special = [:_type_name]
 	for name in extra_attrs[2:end]
 		in(name, special) && continue
+		ob.(name) == Bokehjs.omit && continue
 		key = string(name)
 		# key = begingswith(key, "_") ? key[2:end] : key
 		attrs[key] = ob.(name)

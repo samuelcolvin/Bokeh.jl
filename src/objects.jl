@@ -1,55 +1,13 @@
 module GlyphBase
-    typealias NullString Union(String, Nothing)
-    typealias NullFloat Union(Float64, Nothing)
-    typealias NullInt Union(Int, Nothing)
-
-    type Glyph
-        gtype::String
-        linewidth::NullInt
-        linecolor::NullString
-        fillcolor::NullString
-        linealpha::NullFloat
-        fillalpha::NullFloat
-        size::NullInt
-        dash::Union(Nothing, Array{Int, 1})
-    end
-
-    function Base.show(io::IO, g::Glyph)
-        names = Glyph.names
-        features = String[]
-        for name in Glyph.names
-            showname = name == :gtype ? :type : name
-            g.(name) != nothing && push!(features, "$showname: $(g.(name))")
-        end
-        print(io, "Glyph(", join(features, ", "), ")")
-    end
-
-    function Glyph(;glyphtype=nothing,
-    	            linewidth=nothing, 
-                    linecolor=nothing, 
-                    fillcolor=nothing, 
-                    linealpha=nothing, 
-                    fillalpha=nothing, 
-                    size=nothing, 
-                    dash=nothing)
-        glyphtype == nothing && error("glyphtype is required in Glyph definitions")
-    	Glyph(glyphtype, linewidth, linecolor, fillcolor, linealpha, fillalpha, size, dash)
-    end
-
-    function Circle(;linewidth=1, linecolor="blue", fillcolor="blue", linealpha=1, fillalpha=0.5, size=4)
-        Glyph(glyphtype="circle", linewidth=linewidth, linecolor=linecolor, 
+    function Circle(;linewidth=1, linecolor="blue", fillcolor="blue", linealpha=1.0, fillalpha=0.5, size=4)
+        Bokehjs.Glyph(glyphtype="Circle", linewidth=linewidth, linecolor=linecolor, 
             fillcolor=fillcolor, linealpha=linealpha, fillalpha=fillalpha, size=size)
     end
 
     function Line(;linewidth=1, linecolor="blue", linealpha=1.0, dash=nothing)
-        Glyph(glyphtype="line", linewidth=linewidth, linecolor=linecolor, linealpha=linealpha, dash=dash)
+        Bokehjs.Glyph(glyphtype="Line", linewidth=linewidth, linecolor=linecolor, linealpha=linealpha, dash=dash)
     end
 end
-
-typealias Glyph GlyphBase.Glyph
-typealias NullString GlyphBase.NullString
-typealias NullFloat GlyphBase.NullFloat
-typealias NullInt GlyphBase.NullInt
 
 typealias NullRange Union(Range, Nothing)
 
@@ -57,13 +15,14 @@ type DataColumn
     columns::Array{String, 1}
     data::Dict{String, RealVect}
     glyph::Glyph
+    legend::NullString
     xrange::NullRange
     yrange::NullRange
 end
 
-function DataColumn(xdata::RealVect, ydata::RealVect, glyph::Glyph)
+function DataColumn(xdata::RealVect, ydata::RealVect, glyph::Glyph, legend::NullString=nothing)
 	data = ["x" => xdata, "y" => ydata]
-	DataColumn(["x", "y"], data, glyph, nothing, nothing)
+	DataColumn(["x", "y"], data, glyph, legend, nothing, nothing)
 end
 
 type Plot
@@ -73,6 +32,9 @@ type Plot
     title::String
     width::Int
     height::Int
+    x_axis_type::NullSymbol
+    y_axis_type::NullSymbol
+    legendsgo::NullSymbol
 end
 
 # heavily borrowed from Winston, thanks Winston!
@@ -107,7 +69,7 @@ function Base.convert(::Type{Array{Glyph, 1}}, styles::String)
 end
 
 function Base.convert(::Type{Glyph}, style::String)
-    styd = Dict{Symbol, Any}([:glyphtype => "line", :linecolor => "blue"])
+    styd = Dict{Symbol, Any}([:glyphtype => "Line", :linecolor => "blue", :linewidth => 1, :linealpha => 1.0])
 
     for (k,v) in [ "--" => [4, 4], "-." => [1, 4, 2], ".-" => [1, 4, 2] ]
         splitstyle = split(style, k)
@@ -127,12 +89,12 @@ function Base.convert(::Type{Glyph}, style::String)
         end
     end
 
-    filledglyphs = ["circle"]
+    filledglyphs = ["Circle"]
     if in(styd[:glyphtype], filledglyphs)
         styd[:fillcolor] = styd[:linecolor]
         styd[:fillalpha] = DEFAULT_FILL_ALPHA
     end
-    sizeglyphs = ["circle"]
+    sizeglyphs = ["Circle"]
     if in(styd[:glyphtype], sizeglyphs)
         !haskey(styd, :size) && (styd[:size] = DEFAULT_SIZE)
     end

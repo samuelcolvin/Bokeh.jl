@@ -25,6 +25,10 @@ module Bokeh
 	height(h::Int) = (global HEIGHT = h)
 	height() = HEIGHT
 
+	# default axis types
+	X_AXIS_TYPE = :auto
+	Y_AXIS_TYPE = :auto
+
 	# default glyph type
 	DEFAULT_GLYPHS_STR = "b|r|g|k|y|c|m|b--|r--|g--|k--|y--|c--|m--|--"
 	DEFAULT_GLYPHS = convert(Vector{Glyph}, DEFAULT_GLYPHS_STR)

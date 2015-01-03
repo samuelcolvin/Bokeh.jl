@@ -14,7 +14,7 @@ showplot("holding.html")
 # CURPLOT but rather to extend it
 
 
-# we can do something similar be specify exactly which plot we wish to 
+# we can do something similar bey specifying exactly which plot we wish to 
 # extend
 hold(false)
 # becaues hold is false p1 and p2 are seperate plots
