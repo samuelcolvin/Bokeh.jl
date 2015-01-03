@@ -12,7 +12,15 @@ before_install:
   - sudo apt-get update -qq -y
   - sudo apt-get install libpcre3-dev julia -y
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - npm install -g grunt-cli
+  - git clone git://github.com/n1k0/casperjs.git ~/casperjs
+  - cd ~/casperjs
+  - git checkout tags/1.0.4
+  - phantomjs --version; casperjs --version
+  - export PATH=$PATH:`pwd`/bin
+  - cd -
 script:
   - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.build("Bokeh"); Pkg.test("Bokeh",coverage=true)'
+  - casperjs test test/casper.js
 after_success:
   - julia -e 'cd(Pkg.dir("Bokeh")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
