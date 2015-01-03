@@ -93,9 +93,9 @@ module Bokeh
 	NOSHOW = false
 	noshow(b::Bool) = (global NOSHOW = b)
 
-	# generally js and css is not copied into HTML pages but rather the files referenced,
-	# the only common exception is IJulia plots, this allows that to be ovwritten
-	# so js and css are always included in pages, mainly used for travis testing
+	# generally js and css is not copied into HTML pages but rather the 
+	# files referenced, the only common exception is IJulia plots, this 
+	# allows that to be ovwritten so js and css are always included in pages
 	INCLUDE_JS = false
 	includejs(ijs::Bool) = (global INCLUDE_JS = ijs)
 
