@@ -1,18 +1,17 @@
 module GlyphBase
     function Circle(;linewidth=1, linecolor="blue", fillcolor="blue", linealpha=1.0, fillalpha=0.5, size=4)
-        Bokehjs.Glyph(glyphtype="Circle", linewidth=linewidth, linecolor=linecolor, 
+        Bokehjs.Glyph(glyphtype=:Circle, linewidth=linewidth, linecolor=linecolor, 
             fillcolor=fillcolor, linealpha=linealpha, fillalpha=fillalpha, size=size)
     end
 
     function Line(;linewidth=1, linecolor="blue", linealpha=1.0, dash=nothing)
-        Bokehjs.Glyph(glyphtype="Line", linewidth=linewidth, linecolor=linecolor, linealpha=linealpha, dash=dash)
+        Bokehjs.Glyph(glyphtype=:Line, linewidth=linewidth, linecolor=linecolor, linealpha=linealpha, dash=dash)
     end
 end
 
 typealias NullRange Union(Range, Nothing)
 
 type DataColumn
-    columns::Array{String, 1}
     data::Dict{String, RealVect}
     glyph::Glyph
     legend::NullString
@@ -20,9 +19,15 @@ type DataColumn
     yrange::NullRange
 end
 
-function DataColumn(xdata::RealVect, ydata::RealVect, glyph::Glyph, legend::NullString=nothing)
-	data = ["x" => xdata, "y" => ydata]
-	DataColumn(["x", "y"], data, glyph, legend, nothing, nothing)
+function DataColumn(xdata::RealVect, ydata::RealVect, args...)
+    data = Dict{String, RealVect}(["x" => xdata, "y" => ydata])
+	DataColumn(data, args...)
+end
+
+function DataColumn(data::Dict{String, RealVect}, 
+                    glyph::Glyph, 
+                    legend::NullString=nothing)
+    DataColumn(data, glyph, legend, nothing, nothing)
 end
 
 type Plot
@@ -44,11 +49,11 @@ const chartokens = [
     ':' => {:dash => [1, 4]},
     ';' => {:dash => [1, 4, 2]},
     # '+' => {:glyphtype => "plus"},
-    'o' => {:glyphtype => "circle"},
+    'o' => {:glyphtype => :Circle},
     # '*' => {:glyphtype => "asterisk"},
     # '.' => {:glyphtype => "dot"},
     # 'x' => {:glyphtype => "cross"},
-    # 's' => {:glyphtype => "square"},
+    's' => {:glyphtype => :Square},
     # 'd' => {:glyphtype => "diamond"},
     # '^' => {:glyphtype => "triangle"},
     # 'v' => {:glyphtype => "down-triangle"},
@@ -64,12 +69,14 @@ const chartokens = [
     'k' => {:linecolor => "black"},
 ]
 
+Base.convert(::Type{Array{Glyph, 1}}, glyph::Glyph) = [glyph]
+
 function Base.convert(::Type{Array{Glyph, 1}}, styles::String)
     map(style -> convert(Glyph, style), split(styles, '|'))
 end
 
 function Base.convert(::Type{Glyph}, style::String)
-    styd = Dict{Symbol, Any}([:glyphtype => "Line", :linecolor => "blue", :linewidth => 1, :linealpha => 1.0])
+    styd = Dict{Symbol, Any}([:glyphtype => :Line, :linecolor => "blue", :linewidth => 1, :linealpha => 1.0])
 
     for (k,v) in [ "--" => [4, 4], "-." => [1, 4, 2], ".-" => [1, 4, 2] ]
         splitstyle = split(style, k)
@@ -89,15 +96,10 @@ function Base.convert(::Type{Glyph}, style::String)
         end
     end
 
-    filledglyphs = ["Circle"]
+    filledglyphs = [:Circle, :Square]
     if in(styd[:glyphtype], filledglyphs)
         styd[:fillcolor] = styd[:linecolor]
         styd[:fillalpha] = DEFAULT_FILL_ALPHA
     end
-    sizeglyphs = ["Circle"]
-    if in(styd[:glyphtype], sizeglyphs)
-        !haskey(styd, :size) && (styd[:size] = DEFAULT_SIZE)
-    end
-    # @show styd
     Glyph(;styd...)
 end

@@ -1,6 +1,6 @@
 module Bokeh
 	include("bokehjs.jl")
-	include("objects.jl")
+	include("glyphs.jl")
 	include("display.jl")
 	include("generate.jl")
 	include("plot.jl")

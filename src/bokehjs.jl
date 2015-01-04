@@ -78,9 +78,9 @@ module Bokehjs
 		data::Dict{String, RealVect}
 	end
 
-	function ColumnDataSource(column_names::Vector{String}, data::Dict{String, RealVect})
+	function ColumnDataSource(data::Dict{String, RealVect})
 		ColumnDataSource(uuid4(),
-						 column_names,
+						 collect(keys(data)),
 						 BkAny[],
 						 Dict{String, BkAny}(), 
 						 Dict{String, BkAny}(), 
@@ -100,21 +100,21 @@ module Bokehjs
 
 	type TickFormatter <: PlotObject
 		uuid::UUID
-		_type_name::String
+		_type_name::Symbol
 		format::OmitDict
-		function TickFormatter(name::String)
-			@assert name in ("BasicTickFormatter", "DatetimeTickFormatter", "LogTickFormatter")
+		function TickFormatter(name::Symbol)
+			@assert name in (:BasicTickFormatter, :DatetimeTickFormatter, :LogTickFormatter)
 			# format only seems to occur for DatetimeTickFormatter and even then is empty
-			format = name == "DatetimeTickFormatter" ? Dict{String, BkAny}() : omit
+			format = name == :DatetimeTickFormatter ? Dict{String, BkAny}() : omit
 			new(uuid4(), name, format)
 		end
 	end
 
 	type Ticker <: PlotObject
 		uuid::UUID
-		_type_name::String
+		_type_name::Symbol
 		num_minor_ticks::Int64
-		Ticker(name::String) = new(uuid4(), name, 5)
+		Ticker(name::Symbol) = new(uuid4(), name, 5)
 	end
 
 	type LinearAxis <: Axis
@@ -172,7 +172,7 @@ module Bokehjs
 
 	type Glyph <: PlotObject
 		uuid::UUID
-		_type_name::String
+		_type_name::Symbol
 		line_color::OmitDict
 		line_width::OmitDict
 		line_alpha::OmitDict
@@ -184,7 +184,7 @@ module Bokehjs
 		y::Dict{String, String}
 	end
 
-	function Glyph(glyphtype::String,
+	function Glyph(glyphtype::Symbol,
 				   linecolor::NullString, 
 				   linewidth::NullInt, 
 				   linealpha::NullFloat, 

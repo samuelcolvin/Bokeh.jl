@@ -9,7 +9,7 @@ function _genmodels(plot::Plot)
 	renderers = Bokehjs.PlotObject[]
 	legends = Tuple[]
 	for datacolumn in plot.datacolumns
-		cds = Bokehjs.ColumnDataSource(datacolumn.columns, datacolumn.data)
+		cds = Bokehjs.ColumnDataSource(datacolumn.data)
 		push!(cdss, cds)
 		pushdict!(obs, cds, doc)
 		glyph = datacolumn.glyph
@@ -35,10 +35,10 @@ function _genmodels(plot::Plot)
 
 	# TODO: currently auto and log aren't implemented properly
 	axis_types = {
-		:auto =>     ("BasicTicker", "BasicTickFormatter"),
-		:linear =>   ("BasicTicker", "BasicTickFormatter"),
-		:log =>      ("BasicTicker", "BasicTickFormatter"),
-		:datetime => ("DatetimeTicker", "DatetimeTickFormatter"),
+		:auto =>     (:BasicTicker, :BasicTickFormatter),
+		:linear =>   (:BasicTicker, :BasicTickFormatter),
+		:log =>      (:BasicTicker, :BasicTickFormatter),
+		:datetime => (:DatetimeTicker, :DatetimeTickFormatter),
 	}
 	xticker_type, xtickform_type = axis_types[plot.x_axis_type]
 	yticker_type, ytickform_type = axis_types[plot.y_axis_type]

@@ -66,10 +66,10 @@ function plot(x::RealVect, y::RealVect, args...; kwargs...)
     plot(reshape(x, length(x), 1), reshape(y, length(y), 1), args...; kwargs...)
 end
 
-function plot(x::RealMat, y::RealMat, styles::String=DEFAULT_GLYPHS_STR; 
-              glyphs::Vector{Glyph}=DEFAULT_GLYPHS, legends::Union(Nothing, Vector)=nothing, kwargs...)
+function plot(x::RealMat, y::RealMat, styles::Union(String, Glyph, Vector{Glyph})=DEFAULT_GLYPHS_STR; 
+              legends::Union(Nothing, Vector)=nothing, kwargs...)
     size(x) != size(y) && error("size of x and y are not equal: x: $(size(x)), y: $(size(y))")
-    glyphs = glyphs == DEFAULT_GLYPHS ? convert(Vector{Glyph}, styles) : glyphs
+    glyphs = convert(Vector{Glyph}, styles)
     cols = size(x,2)
     glyphs = repmat(glyphs, int(ceil(cols / length(glyphs))))
     legends = legends == nothing ? [nothing for _ in 1:cols] : legends
