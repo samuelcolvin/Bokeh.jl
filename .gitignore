@@ -3,4 +3,3 @@ env
 /*.html
 /*.json
 # deps/bokehjs
-pyxamples
