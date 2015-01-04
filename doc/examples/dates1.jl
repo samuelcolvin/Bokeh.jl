@@ -10,7 +10,7 @@ autoopen(true)
 plotfile("dates1.html")
 
 # this simple example uses unix time stamps for datetimes
-epoch = DateTime(1970, 1,1)
+epoch = DateTime(1970, 1, 1)
 n = int(now() - epoch) #  ms
 # 1 month range
 day = 1000 * 3600 * 24
