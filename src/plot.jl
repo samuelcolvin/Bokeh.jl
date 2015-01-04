@@ -1,4 +1,14 @@
+using Dates
+
 typealias URange Union(Union(Range, UnitRange))
+
+typealias DTArray Union(AbstractMatrix{DateTime}, AbstractMatrix{Date}, AbstractVector{DateTime}, AbstractVector{Date})
+
+const epoch = DateTime(1970, 1, 1)
+
+unixtime(d::DateTime) = int(d - epoch)
+
+unixtime(d::Date) = int(convert(DateTime, d) - epoch)
 
 function plot(f::Function, args...;kwargs...)
     plot([f], args...; kwargs...)
@@ -20,16 +30,12 @@ function plot(fs::Vector{Function}, start::Real=-10, stop::Real=10, args...;
     plot(x, y, args...; kwargs...)
 end
 
-function plot(x::RealVect, y::RealMat, args...; kwargs...)
-    x = repmat(x, 1, size(y, 2))
-    plot(x, y, args...; kwargs...)
+function plot(x::DTArray, args...; kwargs...)
+    plot(map(unixtime, x), args...; x_axis_type=:datetime, kwargs...)
 end
 
-function plot(y::RealMatVect, args...; kwargs...)
-    # use 0:(length - 1) so the x values are the sames as the indices of y
-    x = 0:(size(y, 1) - 1)
-    x = ndims(y) > 1 ? repmat(x, 1, size(y, 2)) : x
-    plot(x, y, args...; kwargs...)
+function plot(x::RealArray, y::DTArray, args...; kwargs...)
+    plot(x, map(unixtime, y), args...; y_axis_type=:datetime, kwargs...)
 end
 
 # need to work with arrays of arrays as well as mats:
@@ -41,6 +47,18 @@ end
 #     end
 #     plot(y2; kwargs...)
 # end
+
+function plot(y::RealArray, args...; kwargs...)
+    # use 0:(length - 1) so the x values are the sames as the indices of y
+    x = 0:(size(y, 1) - 1)
+    x = ndims(y) > 1 ? repmat(x, 1, size(y, 2)) : x
+    plot(x, y, args...; kwargs...)
+end
+
+function plot(x::RealVect, y::RealMat, args...; kwargs...)
+    x = repmat(x, 1, size(y, 2))
+    plot(x, y, args...; kwargs...)
+end
 
 function plot(x::RealVect, y::RealVect, args...; kwargs...)
     # is there a more efficient way of forcing a matrix ?
@@ -59,14 +77,12 @@ function plot(x::RealMat, y::RealMat, styles::String=DEFAULT_GLYPHS_STR;
     plot(dcs; kwargs...)
 end
 
-# TODO: this "root" plot method is effectively figure, could be changed for clarity?
-
-# there a good if boring reason that we have to use nothing for width, height etc. rather than 
+# there a good if boring reason why we have to use nothing for width, height etc. rather than 
 # set the default to WIDTH, HEIGHT etc.: its because we wouldn't be able to specify a new width 
 # or height on an extending plot if the new value happened to be the same as WIDTH or HEIGHT
 function plot(columns::Array{DataColumn, 1}; extend::Union(Nothing, Plot)=nothing,
               title::NullString=nothing, width::NullInt=nothing, height::NullInt=nothing,
-              x_axis_type=nothing, y_axis_type=nothing, legendsgo::NullSymbol=nothing,
+              x_axis_type::NullSymbol=nothing, y_axis_type::NullSymbol=nothing, legendsgo::NullSymbol=nothing,
               plotfile::NullString=nothing, tools::Union(Nothing, Array{Symbol, 1})=nothing, 
               autoopen::Bool=AUTOOPEN)
     extend == nothing && !HOLD && (global CURPLOT = nothing)

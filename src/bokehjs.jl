@@ -3,9 +3,9 @@ using JSON
 module Bokehjs
 	typealias RealVect Union(AbstractVector{Int}, AbstractVector{Float64})
 	typealias RealMat Union(AbstractMatrix{Int}, AbstractMatrix{Float64})
-	typealias RealMatVect Union(RealMat, RealVect)
+	typealias RealArray Union(RealMat, RealVect)
 	# would be nice to parameterize, but more important to constrain dims to 1 or 2
-	# typealias RealMatVect{N} Union(AbstractArray{Int, N}, AbstractArray{Float64, N})
+	# typealias RealArray{N} Union(AbstractArray{Int, N}, AbstractArray{Float64, N})
 
 	# like nothing except omitted from json rather than being null
 	type Omit
@@ -326,7 +326,7 @@ module Bokehjs
 end
 typealias RealVect Bokehjs.RealVect
 typealias RealMat Bokehjs.RealMat
-typealias RealMatVect Bokehjs.RealMatVect
+typealias RealArray Bokehjs.RealArray
 typealias BkAny Bokehjs.BkAny
 
 typealias Glyph Bokehjs.Glyph

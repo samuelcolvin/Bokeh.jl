@@ -7,7 +7,7 @@ autoopen(true)
 
 # for consistency we set the name of the html file to generate in this example
 # if you dont set this the default name "bokeh_plot.html" is used
-plotfile("dates.html")
+plotfile("dates1.html")
 
 # this simple example uses unix time stamps for datetimes
 epoch = DateTime(1970, 1,1)
