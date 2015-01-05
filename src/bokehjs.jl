@@ -335,31 +335,20 @@ typealias NullSymbol Bokehjs.NullSymbol
 typealias NullFloat Bokehjs.NullFloat
 typealias NullInt Bokehjs.NullInt
 
-if in(:_print, names(JSON, true))
-	# implement correct UUID printing for both old and new JSON.jl
-	function JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID)
-		JSON._print(io, state, string(uuid))
-	end
-	function JSON._print(io::IO, state::JSON.State, tid::Bokehjs.TypeID)
-		tid.plotob == nothing && (return JSON._print(io, state, nothing))
-		attrs = typeof(tid.plotob).names
-		obtype = in(:_type_name, attrs) ? tid.plotob._type_name : typeof(tid.plotob)
-		d = Dict{String, BkAny}([
-			"type" => obtype,
-			"id" => tid.plotob.uuid])
-		JSON._print(io, state, d)
-	end
-else
-	function JSON.print(io::IO, uuid::Bokehjs.UUID)
-		JSON.print(io, string(uuid))
-	end	
-	function JSON.print(io::IO, tid::Bokehjs.TypeID)
-		tid.plotob == nothing && (return JSON.print(io, nothing))
-		attrs = typeof(tid.plotob).names
-		obtype = in(:_type_name, attrs) ? tid.plotob._type_name : typeof(tid.plotob)
-		d = Dict{String, BkAny}([
-			"type" => obtype,
-			"id" => tid.plotob.uuid])
-		JSON.print(io, d)
-	end
+function JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID)
+    JSON._print(io, state, string(uuid))
+end
+
+function JSON._print(io::IO, state::JSON.State, tid::Bokehjs.TypeID)
+    tid.plotob == nothing && (return JSON._print(io, state, nothing))
+    attrs = typeof(tid.plotob).names
+    obtype = in(:_type_name, attrs) ? tid.plotob._type_name : typeof(tid.plotob)
+    d = Dict{String, BkAny}([
+        "type" => obtype,
+        "id" => tid.plotob.uuid])
+    JSON._print(io, state, d)
+end
+
+function JSON._print{T<:Bokehjs.PlotObject}(io::IO, state::JSON.State, d::Type{T})
+    Base.print(io, "\"", d.name.name, "\"")
 end
