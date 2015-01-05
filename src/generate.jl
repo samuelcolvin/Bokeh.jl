@@ -1,4 +1,5 @@
 using Mustache
+using Compat
 
 function _genmodels(plot::Plot)
 	bkplot = Bokehjs.Plot()
@@ -34,12 +35,12 @@ function _genmodels(plot::Plot)
 	pushdict!(obs, dr1y, doc)
 
 	# TODO: currently auto and log aren't implemented properly
-	axis_types = {
+	axis_types = @compat Dict{Symbol, Tuple}(
 		:auto =>     ("BasicTicker", "BasicTickFormatter"),
 		:linear =>   ("BasicTicker", "BasicTickFormatter"),
 		:log =>      ("BasicTicker", "BasicTickFormatter"),
 		:datetime => ("DatetimeTicker", "DatetimeTickFormatter"),
-	}
+	)
 	xticker_type, xtickform_type = axis_types[plot.x_axis_type]
 	yticker_type, ytickform_type = axis_types[plot.y_axis_type]
 
@@ -94,12 +95,12 @@ function _genmodels(plot::Plot)
 	push!(renderers, grid0)
 	push!(renderers, grid1)
 
-	axes = [
+	axes = @compat Dict{Symbol, Vector}(
 		:above => [],
 		:below => [axis0],
 		:left => [axis1],
 		:right => []
-	]
+	)
 
 	bkplot = Bokehjs.Plot(bkplot,
 				dr1x,
@@ -121,11 +122,11 @@ function _genmodels(plot::Plot)
 end
 
 function _obdict(ob::Bokehjs.PlotObject, doc::Bokehjs.UUID)
-	d = Dict{String, BkAny}()
+	d = @compat Dict{String, BkAny}()
 	d["id"] = ob.uuid
 	extra_attrs = typeof(ob).names
 	d["type"] = in(:_type_name, extra_attrs) ? ob._type_name : typeof(ob)
-	attrs = Dict{String, Any}()
+	attrs = @compat Dict{String, Any}()
 	attrs["id"] = d["id"]
 	attrs["doc"] = doc
 	special = [:_type_name]
@@ -180,18 +181,18 @@ function _rendertemplate(models::String, plotcon::Bokehjs.PlotContext, isijulia:
 			print(f, models)
 		end
 	end
-	context = Dict{String, String}([
+	context = @compat Dict{String, String}(
 		"model_id" => string(plotcon.uuid),
 		"all_models" => models,
 		"div_id" => string(Bokehjs.uuid4())
-	])
+	)
 	main = render(main, context)
 	body = render(body, context)
-	maincontext = Dict{String, String}([
+	maincontext = @compat Dict{String, String}(
 		"jscss" => jscss,
 		"main" => main,
 		"body" => body,
-	])
+	)
 	result = render(base, maincontext)
 end
 
