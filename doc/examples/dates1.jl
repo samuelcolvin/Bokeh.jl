@@ -1,5 +1,9 @@
 using Bokeh
-using Dates
+if VERSION < v"0.4-"
+    using Dates
+else
+    using Base.Dates
+end
 # by default autoopen is false (since v0.0.2) so to cause plots to show
 # when plot is called we switch it on
 # this can also be achieved by passing autoopen=true to plot

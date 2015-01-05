@@ -1,4 +1,8 @@
-using Dates
+if VERSION < v"0.4-"
+    using Dates
+else
+    using Base.Dates
+end
 
 typealias URange Union(Union(Range, UnitRange))
 
