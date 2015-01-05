@@ -22,6 +22,7 @@ t = title()
 title(t)
 Bokeh.noshow(true)
 # Bokeh.includejs(true)
+Bokeh.filewarnings(false)
 
 # check they're correct:
 # Bokeh.parse_spec("r--") |> println

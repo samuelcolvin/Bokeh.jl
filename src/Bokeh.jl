@@ -99,6 +99,10 @@ module Bokeh
 	INCLUDE_JS = false
 	includejs(ijs::Bool) = (global INCLUDE_JS = ijs)
 
+  # filesystem warning switch
+  FILE_WARNINGS = true
+  filewarnings(warn::Bool) = (global FILE_WARNINGS = warn)
+
 
 	export plot,
 		   setupnotebook,
