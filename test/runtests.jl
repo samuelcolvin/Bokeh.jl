@@ -21,6 +21,7 @@ glyphsize(dft_size)
 t = title()
 title(t)
 Bokeh.noshow(true)
+# Bokeh.includejs(true)
 
 # check they're correct:
 # Bokeh.parse_spec("r--") |> println
@@ -28,7 +29,7 @@ Bokeh.noshow(true)
 # Bokeh.parse_spec("r:") |> println
 
 exdir = Pkg.dir("Bokeh", "doc", "examples")
-testingdir = Pkg.dir("Bokeh", "test", "_testing")
+testingdir = "/tmp/bokeh_js_testing"
 mkpath(testingdir)
 cd(testingdir)
 for ex in filter(f -> endswith(f, ".jl"), readdir(exdir))
