@@ -1,8 +1,12 @@
 using Bokeh
-using Dates
+if VERSION < v"0.4-"
+    using Dates
+else
+    using Base.Dates
+end
 
 start = now()
-x = map(d -> start + Hour(d), 1:(30 * 24))
+x = map(d -> start + Dates.Hour(d), 1:(30 * 24))
 println(typeof(x))
 # x: Array{DateTime,1}
 day = 1000 * 3600 * 24
@@ -12,7 +16,7 @@ plot(x, y)
 showplot("dates_xy.html")
 
 start = Date(1980, 1, 1)
-x = map(d -> start + Day(d), 1:(365 * 30))
+x = map(d -> start + Dates.Day(d), 1:(365 * 30))
 println(typeof(x))
 # x: Array{Date,1}
 y = 0.5sin(int(x) * pi / 365) + cos(int(x) * pi / (365 * 7))

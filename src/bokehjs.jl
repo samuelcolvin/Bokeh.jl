@@ -1,6 +1,8 @@
 using JSON
+using Compat
 
 module Bokehjs
+  using Compat
 	typealias RealVect Union(AbstractVector{Int}, AbstractVector{Float64})
 	typealias RealMat Union(AbstractMatrix{Int}, AbstractMatrix{Float64})
 	typealias RealArray Union(RealMat, RealVect)
@@ -93,7 +95,7 @@ module Bokehjs
 	end
 
 	function DataRange1d(cdss::Vector{ColumnDataSource}, columns::Vector{String})
-		source(cds) = Dict{String, BkAny}(["columns" => columns, "source" => TypeID(cds)])
+		source(cds) = @Compat.compat Dict{String, BkAny}("columns" => columns, "source" => TypeID(cds))
 		sources = map(source, cdss)
 		DataRange1d(uuid4(), sources)
 	end
@@ -192,15 +194,15 @@ module Bokehjs
 				   fillcolor::NullString,
 				   fillalpha::NullFloat,
 				   size::NullInt)
-		linecolor = linecolor == nothing ? omit : Dict{String, BkAny}({"value" => linecolor})
-		linewidth = linewidth == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => linewidth})
-		linealpha = linealpha == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => linealpha})
+		linecolor = linecolor == nothing ? omit : @Compat.compat Dict{String, BkAny}("value" => linecolor)
+		linewidth = linewidth == nothing ? omit : @Compat.compat Dict{String, BkAny}("units" => "data", "value" => linewidth)
+		linealpha = linealpha == nothing ? omit : @Compat.compat Dict{String, BkAny}("units" => "data", "value" => linealpha)
 		dash = dash == nothing ? omit : dash
-		fillcolor = fillcolor == nothing ? omit : Dict{String, BkAny}({"value" => fillcolor})
-		fillalpha = fillalpha == nothing ? omit : Dict{String, BkAny}({"units" => "data", "value" => fillalpha})
-		size = size == nothing ? omit : Dict{String, BkAny}({"units" => "screen", "value" => size})
-		x = Dict{String, String}({"units" => "data", "field" => "x"})
-		y = Dict{String, String}({"units" => "data", "field" => "y"})
+		fillcolor = fillcolor == nothing ? omit : @Compat.compat Dict{String, BkAny}("value" => fillcolor)
+		fillalpha = fillalpha == nothing ? omit : @Compat.compat Dict{String, BkAny}("units" => "data", "value" => fillalpha)
+		size = size == nothing ? omit : @Compat.compat Dict{String, BkAny}("units" => "screen", "value" => size)
+		x = @Compat.compat Dict("units" => "data", "field" => "x")
+		y = @Compat.compat Dict("units" => "data", "field" => "y")
 		Glyph(uuid4(), glyphtype, linecolor, linewidth, linealpha, dash, fillcolor, fillalpha, size, x, y)
 	end
 
@@ -335,31 +337,21 @@ typealias NullSymbol Bokehjs.NullSymbol
 typealias NullFloat Bokehjs.NullFloat
 typealias NullInt Bokehjs.NullInt
 
-if in(:_print, names(JSON, true))
-	# implement correct UUID printing for both old and new JSON.jl
-	function JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID)
-		JSON._print(io, state, string(uuid))
-	end
-	function JSON._print(io::IO, state::JSON.State, tid::Bokehjs.TypeID)
-		tid.plotob == nothing && (return JSON._print(io, state, nothing))
-		attrs = typeof(tid.plotob).names
-		obtype = in(:_type_name, attrs) ? tid.plotob._type_name : typeof(tid.plotob)
-		d = Dict{String, BkAny}([
-			"type" => obtype,
-			"id" => tid.plotob.uuid])
-		JSON._print(io, state, d)
-	end
-else
-	function JSON.print(io::IO, uuid::Bokehjs.UUID)
-		JSON.print(io, string(uuid))
-	end	
-	function JSON.print(io::IO, tid::Bokehjs.TypeID)
-		tid.plotob == nothing && (return JSON.print(io, nothing))
-		attrs = typeof(tid.plotob).names
-		obtype = in(:_type_name, attrs) ? tid.plotob._type_name : typeof(tid.plotob)
-		d = Dict{String, BkAny}([
-			"type" => obtype,
-			"id" => tid.plotob.uuid])
-		JSON.print(io, d)
-	end
+function JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID)
+    JSON._print(io, state, string(uuid))
+end
+
+function JSON._print(io::IO, state::JSON.State, tid::Bokehjs.TypeID)
+    tid.plotob == nothing && (return JSON._print(io, state, nothing))
+    attrs = typeof(tid.plotob).names
+    obtype = in(:_type_name, attrs) ? tid.plotob._type_name : typeof(tid.plotob)
+    d = @compat Dict{String, BkAny}(
+        "type" => obtype,
+        "id" => tid.plotob.uuid
+    )
+    JSON._print(io, state, d)
+end
+
+function JSON._print{T<:Bokehjs.PlotObject}(io::IO, state::JSON.State, d::Type{T})
+    Base.print(io, "\"", d.name.name, "\"")
 end
