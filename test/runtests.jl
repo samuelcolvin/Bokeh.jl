@@ -35,4 +35,5 @@ mkpath(testingdir)
 cd(testingdir)
 for ex in filter(f -> endswith(f, ".jl"), readdir(exdir))
 	evalfile(joinpath(exdir, ex))
+	hold(false)
 end
