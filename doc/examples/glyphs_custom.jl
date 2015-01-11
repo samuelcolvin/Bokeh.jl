@@ -17,10 +17,10 @@ glyph_with_everything = Glyph(:DiamondCross,
 							  fillalpha=0.5,
 							  size=50)
 plot([y y*-1], [Glyph(:Asterisk), glyph_with_everything])
-palette = ["#000000", "#190000", "#320000", "#4b0000", "#640000", "#7d0000", "#960000", "#af0000", "#c80000", "#e10000", "#ff0000"]
+palette = ["#000000", "#190000", "#320000", "#4b0000", "#640000", "#7d0000", "#960000", "#af0000", "#c80000", "#e10000"]
 low = minimum(y)
 high= maximum(y)
-y_ints = [int(10*(x-low)/(high-low) + 0.5) for x in y] #gives items in colors a value from 0-10
+y_ints = Int64[round(9.99*(x-low)/(high-low) + 0.5) for x in y]  # round to nearest value in range 1:10
 y_colours = [palette[i] for i in y_ints]
 
 data = @compat Dict{Symbol, Vector}(:x => x, :y => y, :y_colours => y_colours, :y_sizes => y)
