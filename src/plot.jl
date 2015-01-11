@@ -10,11 +10,17 @@ typealias DTArray Union(AbstractMatrix{DateTime}, AbstractMatrix{Date}, Abstract
 
 typealias GlyphTypes Union(String, Glyph, Vector{Glyph})
 
-const epoch = DateTime(1970, 1, 1)
+const EPOCH = DateTime(1970, 1, 1)
 
-unixtime(d::DateTime) = int(d - epoch)
+unixtime(d::Date) = unixtime(convert(DateTime, d))
 
-unixtime(d::Date) = int(convert(DateTime, d) - epoch)
+unixtime(d::DateTime) = int(d - EPOCH)
+
+getglyphs(styles::String, count::Int64) = getglyphs(convert(Vector{Glyph}, styles), count)
+
+getglyphs(glyph::Glyph, count::Int64) = getglyphs([glyph], count)
+
+getglyphs(glyphs::Vector{Glyph}, count::Int64) = repmat(glyphs, int(ceil(count / length(glyphs))))
 
 function plot(f::Function, args...;kwargs...)
     plot([f], args...; kwargs...)
@@ -44,20 +50,6 @@ function plot(x::RealArray, y::DTArray, args...; kwargs...)
     plot(x, map(unixtime, y), args...; y_axis_type=:datetime, kwargs...)
 end
 
-# function getindex_safe(v::Vector{Vector}, i::Int64, j::Int64)
-#     (j < 1 || i < 1 || i > length(v)) && return NaN
-#     vv = v[i]
-#     (j > length(vv)) && return NaN
-#     vv[j]
-# end
-
-# tomatrix(v::Vector{Vector}) = Float64[getindex_safe(v, i, j) for j=1:maximum(map(length, v)), i=1:length(v)]
-
-function getglyphs(styles::GlyphTypes, count::Int64)
-    glyphs = convert(Vector{Glyph}, styles)
-    repmat(glyphs, int(ceil(count / length(glyphs))))
-end
-
 function plot(y::Vector{Vector}, styles::GlyphTypes=DEFAULT_GLYPHS_STR; kwargs...)
     x = [[1:length(yv)] for yv in y]
     plot(x, y, styles; kwargs...)
@@ -68,21 +60,21 @@ function plot(x::RealArray, y::Vector{Vector}, args...; kwargs...)
     plot(x, y, args...; kwargs...)
 end
 
-function plot{T <: AbstractVector}(x::Vector{T}, y::Vector{Vector}, styles::GlyphTypes=DEFAULT_GLYPHS_STR; kwargs...)
+function plot{T <: AbstractVector}(x::Vector{T}, y::Vector{Vector}, styles::GlyphTypes=DEFAULT_GLYPHS_STR; autoopen::Bool=AUTOOPEN, kwargs...)
     hold_val = HOLD
-    # restart CURPLOT if old was false
-    !hold_val && global CURPLOT = nothing
-    hold(true)
+    # clear CURPLOT if hold was previously false
+    hold(true, !hold_val)
+    global AUTOOPEN = false
     lx = length(x)
     lx != length(y) && error("length of x and y are not equal: x: $(length(x)), y: $(length(y))")
     glyphs = getglyphs(styles, lx)
-    plt = nothing
     for i in 1:lx
-        plt = plot(x[i], y[i], glyphs[i]; kwargs...)
+        plot(x[i], y[i], glyphs[i]; kwargs...)
     end
-    hold(hold_val)
-    # set CURPLOT which may have been cleared by hold(false)
-    !hold_val && global CURPLOT = plt
+    plt = CURPLOT
+    hold(hold_val, !hold_val)
+    !isinteractive() && autoopen && showplot(plt)
+    global AUTOOPEN = autoopen
     return plt
 end
 
@@ -109,14 +101,14 @@ function plot(x::RealMat, y::RealMat, styles::GlyphTypes=DEFAULT_GLYPHS_STR;
     cols = size(x, 2)
     glyphs = getglyphs(styles, cols)
     legends = legends == nothing ? [nothing for _ in 1:cols] : legends
-    dcs = DataColumn[DataColumn(x[:,i], y[:,i], glyphs[i], legends[i]) for i in 1:cols]
+    dcs = BokehDataSet[BokehDataSet(x[:,i], y[:,i], glyphs[i], legends[i]) for i in 1:cols]
     plot(dcs; kwargs...)
 end
 
 # there a good if boring reason why we have to use nothing for width, height etc. rather than 
 # set the default to WIDTH, HEIGHT etc.: its because we wouldn't be able to specify a new width 
 # or height on an extending plot if the new value happened to be the same as WIDTH or HEIGHT
-function plot(columns::Array{DataColumn, 1}; extend::Union(Nothing, Plot)=nothing,
+function plot(columns::Array{BokehDataSet, 1}; extend::Union(Nothing, Plot)=nothing,
               title::NullString=nothing, width::NullInt=nothing, height::NullInt=nothing,
               x_axis_type::NullSymbol=nothing, y_axis_type::NullSymbol=nothing, legendsgo::NullSymbol=nothing,
               plotfile::NullString=nothing, tools::Union(Nothing, Array{Symbol, 1})=nothing, 
@@ -141,6 +133,9 @@ function plot(columns::Array{DataColumn, 1}; extend::Union(Nothing, Plot)=nothin
             title != nothing && (p.title = title)
             width != nothing && (p.width = width)
             height != nothing && (p.height = height)
+            x_axis_type != nothing && (p.x_axis_type = x_axis_type)
+            y_axis_type != nothing && (p.y_axis_type = y_axis_type)
+            legendsgo != nothing && (p.legendsgo = legendsgo)
         end
         if extend == nothing
             add2plot!(CURPLOT)

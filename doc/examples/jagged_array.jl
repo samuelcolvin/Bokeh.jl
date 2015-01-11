@@ -4,12 +4,11 @@ hold(true)
 # jagged array, this is an array of arrays, not something we should use if possible, 
 # but Bokeh.jl can deal with it
 ys=Vector[[1,2,3], [4,5,6], [7,8,9,10]]
-plot(ys, "ro|go|bo")
+plot(ys, "ro|ko|bo")
 
-x=[4,3,2,1]
-plot(x, ys, "rd|gd|bd")
+x=[14,13,12,11]
+plot(x, ys, "rd|kd|bd")
 
-xs = Vector[[6,4,2], [3,2,1], [10.1,10,8, 7.5]]
-plot(xs, ys, "rs|gs|bs")
-println(Bokeh.CURPLOT)
+xs = Vector[[7,4,2], [6,5,4], [10.1,10,8, 7.5]]
+plot(xs, ys, "rs|ks|bs")
 showplot()

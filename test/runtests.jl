@@ -8,8 +8,8 @@ bkfiles = readdir(Pkg.dir("Bokeh", "deps", "bokehjs"))
 
 # try setting all possible params
 # some lime autoopen actually need to be set for travis
-debug(true)
-debug(false)
+Bokeh.debug(true)
+Bokeh.debug(false)
 w = width()
 width(w)
 h = height()

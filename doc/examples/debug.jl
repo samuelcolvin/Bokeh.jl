@@ -1,6 +1,6 @@
 using Bokeh
 # simple example with debug true so we can read the json more easily
-debug(true)
+Bokeh.debug(true)
 plotfile("debug.html")
 y = [1:10].^2
 # here we don't define x so it's auto generated as 0:(length(y) - 1)

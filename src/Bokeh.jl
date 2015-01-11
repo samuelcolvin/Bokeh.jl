@@ -66,8 +66,8 @@ module Bokeh
 
 	# hold on to plots
 	HOLD = false
-	function hold(h::Bool)
-		if !h
+	function hold(h::Bool, clear::Union(Bool, Nothing)=nothing)
+		if (!h && clear == nothing) || clear == true
 			global CURPLOT = nothing
 		end
 		global HOLD = h
@@ -99,21 +99,19 @@ module Bokeh
 	INCLUDE_JS = false
 	includejs(ijs::Bool) = (global INCLUDE_JS = ijs)
 
-  # filesystem warning switch
-  FILE_WARNINGS = true
-  filewarnings(warn::Bool) = (global FILE_WARNINGS = warn)
+	# filesystem warning switch
+	FILE_WARNINGS = true
+	filewarnings(warn::Bool) = (global FILE_WARNINGS = warn)
 
 
 	export plot,
 		   setupnotebook,
-		   GlyphBase,
 		   Glyph,
 		   Plot,
-		   DataColumn,
+		   BokehDataSet,
 		   renderplot,
 		   genplot,
 		   showplot,
-		   debug, 
 		   autoopen, 
 		   width,
 		   height,
