@@ -44,22 +44,34 @@ type Plot
     legendsgo::NullSymbol
 end
 
+# both the string and the reversed string will be tried, eg. "ox" is equivilent to "xo"
+STRINGTOKENS = @compat Dict(
+    "--"=>@Compat.compat(Dict(:dash=>[4, 4])),
+    "-."=>@Compat.compat(Dict(:dash=>[1, 4, 2])),
+    "ox"=>@Compat.compat(Dict(:glyphtype=>:CircleX)),
+    "o+"=>@Compat.compat(Dict(:glyphtype=>:CircleCross)),
+    "sx"=>@Compat.compat(Dict(:glyphtype=>:SquareX)),
+    "s+"=>@Compat.compat(Dict(:glyphtype=>:SquareCross)),
+)
+
+for (k, v) in Dict(STRINGTOKENS)
+    STRINGTOKENS[reverse(k)] = v
+end
+
 # heavily borrowed from Winston, thanks Winston!
-const chartokens = @compat Dict(
+const CHARTOKENS = @compat Dict(
     '-'=>@Compat.compat(Dict(:dash=>nothing)),
     ':'=>@Compat.compat(Dict(:dash=>[1, 4])),
     ';'=>@Compat.compat(Dict(:dash=>[1, 4, 2])),
-    # '+'=>@Compat.compat(Dict(:glyphtype=>"plus")),
+    '+'=>@Compat.compat(Dict(:glyphtype=>:Cross)),
     'o'=>@Compat.compat(Dict(:glyphtype=>:Circle)),
-    # '*'=>@Compat.compat(Dict(:glyphtype=>"asterisk")),
+    '*'=>@Compat.compat(Dict(:glyphtype=>:Asterisk)),
     # '.'=>@Compat.compat(Dict(:glyphtype=>"dot")),
-    # 'x'=>@Compat.compat(Dict(:glyphtype=>"cross")),
+    'x'=>@Compat.compat(Dict(:glyphtype=>:X)),
     's'=>@Compat.compat(Dict(:glyphtype=>:Square)),
-    # 'd'=>@Compat.compat(Dict(:glyphtype=>"diamond")),
-    # '^'=>@Compat.compat(Dict(:glyphtype=>"triangle")),
-    # 'v'=>@Compat.compat(Dict(:glyphtype=>"down-triangle")),
-    # '>'=>@Compat.compat(Dict(:glyphtype=>"right-triangle")),
-    # '<'=>@Compat.compat(Dict(:glyphtype=>"left-triangle")),
+    'd'=>@Compat.compat(Dict(:glyphtype=>:Diamond)),
+    '^'=>@Compat.compat(Dict(:glyphtype=>:Triangle)),
+    'v'=>@Compat.compat(Dict(:glyphtype=>:InvertedTriangle)),
     'y'=>@Compat.compat(Dict(:linecolor=>"yellow")),
     'm'=>@Compat.compat(Dict(:linecolor=>"magenta")),
     'c'=>@Compat.compat(Dict(:linecolor=>"cyan")),
@@ -78,18 +90,19 @@ end
 
 function Base.convert(::Type{Glyph}, style::String)
     styd = @compat Dict(:glyphtype=>:Line, :linecolor=>"blue", :linewidth=>1, :linealpha=>1.0)
-
-    for (k,v) in @compat Dict("--"=>[4, 4], "-."=>[1, 4, 2], ".-"=>[1, 4, 2])
-        splitstyle = split(style, k)
+    for key in keys(STRINGTOKENS)
+        splitstyle = split(style, key)
         if length(splitstyle) > 1
-            styd[:dash] = v
+            for (k, v) in STRINGTOKENS[key]
+                styd[k] = v
+            end
             style = join(splitstyle)
         end
     end
 
     for char in style
-        if haskey(chartokens, char)
-            for (k,v) in chartokens[char]
+        if haskey(CHARTOKENS, char)
+            for (k, v) in CHARTOKENS[char]
                 styd[k] = v
             end
         else
@@ -97,10 +110,18 @@ function Base.convert(::Type{Glyph}, style::String)
         end
     end
 
-    filledglyphs = [:Circle, :Square]
+    filledglyphs = [:Circle, :Square, :Diamond, :Triangle, :InvertedTriangle]
     if in(styd[:glyphtype], filledglyphs)
         styd[:fillcolor] = styd[:linecolor]
         styd[:fillalpha] = DEFAULT_FILL_ALPHA
+        # this seems to be the best way of making plots look right, better ideas?
+        styd[:linealpha] = DEFAULT_FILL_ALPHA
+        styd[:size] = DEFAULT_SIZE
+    end
+    emptyglyphs = [:CircleX, :CircleCross, :SquareX, :SquareCross]
+    if in(styd[:glyphtype], emptyglyphs)
+        styd[:fillcolor] = "transparent"
+        styd[:size] = DEFAULT_SIZE
     end
     Glyph(;styd...)
 end

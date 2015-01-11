@@ -36,7 +36,7 @@ module Bokeh
 	glyphs(s::String) = (global DEFAULT_GLYPHS = convert(Vector{Glyph},s))
 	glyphs() = DEFAULT_GLYPHS
 	# default glyph size
-	DEFAULT_SIZE = 8
+	DEFAULT_SIZE = 6
 	glyphsize(gs::Int) = (global DEFAULT_SIZE = gs)
 	glyphsize() = DEFAULT_SIZE
 	# default alpha value for filled glyphs

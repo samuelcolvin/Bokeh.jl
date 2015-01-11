@@ -8,6 +8,8 @@ typealias URange Union(Union(Range, UnitRange))
 
 typealias DTArray Union(AbstractMatrix{DateTime}, AbstractMatrix{Date}, AbstractVector{DateTime}, AbstractVector{Date})
 
+typealias GlyphTypes Union(String, Glyph, Vector{Glyph})
+
 const epoch = DateTime(1970, 1, 1)
 
 unixtime(d::DateTime) = int(d - epoch)
@@ -42,53 +44,52 @@ function plot(x::RealArray, y::DTArray, args...; kwargs...)
     plot(x, map(unixtime, y), args...; y_axis_type=:datetime, kwargs...)
 end
 
-function getindex_safe(v::Vector{Vector}, i::Int64, j::Int64)
-    (j < 1 || i < 1 || i > length(v)) && return NaN
-    vv = v[i]
-    (j > length(vv)) && return NaN
-    vv[j]
+# function getindex_safe(v::Vector{Vector}, i::Int64, j::Int64)
+#     (j < 1 || i < 1 || i > length(v)) && return NaN
+#     vv = v[i]
+#     (j > length(vv)) && return NaN
+#     vv[j]
+# end
+
+# tomatrix(v::Vector{Vector}) = Float64[getindex_safe(v, i, j) for j=1:maximum(map(length, v)), i=1:length(v)]
+
+function getglyphs(styles::GlyphTypes, count::Int64)
+    glyphs = convert(Vector{Glyph}, styles)
+    repmat(glyphs, int(ceil(count / length(glyphs))))
 end
 
-
-tomatrix(v::Vector{Vector}) = Float64[getindex_safe(v, i, j) for j=1:maximum(map(length, v)), i=1:length(v)]
-
-function plot(y::Vector{Vector}, args...; kwargs...)
-    # tries to catch and deal with Vectors of Vectors defined as Vector{Any}
-    plot(tomatrix(y), args...; kwargs...)
+function plot(y::Vector{Vector}, styles::GlyphTypes=DEFAULT_GLYPHS_STR; kwargs...)
+    x = [[1:length(yv)] for yv in y]
+    plot(x, y, styles; kwargs...)
 end
 
 function plot(x::RealArray, y::Vector{Vector}, args...; kwargs...)
-    # as above with seperate x
-    plot(x, tomatrix(y), args...; kwargs...)
+    x = [x[1:length(yv)] for yv in y]
+    plot(x, y, args...; kwargs...)
 end
 
-# this could be useful for vectors of vectors defined as Vector{Any}, but overall will probably
-# cause more confusion than it avoids
-# function vectorise(v::Vector{Any})
-#     # has to accept Vector{Any} although every value must be a Vector
-#     # maybe we should check every value, not just the first one?
-#     if isa(v[1], AbstractVector)
-#         return Float64[v[j][i] for i=1:maximum(map(length, v)), j=1:length(v)]
-#     else
-#         error("y had an unacceptable type $(typeof(y))")
-#     end
-# end
+function plot{T <: AbstractVector}(x::Vector{T}, y::Vector{Vector}, styles::GlyphTypes=DEFAULT_GLYPHS_STR; kwargs...)
+    hold_val = HOLD
+    # restart CURPLOT if old was false
+    !hold_val && global CURPLOT = nothing
+    hold(true)
+    lx = length(x)
+    lx != length(y) && error("length of x and y are not equal: x: $(length(x)), y: $(length(y))")
+    glyphs = getglyphs(styles, lx)
+    plt = nothing
+    for i in 1:lx
+        plt = plot(x[i], y[i], glyphs[i]; kwargs...)
+    end
+    hold(hold_val)
+    # set CURPLOT which may have been cleared by hold(false)
+    !hold_val && global CURPLOT = plt
+    return plt
+end
 
-# function plot(y::Vector{Any}, args...; kwargs...)
-#     # tries to catch and deal with Vectors of Vectors defined as Vector{Any}
-#     plot(vectorise(y), args...; kwargs...)
-# end
-
-# function plot(x::RealArray, y::Vector{Any}, args...; kwargs...)
-#     # as above with seperate x
-#     plot(x, vectorise(y), args...; kwargs...)
-# end
-
-function plot(y::RealArray, args...; kwargs...)
-    # use 0:(length - 1) so the x values are the sames as the indices of y
-    x = 0:(size(y, 1) - 1)
+function plot(y::RealArray, styles::GlyphTypes=DEFAULT_GLYPHS_STR; kwargs...)
+    x = 1:size(y, 1)
     x = ndims(y) > 1 ? repmat(x, 1, size(y, 2)) : x
-    plot(x, y, args...; kwargs...)
+    plot(x, y, styles; kwargs...)
 end
 
 function plot(x::RealVect, y::RealMat, args...; kwargs...)
@@ -102,12 +103,11 @@ function plot(x::RealVect, y::RealVect, args...; kwargs...)
     plot(reshape(x, length(x), 1), reshape(y, length(y), 1), args...; kwargs...)
 end
 
-function plot(x::RealMat, y::RealMat, styles::Union(String, Glyph, Vector{Glyph})=DEFAULT_GLYPHS_STR; 
+function plot(x::RealMat, y::RealMat, styles::GlyphTypes=DEFAULT_GLYPHS_STR; 
               legends::Union(Nothing, Vector)=nothing, kwargs...)
     size(x) != size(y) && error("size of x and y are not equal: x: $(size(x)), y: $(size(y))")
-    glyphs = convert(Vector{Glyph}, styles)
-    cols = size(x,2)
-    glyphs = repmat(glyphs, int(ceil(cols / length(glyphs))))
+    cols = size(x, 2)
+    glyphs = getglyphs(styles, cols)
     legends = legends == nothing ? [nothing for _ in 1:cols] : legends
     dcs = DataColumn[DataColumn(x[:,i], y[:,i], glyphs[i], legends[i]) for i in 1:cols]
     plot(dcs; kwargs...)
