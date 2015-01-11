@@ -42,14 +42,46 @@ function plot(x::RealArray, y::DTArray, args...; kwargs...)
     plot(x, map(unixtime, y), args...; y_axis_type=:datetime, kwargs...)
 end
 
-# need to work with arrays of arrays as well as mats:
-# function plot{T}(y::Array{Array{T,1}, 1}; kwargs...)
-#     len = maximum(map(length, y))
-#     y2 = zeros(len, length(y))
-#     for (i, ar) in enumerate(y)
-#         y2[:, 1:length(ar)] = ar
+function getindex_safe(v::Vector{Vector}, i::Int64, j::Int64)
+    (j < 1 || i < 1 || i > length(v)) && return NaN
+    vv = v[i]
+    (j > length(vv)) && return NaN
+    vv[j]
+end
+
+
+tomatrix(v::Vector{Vector}) = Float64[getindex_safe(v, i, j) for j=1:maximum(map(length, v)), i=1:length(v)]
+
+function plot(y::Vector{Vector}, args...; kwargs...)
+    # tries to catch and deal with Vectors of Vectors defined as Vector{Any}
+    plot(tomatrix(y), args...; kwargs...)
+end
+
+function plot(x::RealArray, y::Vector{Vector}, args...; kwargs...)
+    # as above with seperate x
+    plot(x, tomatrix(y), args...; kwargs...)
+end
+
+# this could be useful for vectors of vectors defined as Vector{Any}, but overall will probably
+# cause more confusion than it avoids
+# function vectorise(v::Vector{Any})
+#     # has to accept Vector{Any} although every value must be a Vector
+#     # maybe we should check every value, not just the first one?
+#     if isa(v[1], AbstractVector)
+#         return Float64[v[j][i] for i=1:maximum(map(length, v)), j=1:length(v)]
+#     else
+#         error("y had an unacceptable type $(typeof(y))")
 #     end
-#     plot(y2; kwargs...)
+# end
+
+# function plot(y::Vector{Any}, args...; kwargs...)
+#     # tries to catch and deal with Vectors of Vectors defined as Vector{Any}
+#     plot(vectorise(y), args...; kwargs...)
+# end
+
+# function plot(x::RealArray, y::Vector{Any}, args...; kwargs...)
+#     # as above with seperate x
+#     plot(x, vectorise(y), args...; kwargs...)
 # end
 
 function plot(y::RealArray, args...; kwargs...)
