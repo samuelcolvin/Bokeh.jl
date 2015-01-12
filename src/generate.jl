@@ -208,7 +208,7 @@ function genplot(p::Plot, filename::NullString=nothing)
     html = renderplot(p)
 	if ispath(filename) && FILE_WARNINGS
 		if WARN_FILE != filename
-			warn("$(filename) already exists, overwriting")
+			println("$(filename) already exists, overwriting")
 			global WARN_FILE = filename
 		end
 	end

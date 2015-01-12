@@ -8,8 +8,8 @@ bkfiles = readdir(Pkg.dir("Bokeh", "deps", "bokehjs"))
 
 # try setting all possible params
 # some lime autoopen actually need to be set for travis
-debug(true)
-debug(false)
+Bokeh.debug(true)
+Bokeh.debug(false)
 w = width()
 width(w)
 h = height()
@@ -35,4 +35,5 @@ mkpath(testingdir)
 cd(testingdir)
 for ex in filter(f -> endswith(f, ".jl"), readdir(exdir))
 	evalfile(joinpath(exdir, ex))
+	hold(false)
 end

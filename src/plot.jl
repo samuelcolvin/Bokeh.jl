@@ -8,11 +8,19 @@ typealias URange Union(Union(Range, UnitRange))
 
 typealias DTArray Union(AbstractMatrix{DateTime}, AbstractMatrix{Date}, AbstractVector{DateTime}, AbstractVector{Date})
 
-const epoch = DateTime(1970, 1, 1)
+typealias GlyphTypes Union(String, Glyph, Vector{Glyph})
 
-unixtime(d::DateTime) = int(d - epoch)
+const EPOCH = DateTime(1970, 1, 1)
 
-unixtime(d::Date) = int(convert(DateTime, d) - epoch)
+unixtime(d::Date) = unixtime(convert(DateTime, d))
+
+unixtime(d::DateTime) = int(d - EPOCH)
+
+getglyphs(styles::String, count::Int64) = getglyphs(convert(Vector{Glyph}, styles), count)
+
+getglyphs(glyph::Glyph, count::Int64) = getglyphs([glyph], count)
+
+getglyphs(glyphs::Vector{Glyph}, count::Int64) = repmat(glyphs, int(ceil(count / length(glyphs))))
 
 function plot(f::Function, args...;kwargs...)
     plot([f], args...; kwargs...)
@@ -42,21 +50,38 @@ function plot(x::RealArray, y::DTArray, args...; kwargs...)
     plot(x, map(unixtime, y), args...; y_axis_type=:datetime, kwargs...)
 end
 
-# need to work with arrays of arrays as well as mats:
-# function plot{T}(y::Array{Array{T,1}, 1}; kwargs...)
-#     len = maximum(map(length, y))
-#     y2 = zeros(len, length(y))
-#     for (i, ar) in enumerate(y)
-#         y2[:, 1:length(ar)] = ar
-#     end
-#     plot(y2; kwargs...)
-# end
+function plot(y::Vector{Vector}, styles::GlyphTypes=DEFAULT_GLYPHS_STR; kwargs...)
+    x = [[1:length(yv)] for yv in y]
+    plot(x, y, styles; kwargs...)
+end
 
-function plot(y::RealArray, args...; kwargs...)
-    # use 0:(length - 1) so the x values are the sames as the indices of y
-    x = 0:(size(y, 1) - 1)
-    x = ndims(y) > 1 ? repmat(x, 1, size(y, 2)) : x
+function plot(x::RealArray, y::Vector{Vector}, args...; kwargs...)
+    x = [x[1:length(yv)] for yv in y]
     plot(x, y, args...; kwargs...)
+end
+
+function plot{T <: AbstractVector}(x::Vector{T}, y::Vector{Vector}, styles::GlyphTypes=DEFAULT_GLYPHS_STR; autoopen::Bool=AUTOOPEN, kwargs...)
+    hold_val = HOLD
+    # clear CURPLOT if hold was previously false
+    hold(true, !hold_val)
+    global AUTOOPEN = false
+    lx = length(x)
+    lx != length(y) && error("length of x and y are not equal: x: $(length(x)), y: $(length(y))")
+    glyphs = getglyphs(styles, lx)
+    for i in 1:lx
+        plot(x[i], y[i], glyphs[i]; kwargs...)
+    end
+    plt = CURPLOT
+    hold(hold_val, !hold_val)
+    !isinteractive() && autoopen && showplot(plt)
+    global AUTOOPEN = autoopen
+    return plt
+end
+
+function plot(y::RealArray, styles::GlyphTypes=DEFAULT_GLYPHS_STR; kwargs...)
+    x = 1:size(y, 1)
+    x = ndims(y) > 1 ? repmat(x, 1, size(y, 2)) : x
+    plot(x, y, styles; kwargs...)
 end
 
 function plot(x::RealVect, y::RealMat, args...; kwargs...)
@@ -70,21 +95,20 @@ function plot(x::RealVect, y::RealVect, args...; kwargs...)
     plot(reshape(x, length(x), 1), reshape(y, length(y), 1), args...; kwargs...)
 end
 
-function plot(x::RealMat, y::RealMat, styles::Union(String, Glyph, Vector{Glyph})=DEFAULT_GLYPHS_STR; 
+function plot(x::RealMat, y::RealMat, styles::GlyphTypes=DEFAULT_GLYPHS_STR; 
               legends::Union(Nothing, Vector)=nothing, kwargs...)
     size(x) != size(y) && error("size of x and y are not equal: x: $(size(x)), y: $(size(y))")
-    glyphs = convert(Vector{Glyph}, styles)
-    cols = size(x,2)
-    glyphs = repmat(glyphs, int(ceil(cols / length(glyphs))))
+    cols = size(x, 2)
+    glyphs = getglyphs(styles, cols)
     legends = legends == nothing ? [nothing for _ in 1:cols] : legends
-    dcs = DataColumn[DataColumn(x[:,i], y[:,i], glyphs[i], legends[i]) for i in 1:cols]
+    dcs = BokehDataSet[BokehDataSet(x[:,i], y[:,i], glyphs[i], legends[i]) for i in 1:cols]
     plot(dcs; kwargs...)
 end
 
 # there a good if boring reason why we have to use nothing for width, height etc. rather than 
 # set the default to WIDTH, HEIGHT etc.: its because we wouldn't be able to specify a new width 
 # or height on an extending plot if the new value happened to be the same as WIDTH or HEIGHT
-function plot(columns::Array{DataColumn, 1}; extend::Union(Nothing, Plot)=nothing,
+function plot(columns::Array{BokehDataSet, 1}; extend::Union(Nothing, Plot)=nothing,
               title::NullString=nothing, width::NullInt=nothing, height::NullInt=nothing,
               x_axis_type::NullSymbol=nothing, y_axis_type::NullSymbol=nothing, legendsgo::NullSymbol=nothing,
               plotfile::NullString=nothing, tools::Union(Nothing, Array{Symbol, 1})=nothing, 
@@ -109,6 +133,9 @@ function plot(columns::Array{DataColumn, 1}; extend::Union(Nothing, Plot)=nothin
             title != nothing && (p.title = title)
             width != nothing && (p.width = width)
             height != nothing && (p.height = height)
+            x_axis_type != nothing && (p.x_axis_type = x_axis_type)
+            y_axis_type != nothing && (p.y_axis_type = y_axis_type)
+            legendsgo != nothing && (p.legendsgo = legendsgo)
         end
         if extend == nothing
             add2plot!(CURPLOT)
