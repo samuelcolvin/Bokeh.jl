@@ -19,7 +19,7 @@ module Bokehjs
 	# in case we want to restrict value types in future:
 	typealias BkAny Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
 	typealias NullDict Union(Nothing, Dict{String, BkAny})
-	typealias OmitDict Union(Omit, Dict{String, BkAny})
+	typealias OmitDict Union(Omit, Dict{Symbol, BkAny})
 
 	typealias NullString Union(Nothing, String)
 	typealias OmitString Union(Omit, String)
@@ -73,19 +73,19 @@ module Bokehjs
 
 	type ColumnDataSource <: PlotObject
 		uuid::UUID
-		column_names::Vector{String}
+		column_names::Vector{Symbol}
 		selected::Vector{Any}
-		discrete_ranges::Dict{String, BkAny}
-		cont_ranges::Dict{String, BkAny}
-		data::Dict{String, RealVect}
+		discrete_ranges::Dict{Symbol, BkAny}
+		cont_ranges::Dict{Symbol, BkAny}
+		data::Dict{Symbol, Vector}
 	end
 
-	function ColumnDataSource(column_names::Vector{String}, data::Dict{String, RealVect})
+	function ColumnDataSource(data::Dict{Symbol, Vector})
 		ColumnDataSource(uuid4(),
-						 column_names,
+						 collect(keys(data)),
 						 BkAny[],
-						 Dict{String, BkAny}(), 
-						 Dict{String, BkAny}(), 
+						 Dict{Symbol, BkAny}(), 
+						 Dict{Symbol, BkAny}(), 
 						 data)
 	end
 
@@ -102,21 +102,21 @@ module Bokehjs
 
 	type TickFormatter <: PlotObject
 		uuid::UUID
-		_type_name::String
+		_type_name::Symbol
 		format::OmitDict
-		function TickFormatter(name::String)
-			@assert name in ("BasicTickFormatter", "DatetimeTickFormatter", "LogTickFormatter")
+		function TickFormatter(name::Symbol)
+			@assert name in (:BasicTickFormatter, :DatetimeTickFormatter, :LogTickFormatter)
 			# format only seems to occur for DatetimeTickFormatter and even then is empty
-			format = name == "DatetimeTickFormatter" ? Dict{String, BkAny}() : omit
+			format = name == :DatetimeTickFormatter ? Dict{Symbol, BkAny}() : omit
 			new(uuid4(), name, format)
 		end
 	end
 
 	type Ticker <: PlotObject
 		uuid::UUID
-		_type_name::String
+		_type_name::Symbol
 		num_minor_ticks::Int64
-		Ticker(name::String) = new(uuid4(), name, 5)
+		Ticker(name::Symbol) = new(uuid4(), name, 5)
 	end
 
 	type LinearAxis <: Axis
@@ -174,59 +174,17 @@ module Bokehjs
 
 	type Glyph <: PlotObject
 		uuid::UUID
-		_type_name::String
+		_type_name::Symbol
 		line_color::OmitDict
 		line_width::OmitDict
 		line_alpha::OmitDict
-		line_dash::Union(Omit, Vector{Int64})
 		fill_color::OmitDict
 		fill_alpha::OmitDict
 		size::OmitDict
-		x::Dict{String, String}
-		y::Dict{String, String}
+		line_dash::Union(Omit, Vector{Int64})
+		x::Dict{Symbol, Symbol}
+		y::Dict{Symbol, Symbol}
 	end
-
-	function Glyph(glyphtype::String,
-				   linecolor::NullString, 
-				   linewidth::NullInt, 
-				   linealpha::NullFloat, 
-				   dash::Union(Nothing, Vector{Int64}),
-				   fillcolor::NullString,
-				   fillalpha::NullFloat,
-				   size::NullInt)
-		linecolor = linecolor == nothing ? omit : @Compat.compat Dict{String, BkAny}("value" => linecolor)
-		linewidth = linewidth == nothing ? omit : @Compat.compat Dict{String, BkAny}("units" => "data", "value" => linewidth)
-		linealpha = linealpha == nothing ? omit : @Compat.compat Dict{String, BkAny}("units" => "data", "value" => linealpha)
-		dash = dash == nothing ? omit : dash
-		fillcolor = fillcolor == nothing ? omit : @Compat.compat Dict{String, BkAny}("value" => fillcolor)
-		fillalpha = fillalpha == nothing ? omit : @Compat.compat Dict{String, BkAny}("units" => "data", "value" => fillalpha)
-		size = size == nothing ? omit : @Compat.compat Dict{String, BkAny}("units" => "screen", "value" => size)
-		x = @Compat.compat Dict("units" => "data", "field" => "x")
-		y = @Compat.compat Dict("units" => "data", "field" => "y")
-		Glyph(uuid4(), glyphtype, linecolor, linewidth, linealpha, dash, fillcolor, fillalpha, size, x, y)
-	end
-
-	function Glyph(;glyphtype=nothing,
-				   linecolor=nothing, 
-				   linewidth=nothing, 
-				   linealpha=nothing, 
-				   dash=nothing,
-				   fillcolor=nothing, 
-				   fillalpha=nothing,
-				   size=nothing)
-		glyphtype == nothing && error("glyphtype is required in Glyph definitions")
-		Glyph(glyphtype, linecolor, linewidth, linealpha, dash, fillcolor, fillalpha, size)
-	end
-
-    function Base.show(io::IO, g::Glyph)
-        names = Glyph.names
-        features = String[]
-        for name in Glyph.names
-            showname = name == :_type_name ? :type : name
-            g.(name) != nothing && push!(features, "$showname: $(g.(name))")
-        end
-        print(io, "Glyph(", join(features, ", "), ")")
-    end
 
 	type GlyphRenderer <: Renderer
 		uuid::UUID
@@ -330,6 +288,7 @@ typealias RealVect Bokehjs.RealVect
 typealias RealMat Bokehjs.RealMat
 typealias RealArray Bokehjs.RealArray
 typealias BkAny Bokehjs.BkAny
+typealias omit Bokehjs.omit
 
 typealias Glyph Bokehjs.Glyph
 typealias NullString Bokehjs.NullString

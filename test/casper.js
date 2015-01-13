@@ -2,7 +2,7 @@ var fs = require('fs');
 
 casper.test.begin("simple.js rendering", 2, function(test) {
   var filepath = '/tmp/bokeh_js_testing/simple.html';
-  test.assert(fs.exists(filepath), 'simple.html exists.');
+  test.assert(fs.exists(filepath), filepath + ' does not exist');
   casper.on('remote.message', function(message) {
     this.echo(message);
   });

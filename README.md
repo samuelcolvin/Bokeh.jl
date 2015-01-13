@@ -25,7 +25,7 @@ Methods:
 	# x vs. y
 	plot(x, y)
 
-	# cos evaluated in range -10:10-, 500 points
+	# cos evaluated in range -10:10, 500 points
 	plot(cos)
 
 	# cos evaluated in range 0:5, 500 points
