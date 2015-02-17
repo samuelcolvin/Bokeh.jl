@@ -134,14 +134,16 @@ plot(x, y)
 <p><a href="./examples/hello_world.jl">get source</a></p>
 <h3 id="functions">Functions</h3>
 <p><a href="./examples/functions.html"><img alt="view" src="./examples/functions.png" /></a></p>
-<p>Bokeh.jl tries hard to share it's interface with <a href="">TextPlots.jl</a> particularly for functions.</p>
+<p>Bokeh.jl allows you to plot functiosn directly in a simpler way to 
+<a href="https://github.com/sunetos/TextPlots.jl">TextPlots.jl</a>.</p>
 <pre><code>using Bokeh
 
 plotfile("functions.html")
 
 plot(sin) # this uses the default range of -10 to 10
-plot(sin, 0:20)
-# the two plots above won't be shown since we haven't set hold, see below
+plot(sin, 0:20) # supply the rante
+plot(x -&gt; x^3 - 2x^2 + 3x, -5, 5) # also supplies the range
+# the three plots above won't be shown since we haven't set hold, see below
 
 plot([sin, cos, tan, sinh, cosh, tanh], -1:1)
 showplot()
@@ -190,6 +192,8 @@ y2 = sin(x)./x
 plot(x, y2, "r")
 showplot()
 </code></pre>
+<!-- TODO: we need a more comprehensive explanation of hold etc. -->
+
 <p><a href="./examples/hold.jl">get source</a></p>
 <h3 id="legend">Legend</h3>
 <p><a href="./examples/legend.html"><img alt="view" src="./examples/legend.png" /></a></p>
@@ -291,9 +295,9 @@ plot(x, [y1 y2], glyphs, title="Share Price Prediction", legends=["Average", "Cl
 showplot()
 </code></pre>
 <p><a href="./examples/dates.jl">get source</a></p>
-<ul>
-<li>because we want to set the second dataset points to be semi transparent we've had to define <code>Glyph</code> types directly. </li>
-</ul>
+<p>Because we want to set the second dataset points to be semi transparent we've had to define <code>Glyph</code> types directly. </p>
+<!-- We need a logical description of the API -->
+
 </div>
             
         </div>
