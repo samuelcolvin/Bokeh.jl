@@ -1,6 +1,6 @@
 using Bokeh
 
-plotfile("hello_world.html")  # this isn't shown in the actual exmaple for simplicity
+plotfile("hello_world.html")  # this isn't shown in the actual example for simplicity
 autoopen(true)
 
 x = linspace(0, 2pi)
