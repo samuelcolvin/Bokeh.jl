@@ -42,15 +42,17 @@ so the plot is opened in your default browser as soon as we call `plot`.
 
 [![view](examples/functions.png)](examples/functions.html)
 
-Bokeh.jl tries hard to share it's interface with [TextPlots.jl]() particularly for functions.
+Bokeh.jl allows you to plot functiosn directly in a simpler way to 
+[TextPlots.jl](https://github.com/sunetos/TextPlots.jl).
 
     using Bokeh
 
     plotfile("functions.html")
 
     plot(sin) # this uses the default range of -10 to 10
-    plot(sin, 0:20)
-    # the two plots above won't be shown since we haven't set hold, see below
+    plot(sin, 0:20) # supply the rante
+    plot(x -> x^3 - 2x^2 + 3x, -5, 5) # also supplies the range
+    # the three plots above won't be shown since we haven't set hold, see below
 
     plot([sin, cos, tan, sinh, cosh, tanh], -1:1)
     showplot()
@@ -104,6 +106,8 @@ You can use hold to call `plot` multiple times and combine the results in one di
     y2 = sin(x)./x
     plot(x, y2, "r")
     showplot()
+
+<!-- TODO: we need a more comprehensive explanation of hold etc. -->
 
 [get source](examples/hold.jl)
 
@@ -221,4 +225,6 @@ The example below uses `Dates` objects, for the ints approach, see
 
 [get source](examples/dates.jl)
 
-* because we want to set the second dataset points to be semi transparent we've had to define `Glyph` types directly. 
+Because we want to set the second dataset points to be semi transparent we've had to define `Glyph` types directly. 
+
+<!-- We need a logical description of the API -->
