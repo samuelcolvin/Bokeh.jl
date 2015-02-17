@@ -1,5 +1,6 @@
 using Bokeh
 
+Bokeh.includejs(true)  # this is required as these files will be published online
 plotfile("simple_glyphs.html")
 
 x = linspace(0, 2pi)
