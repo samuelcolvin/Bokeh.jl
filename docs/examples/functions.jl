@@ -1,6 +1,5 @@
 using Bokeh
 
-Bokeh.includejs(true)  # this is required as these files will be published online
 plotfile("functions.html")
 
 plot(sin) # this uses the default range of -10 to 10
