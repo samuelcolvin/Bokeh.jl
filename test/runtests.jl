@@ -21,7 +21,6 @@ glyphsize(dft_size)
 t = title()
 title(t)
 Bokeh.noshow(true)
-# Bokeh.includejs(true)
 Bokeh.filewarnings(false)
 
 # check they're correct:
@@ -29,7 +28,7 @@ Bokeh.filewarnings(false)
 
 # Bokeh.parse_spec("r:") |> println
 
-exdir = Pkg.dir("Bokeh", "doc", "examples")
+exdir = Pkg.dir("Bokeh", "test", "test-cases")
 testingdir = "/tmp/bokeh_js_testing"
 mkpath(testingdir)
 cd(testingdir)
