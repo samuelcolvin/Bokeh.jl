@@ -1,0 +1,4 @@
+site_name: Bokeh.jl
+repo_url: https://github.com/bokeh/Bokeh.jl
+site_description: Julia bindings for Bokeh
+site_author: Samuel Colvin
