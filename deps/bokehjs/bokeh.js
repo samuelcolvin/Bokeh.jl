@@ -22924,19 +22924,26 @@ define('common/plot_template',[],function(){
       function Properties() {}
 
       Properties.prototype.source_v_select = function(attrname, datasource) {
-        var i, obj, value, _i, _ref, _results;
+        var i, length, obj, value;
         obj = this[attrname];
         if (obj == null) {
           throw new Error("requested vector selection of unknown property '" + attrname + "'");
         } else if ((obj.field != null) && (obj.field in datasource.get('data'))) {
           return datasource.get_column(obj.field);
         } else if (_.isObject(obj)) {
-          value = obj.value != null ? obj.value : NaN;
-          _results = [];
-          for (i = _i = 0, _ref = datasource.get_length(); 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
-            _results.push(value);
+          length = datasource.get_length();
+          if (length == null) {
+            length = 1;
           }
-          return _results;
+          value = obj.value != null ? obj.value : NaN;
+          return (function() {
+            var _i, _results;
+            _results = [];
+            for (i = _i = 0; 0 <= length ? _i < length : _i > length; i = 0 <= length ? ++_i : --_i) {
+              _results.push(value);
+            }
+            return _results;
+          })();
         } else {
           throw new Error("requested vector selection of '" + attrname + "' failed for " + obj);
         }
@@ -23046,7 +23053,6 @@ define('common/plot_template',[],function(){
         } else if (_.isArray(value)) {
           return this[attrname].value = value;
         } else if (_.isObject(value)) {
-          value = this._fix_singleton_array_value(value);
           return this[attrname] = _.extend(this[attrname], value);
         } else {
           return logger.warn("array property '" + attrname + "' given invalid value: " + value);
@@ -23487,7 +23493,6 @@ define('common/plot_template',[],function(){
           });
         }
         this.unpause();
-        this.request_render();
         logger.debug("PlotView initialized");
         return this;
       };
@@ -23667,7 +23672,7 @@ define('common/plot_template',[],function(){
       };
 
       PlotView.prototype._render_levels = function(ctx, levels, clip_region) {
-        var k, level, renderers, v, _i, _len;
+        var i, indices, level, renderer, renderers, sortKey, _i, _j, _k, _len, _len1, _len2, _ref1;
         ctx.save();
         if (clip_region != null) {
           ctx.beginPath();
@@ -23675,12 +23680,21 @@ define('common/plot_template',[],function(){
           ctx.clip();
           ctx.beginPath();
         }
-        for (_i = 0, _len = levels.length; _i < _len; _i++) {
-          level = levels[_i];
-          renderers = this.levels[level];
-          for (k in renderers) {
-            v = renderers[k];
-            v.render();
+        indices = {};
+        _ref1 = this.mget("renderers");
+        for (i = _i = 0, _len = _ref1.length; _i < _len; i = ++_i) {
+          renderer = _ref1[i];
+          indices[renderer.id] = i;
+        }
+        sortKey = function(renderer) {
+          return indices[renderer.model.id];
+        };
+        for (_j = 0, _len1 = levels.length; _j < _len1; _j++) {
+          level = levels[_j];
+          renderers = _.sortBy(_.values(this.levels[level]), sortKey);
+          for (_k = 0, _len2 = renderers.length; _k < _len2; _k++) {
+            renderer = renderers[_k];
+            renderer.render();
           }
         }
         return ctx.restore();
@@ -24631,13 +24645,16 @@ define('common/plot_template',[],function(){
       };
 
       GridPlotView.prototype.build_children = function() {
-        var childmodels, plot, row, viewstates, vsrow, x, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref4, _ref5, _ref6, _results;
+        var childmodels, plot, row, viewstates, vsrow, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref4, _ref5, _ref6, _results;
         childmodels = [];
         _ref4 = this.mget('children');
         for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
           row = _ref4[_i];
           for (_j = 0, _len1 = row.length; _j < _len1; _j++) {
             plot = row[_j];
+            if (plot == null) {
+              continue;
+            }
             plot.set('toolbar_location', null);
             childmodels.push(plot);
           }
@@ -24647,27 +24664,29 @@ define('common/plot_template',[],function(){
         _ref5 = this.mget('children');
         for (_k = 0, _len2 = _ref5.length; _k < _len2; _k++) {
           row = _ref5[_k];
-          vsrow = (function() {
-            var _l, _len3, _results;
-            _results = [];
-            for (_l = 0, _len3 = row.length; _l < _len3; _l++) {
-              x = row[_l];
-              _results.push(this.child_views[x.id].canvas);
+          vsrow = [];
+          for (_l = 0, _len3 = row.length; _l < _len3; _l++) {
+            plot = row[_l];
+            if (plot == null) {
+              continue;
             }
-            return _results;
-          }).call(this);
+            vsrow.push(this.child_views[plot.id].canvas);
+          }
           viewstates.push(vsrow);
         }
         this.viewstate.set('viewstates', viewstates);
         _ref6 = this.mget('children');
         _results = [];
-        for (_l = 0, _len3 = _ref6.length; _l < _len3; _l++) {
-          row = _ref6[_l];
+        for (_m = 0, _len4 = _ref6.length; _m < _len4; _m++) {
+          row = _ref6[_m];
           _results.push((function() {
-            var _len4, _m, _results1;
+            var _len5, _n, _results1;
             _results1 = [];
-            for (_m = 0, _len4 = row.length; _m < _len4; _m++) {
-              plot = row[_m];
+            for (_n = 0, _len5 = row.length; _n < _len5; _n++) {
+              plot = row[_n];
+              if (plot == null) {
+                continue;
+              }
               _results1.push(this.listenTo(plot.solver, 'layout_update', this.render));
             }
             return _results1;
@@ -24677,7 +24696,7 @@ define('common/plot_template',[],function(){
       };
 
       GridPlotView.prototype.render = function() {
-        var add, cidx, col_widths, div, height, last_plot, plot_divs, plot_wrapper, plotspec, ridx, row, row_heights, toolbar_location, toolbar_selector, total_height, view, width, x_coords, xpos, y_coords, ypos, _i, _j, _k, _len, _len1, _len2, _ref4, _ref5;
+        var add, cidx, col_widths, div, height, last_plot, plot, plot_divs, plot_wrapper, ridx, row, row_heights, toolbar_location, toolbar_selector, total_height, view, width, x_coords, xpos, y_coords, ypos, _i, _j, _k, _len, _len1, _len2, _ref4, _ref5;
         GridPlotView.__super__.render.call(this);
         _ref4 = _.values(this.child_views);
         for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
@@ -24719,8 +24738,11 @@ define('common/plot_template',[],function(){
         for (ridx = _j = 0, _len1 = _ref5.length; _j < _len1; ridx = ++_j) {
           row = _ref5[ridx];
           for (cidx = _k = 0, _len2 = row.length; _k < _len2; cidx = ++_k) {
-            plotspec = row[cidx];
-            view = this.child_views[plotspec.id];
+            plot = row[cidx];
+            if (plot == null) {
+              continue;
+            }
+            view = this.child_views[plot.id];
             ypos = this.viewstate.position_child_y(y_coords[ridx], view.canvas.get('height'));
             xpos = this.viewstate.position_child_x(x_coords[cidx], view.canvas.get('width'));
             plot_wrapper = $("<div class='gp_plotwrapper'></div>");
@@ -24756,20 +24778,27 @@ define('common/plot_template',[],function(){
       GridPlot.prototype.initialize = function(attrs, options) {
         GridPlot.__super__.initialize.call(this, attrs, options);
         return this.register_property('tool_manager', function() {
-          var plot;
+          var children, plot, _i, _len, _ref5;
+          children = [];
+          _ref5 = _.flatten(this.get('children'));
+          for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
+            plot = _ref5[_i];
+            if (plot != null) {
+              children.push(plot);
+            }
+          }
           return new GridToolManager({
             tool_managers: (function() {
-              var _i, _len, _ref5, _results;
-              _ref5 = _.flatten(this.get('children'));
+              var _j, _len1, _results;
               _results = [];
-              for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
-                plot = _ref5[_i];
+              for (_j = 0, _len1 = children.length; _j < _len1; _j++) {
+                plot = children[_j];
                 _results.push(plot.get('tool_manager'));
               }
               return _results;
-            }).call(this),
+            })(),
             toolbar_location: this.get('toolbar_location'),
-            num_plots: _.flatten(this.get('children')).length
+            num_plots: children.length
           });
         }, true);
       };
@@ -25055,7 +25084,7 @@ define('common/plot_template',[],function(){
           logger.warn('select called with mis-matched data sources');
         }
         indices = renderer_view.hit_test(geometry);
-        selector = this._get_selector(tool);
+        selector = this._get_selector(renderer_view);
         selector.update(indices, final, append);
         this._save_indices(selector.get('indices'));
         source.trigger('select');
@@ -25075,18 +25104,24 @@ define('common/plot_template',[],function(){
         }
       };
 
-      SelectionManager.prototype.clear = function(tool) {
-        var selector;
-        if (tool != null) {
-          selector = this._get_selector(tool);
+      SelectionManager.prototype.clear = function(rview) {
+        var k, s, selector, _ref1;
+        if (rview != null) {
+          selector = this._get_selector(rview);
           selector.clear();
+        } else {
+          _ref1 = this.selectors;
+          for (k in _ref1) {
+            s = _ref1[k];
+            s.clear();
+          }
         }
         return this._save_indices([]);
       };
 
-      SelectionManager.prototype._get_selector = function(tool) {
-        _.setdefault(this.selectors, tool.model.id, new Selector());
-        return this.selectors[tool.model.id];
+      SelectionManager.prototype._get_selector = function(rview) {
+        _.setdefault(this.selectors, rview.model.id, new Selector());
+        return this.selectors[rview.model.id];
       };
 
       SelectionManager.prototype._save_indices = function(indices) {
@@ -27206,17 +27241,6 @@ else window.rbush = rbush;
         line_dash_offset: 0
       };
 
-      Glyph.prototype.defaults = function() {
-        return _.extend({}, Glyph.__super__.defaults.call(this), {
-          size_units: 'screen',
-          radius_units: 'data',
-          length_units: 'screen',
-          angle_units: 'deg',
-          start_angle_units: 'deg',
-          end_angle_units: 'deg'
-        });
-      };
-
       return Glyph;
 
     })(HasParent);
@@ -28216,6 +28240,13 @@ else window.rbush = rbush;
       Circle.prototype.display_defaults = function() {
         return _.extend({}, Circle.__super__.display_defaults.call(this), this.line_defaults, this.fill_defaults, {
           size: 4
+        });
+      };
+
+      Circle.prototype.defaults = function() {
+        return _.extend({}, Circle.__super__.defaults.call(this), {
+          size_units: 'screen',
+          radius_units: 'data'
         });
       };
 
@@ -29421,6 +29452,12 @@ return { create_gear_tooth: createGearTooth, create_internal_gear_tooth: createI
       ImageURL.prototype.default_view = ImageURLView;
 
       ImageURL.prototype.type = 'ImageURL';
+
+      ImageURL.prototype.defaults = function() {
+        return _.extend({}, ImageURL.__super__.defaults.call(this), {
+          angle: 0
+        });
+      };
 
       ImageURL.prototype.display_defaults = function() {
         return _.extend({}, ImageURL.__super__.display_defaults.call(this), {
@@ -30853,13 +30890,15 @@ return { create_gear_tooth: createGearTooth, create_internal_gear_tooth: createI
         return _ref;
       }
 
-      TextView.prototype._fields = ['x', 'y', 'angle', 'text:string'];
+      TextView.prototype._fields = ['x', 'y', 'angle', 'text:string', 'x_offset', 'y_offset'];
 
       TextView.prototype._properties = ['text'];
 
       TextView.prototype._map_data = function() {
         var _ref1;
-        return _ref1 = this.renderer.map_to_screen(this.x, this.glyph.x.units, this.y, this.glyph.y.units), this.sx = _ref1[0], this.sy = _ref1[1], _ref1;
+        _ref1 = this.renderer.map_to_screen(this.x, this.glyph.x.units, this.y, this.glyph.y.units), this.sx = _ref1[0], this.sy = _ref1[1];
+        this.sx_offset = this.distance_vector('x', 'x_offset', 'edge');
+        return this.sy_offset = this.distance_vector('y', 'y_offset', 'edge');
       };
 
       TextView.prototype._render = function(ctx, indices) {
@@ -30867,15 +30906,15 @@ return { create_gear_tooth: createGearTooth, create_internal_gear_tooth: createI
         _results = [];
         for (_i = 0, _len = indices.length; _i < _len; _i++) {
           i = indices[_i];
-          if (isNaN(this.sx[i] + this.sy[i] + this.angle[i]) || (this.text[i] == null)) {
+          if (isNaN(this.sx[i] + this.sy[i] + this.sx_offset[i] + this.sy_offset[i] + this.angle[i]) || (this.text[i] == null)) {
             continue;
           }
-          ctx.translate(this.sx[i], this.sy[i]);
+          ctx.save();
+          ctx.translate(this.sx[i] + this.sx_offset[i], this.sy[i] + this.sy_offset[i]);
           ctx.rotate(this.angle[i]);
           this.props.text.set_vectorize(ctx, i);
           ctx.fillText(this.text[i], 0, 0);
-          ctx.rotate(-this.angle[i]);
-          _results.push(ctx.translate(-this.sx[i], -this.sy[i]));
+          _results.push(ctx.restore());
         }
         return _results;
       };
@@ -30912,6 +30951,20 @@ return { create_gear_tooth: createGearTooth, create_internal_gear_tooth: createI
       Text.prototype.default_view = TextView;
 
       Text.prototype.type = 'Text';
+
+      Text.prototype.defaults = function() {
+        return _.extend({}, Text.__super__.defaults.call(this), {
+          angle: 0,
+          x_offset: {
+            value: 0,
+            units: "screen"
+          },
+          y_offset: {
+            value: 0,
+            units: "screen"
+          }
+        });
+      };
 
       Text.prototype.display_defaults = function() {
         return _.extend({}, Text.__super__.display_defaults.call(this), {
@@ -35591,7 +35644,7 @@ return root.sprintf = sprintf;
       };
 
       LogTicker.prototype.get_ticks_no_defaults = function(data_low, data_high, desired_n_ticks) {
-        var end_factor, endlog, factor, factors, i, interval, log_high, log_interval, log_low, minor_interval, minor_offsets, minor_ticks, num_minor_ticks, start_factor, startlog, tick, ticks, x, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _ref1;
+        var base, end_factor, endlog, factor, factors, i, interval, log_high, log_interval, log_low, minor_interval, minor_offsets, minor_ticks, num_minor_ticks, start_factor, startlog, tick, ticks, x, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _ref1;
         num_minor_ticks = this.get('num_minor_ticks');
         minor_ticks = [];
         if (data_low <= 0) {
@@ -35600,8 +35653,9 @@ return root.sprintf = sprintf;
         if (data_low > data_high) {
           _ref1 = [data_high, data_low], data_low = _ref1[0], data_high = _ref1[1];
         }
-        log_low = Math.log(data_low) / Math.log(10);
-        log_high = Math.log(data_high) / Math.log(10);
+        base = this.get('base');
+        log_low = Math.log(data_low) / Math.log(base);
+        log_high = Math.log(data_high) / Math.log(base);
         log_interval = log_high - log_low;
         if (log_interval < 2) {
           interval = this.get_interval(data_low, data_high, desired_n_ticks);
@@ -35654,10 +35708,10 @@ return root.sprintf = sprintf;
             ticks = ticks.concat([endlog]);
           }
           ticks = ticks.map(function(i) {
-            return Math.pow(10, i);
+            return Math.pow(base, i);
           });
           if (num_minor_ticks > 1) {
-            minor_interval = Math.pow(10, interval) / num_minor_ticks;
+            minor_interval = Math.pow(base, interval) / num_minor_ticks;
             minor_offsets = (function() {
               var _l, _results;
               _results = [];
@@ -35722,8 +35776,9 @@ return root.sprintf = sprintf;
   var __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  define('ticking/log_tick_formatter',["underscore", "common/collection", "common/has_properties", "ticking/basic_tick_formatter"], function(_, Collection, HasProperties, BasicTickFormatter) {
-    var LogTickFormatter, LogTickFormatters, _ref, _ref1;
+  define('ticking/log_tick_formatter',["underscore", "common/collection", "common/has_properties", "common/logging", "ticking/basic_tick_formatter"], function(_, Collection, HasProperties, Logging, BasicTickFormatter) {
+    var LogTickFormatter, LogTickFormatters, logger, _ref, _ref1;
+    logger = Logging.logger;
     LogTickFormatter = (function(_super) {
       __extends(LogTickFormatter, _super);
 
@@ -35736,18 +35791,26 @@ return root.sprintf = sprintf;
 
       LogTickFormatter.prototype.initialize = function(attrs, options) {
         LogTickFormatter.__super__.initialize.call(this, attrs, options);
-        return this.basic_formatter = new BasicTickFormatter.Model();
+        this.basic_formatter = new BasicTickFormatter.Model();
+        if (this.get('ticker') == null) {
+          return logger.warn("LogTickFormatter not configured with a ticker, using default base of 10 (labels will be incorrect if ticker base is not 10)");
+        }
       };
 
       LogTickFormatter.prototype.format = function(ticks) {
-        var i, labels, small_interval, _i, _ref1;
+        var base, i, labels, small_interval, _i, _ref1;
         if (ticks.length === 0) {
           return [];
+        }
+        if (this.get('ticker') != null) {
+          base = this.get('ticker').get('base');
+        } else {
+          base = 10;
         }
         small_interval = false;
         labels = new Array(ticks.length);
         for (i = _i = 0, _ref1 = ticks.length; 0 <= _ref1 ? _i < _ref1 : _i > _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
-          labels[i] = "10^" + (Math.round(Math.log(ticks[i]) / Math.log(10)));
+          labels[i] = "" + base + "^" + (Math.round(Math.log(ticks[i]) / Math.log(base)));
           if ((i > 0) && (labels[i] === labels[i - 1])) {
             small_interval = true;
             break;
@@ -36029,7 +36092,7 @@ return root.sprintf = sprintf;
           fill_color: null,
           fill_alpha: 0.2,
           line_color: 'grey',
-          line_width: 2,
+          line_width: 3,
           line_alpha: 0.8,
           line_join: 'miter',
           line_cap: 'butt',
@@ -36098,12 +36161,22 @@ return root.sprintf = sprintf;
       };
 
       ColumnDataSource.prototype.get_length = function() {
-        var data;
+        var data, key, lengths, val;
         data = this.get('data');
         if (_.keys(data).length === 0) {
-          return 0;
+          return null;
+        } else {
+          lengths = _.uniq((function() {
+            var _results;
+            _results = [];
+            for (key in data) {
+              val = data[key];
+              _results.push(val.length);
+            }
+            return _results;
+          })());
+          return lengths[0];
         }
-        return data[_.keys(data)[0]].length;
       };
 
       ColumnDataSource.prototype.columns = function() {
@@ -37423,19 +37496,24 @@ define('tool/actions/preview_save_tool_template',[],function(){
         new_data.vx = _.clone(this.data.vx);
         new_data.vy = _.clone(this.data.vy);
         overlay.set('data', new_data);
-        append = (_ref1 = e.srcEvent.shiftKey) != null ? _ref1 : false;
-        return this._select(this.data.vx, this.data.vy, append);
+        if (this.mget('select_every_mousemove')) {
+          append = (_ref1 = e.srcEvent.shiftKey) != null ? _ref1 : false;
+          return this._select(this.data.vx, this.data.vy, false, append);
+        }
       };
 
       LassoSelectToolView.prototype._pan_end = function(e) {
-        return this._clear_overlay();
+        var append, _ref1;
+        this._clear_overlay();
+        append = (_ref1 = e.srcEvent.shiftKey) != null ? _ref1 : false;
+        return this._select(this.data.vx, this.data.vy, true, append);
       };
 
       LassoSelectToolView.prototype._clear_overlay = function() {
         return this.mget('overlay').set('data', null);
       };
 
-      LassoSelectToolView.prototype._select = function(vx, vy, append) {
+      LassoSelectToolView.prototype._select = function(vx, vy, final, append) {
         var ds, geometry, r, sm, _i, _len, _ref1;
         geometry = {
           type: 'poly',
@@ -37447,9 +37525,9 @@ define('tool/actions/preview_save_tool_template',[],function(){
           r = _ref1[_i];
           ds = r.get('data_source');
           sm = ds.get('selection_manager');
-          sm.select(this, this.plot_view.renderers[r.id], geometry, true, append);
+          sm.select(this, this.plot_view.renderers[r.id], geometry, final, append);
         }
-        this._save_geometry(geometry, true, append);
+        this._save_geometry(geometry, final, append);
         return null;
       };
 
@@ -37479,10 +37557,18 @@ define('tool/actions/preview_save_tool_template',[],function(){
       LassoSelectTool.prototype.initialize = function(attrs, options) {
         var plot_renderers;
         LassoSelectTool.__super__.initialize.call(this, attrs, options);
-        this.set('overlay', new PolySelection.Model);
+        this.set('overlay', new PolySelection.Model({
+          line_width: 2
+        }));
         plot_renderers = this.get('plot').get('renderers');
         plot_renderers.push(this.get('overlay'));
         return this.get('plot').set('renderers', plot_renderers);
+      };
+
+      LassoSelectTool.prototype.defaults = function() {
+        return _.extend({}, LassoSelectTool.__super__.defaults.call(this), {
+          select_every_mousemove: true
+        });
       };
 
       return LassoSelectTool;
@@ -37813,10 +37899,10 @@ define('tool/actions/preview_save_tool_template',[],function(){
         vx = canvas.sx_to_vx(e.bokeh.sx);
         vy = canvas.sy_to_vy(e.bokeh.sy);
         append = (_ref1 = e.srcEvent.shiftKey) != null ? _ref1 : false;
-        return this._select(vx, vy, append);
+        return this._select(vx, vy, true, append);
       };
 
-      TapToolView.prototype._select = function(vx, vy, append) {
+      TapToolView.prototype._select = function(vx, vy, final, append) {
         var ds, geometry, r, sm, _i, _len, _ref1;
         geometry = {
           type: 'point',
@@ -37828,9 +37914,9 @@ define('tool/actions/preview_save_tool_template',[],function(){
           r = _ref1[_i];
           ds = r.get('data_source');
           sm = ds.get('selection_manager');
-          sm.select(this, this.plot_view.renderers[r.id], geometry, true, append);
+          sm.select(this, this.plot_view.renderers[r.id], geometry, final, append);
         }
-        this._save_geometry(geometry, true, append);
+        this._save_geometry(geometry, final, append);
         return null;
       };
 
@@ -38178,251 +38264,6 @@ define('tool/actions/preview_save_tool_template',[],function(){
 
 /*
 //@ sourceMappingURL=crosshair_tool.js.map
-*/;
-(function() {
-  var __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-  define('tool/inspectors/hover_tool',["underscore", "sprintf", "common/collection", "renderer/annotation/tooltip", "./inspect_tool"], function(_, sprintf, Collection, Tooltip, InspectTool) {
-    var HoverTool, HoverToolView, HoverTools, _color_to_hex, _format_number, _ref, _ref1, _ref2;
-    _color_to_hex = function(color) {
-      var blue, digits, green, red, rgb;
-      if (color.substr(0, 1) === '#') {
-        return color;
-      }
-      digits = /(.*?)rgb\((\d+), (\d+), (\d+)\)/.exec(color);
-      red = parseInt(digits[2]);
-      green = parseInt(digits[3]);
-      blue = parseInt(digits[4]);
-      rgb = blue | (green << 8) | (red << 16);
-      return digits[1] + '#' + rgb.toString(16);
-    };
-    _format_number = function(number) {
-      if (typeof number === "string") {
-        return number;
-      }
-      if (Math.floor(number) === number) {
-        return sprintf("%d", number);
-      }
-      if (Math.abs(number) > 0.1 && Math.abs(number) < 1000) {
-        return sprintf("%0.3f", number);
-      }
-      return sprintf("%0.3e", number);
-    };
-    HoverToolView = (function(_super) {
-      __extends(HoverToolView, _super);
-
-      function HoverToolView() {
-        _ref = HoverToolView.__super__.constructor.apply(this, arguments);
-        return _ref;
-      }
-
-      HoverToolView.prototype.bind_bokeh_events = function() {
-        var r, _i, _len, _ref1;
-        _ref1 = this.mget('renderers');
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          r = _ref1[_i];
-          this.listenTo(r.get('data_source'), 'inspect', this._update);
-        }
-        return this.plot_view.canvas_view.canvas_wrapper.css('cursor', 'crosshair');
-      };
-
-      HoverToolView.prototype._move = function(e) {
-        var canvas, vx, vy;
-        if (!this.mget('active')) {
-          return;
-        }
-        canvas = this.plot_view.canvas;
-        vx = canvas.sx_to_vx(e.bokeh.sx);
-        vy = canvas.sy_to_vy(e.bokeh.sy);
-        if (!this.plot_view.frame.contains(vx, vy)) {
-          this.mget('tooltip').clear();
-          return;
-        }
-        return this._inspect(vx, vy);
-      };
-
-      HoverToolView.prototype._move_exit = function() {
-        return this.mget('tooltip').clear();
-      };
-
-      HoverToolView.prototype._inspect = function(vx, vy, e) {
-        var geometry, r, sm, _i, _len, _ref1, _results;
-        geometry = {
-          type: 'point',
-          vx: vx,
-          vy: vy
-        };
-        _ref1 = this.mget('renderers');
-        _results = [];
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          r = _ref1[_i];
-          sm = r.get('data_source').get('selection_manager');
-          _results.push(sm.inspect(this, this.plot_view.renderers[r.id], geometry, {
-            "geometry": geometry
-          }));
-        }
-        return _results;
-      };
-
-      HoverToolView.prototype._update = function(indices, tool, renderer, ds, _arg) {
-        var canvas, colname, color, column, column_name, dsvalue, frame, geometry, hex, i, label, match, opts, row, rx, ry, span, swatch, sx, sy, table, td, unused, value, vx, vy, x, xmapper, y, ymapper, _i, _j, _len, _len1, _ref1, _ref2, _ref3, _ref4, _ref5;
-        geometry = _arg.geometry;
-        this.mget('tooltip').clear();
-        if (indices.length === 0) {
-          return;
-        }
-        vx = geometry.vx;
-        vy = geometry.vy;
-        canvas = this.plot_model.get('canvas');
-        frame = this.plot_model.get('frame');
-        sx = canvas.vx_to_sx(vx);
-        sy = canvas.vy_to_sy(vy);
-        xmapper = frame.get('x_mappers')[renderer.mget('x_range_name')];
-        ymapper = frame.get('y_mappers')[renderer.mget('y_range_name')];
-        x = xmapper.map_from_target(vx);
-        y = ymapper.map_from_target(vy);
-        for (_i = 0, _len = indices.length; _i < _len; _i++) {
-          i = indices[_i];
-          if (this.mget('snap_to_data')) {
-            rx = canvas.sx_to_vx(renderer.glyph.sx[i]);
-            ry = canvas.sy_to_vy(renderer.glyph.sy[i]);
-          } else {
-            _ref1 = [vx, vy], rx = _ref1[0], ry = _ref1[1];
-          }
-          table = $('<table></table>');
-          _ref2 = this.mget("tooltips");
-          for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-            _ref3 = _ref2[_j], label = _ref3[0], value = _ref3[1];
-            row = $("<tr></tr>");
-            row.append($("<td class='bk-tooltip-row-label'>" + label + ": </td>"));
-            td = $("<td class='bk-tooltip-row-value'></td>");
-            if (value.indexOf("$color") >= 0) {
-              _ref4 = value.match(/\$color(\[.*\])?:(\w*)/), match = _ref4[0], opts = _ref4[1], colname = _ref4[2];
-              column = ds.get_column(colname);
-              if (column == null) {
-                span = $("<span>" + colname + " unknown</span>");
-                td.append(span);
-                continue;
-              }
-              hex = (opts != null ? opts.indexOf("hex") : void 0) >= 0;
-              swatch = (opts != null ? opts.indexOf("swatch") : void 0) >= 0;
-              color = column[i];
-              if (color == null) {
-                span = $("<span>(null)</span>");
-                td.append(span);
-                continue;
-              }
-              if (hex) {
-                color = _color_to_hex(color);
-              }
-              span = $("<span>" + color + "</span>");
-              td.append(span);
-              if (swatch) {
-                span = $("<span class='bk-tooltip-color-block'> </span>");
-                span.css({
-                  backgroundColor: color
-                });
-              }
-              td.append(span);
-            } else {
-              value = value.replace("$index", "" + i);
-              value = value.replace("$x", "" + (_format_number(x)));
-              value = value.replace("$y", "" + (_format_number(y)));
-              value = value.replace("$vx", "" + vx);
-              value = value.replace("$vy", "" + vy);
-              value = value.replace("$sx", "" + sx);
-              value = value.replace("$sy", "" + sy);
-              while (value.indexOf("@") >= 0) {
-                _ref5 = value.match(/(@)(\w*)/), match = _ref5[0], unused = _ref5[1], column_name = _ref5[2];
-                column = ds.get_column(column_name);
-                if (column == null) {
-                  value = value.replace(column_name, "" + column_name + " unknown");
-                  break;
-                }
-                column = ds.get_column(column_name);
-                dsvalue = column[i];
-                if (typeof dsvalue === "number") {
-                  value = value.replace(match, "" + (_format_number(dsvalue)));
-                } else {
-                  value = value.replace(match, "" + dsvalue);
-                }
-              }
-              span = $("<span>" + value + "</span>");
-              td.append(span);
-            }
-            row.append(td);
-            table.append(row);
-          }
-          this.mget('tooltip').add(rx, ry, table);
-        }
-        return null;
-      };
-
-      return HoverToolView;
-
-    })(InspectTool.View);
-    HoverTool = (function(_super) {
-      var icon;
-
-      __extends(HoverTool, _super);
-
-      function HoverTool() {
-        _ref1 = HoverTool.__super__.constructor.apply(this, arguments);
-        return _ref1;
-      }
-
-      HoverTool.prototype.default_view = HoverToolView;
-
-      HoverTool.prototype.type = "HoverTool";
-
-      HoverTool.prototype.tool_name = "Hover Tool";
-
-      icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA8ElEQVQ4T42T0Q2CMBCGaQjPxgmMG/jelIQN3ECZQEfADRwBJzBuQCC81wlkBHxvqP8lmhTsUfpSWvp/vfvvKiJn1HVdpml6dPdC38I90DSNxVobYzKMPiSm/z5AZK3t4zjOpJQ6BPECfiKAcqRUzkFmASQEhHzJOUgQ8BWyviwFsL4sBnC+LAE84YMWQnSAVCixdkvMAiB6Q7TCfJtrLq4PHkmSnHHbi0LHvOYa6w/g3kitjSgOYFyUUoWvlCPA9C1gvQfgDmiHNLZBgO8A3geZt+G6chQBA7hi/0QVQBrZ9EwQ0LbtbhgGghQAVFPAB25HmRH8b2/nAAAAAElFTkSuQmCC';
-
-      HoverTool.prototype.initialize = function(attrs, options) {
-        var renderers;
-        HoverTool.__super__.initialize.call(this, attrs, options);
-        this.set('tooltip', new Tooltip.Model());
-        renderers = this.get('plot').get('renderers');
-        renderers.push(this.get('tooltip'));
-        return this.get('plot').set('renderers', renderers);
-      };
-
-      HoverTool.prototype.defaults = function() {
-        return _.extend({}, HoverTool.__super__.defaults.call(this), {
-          snap_to_data: true,
-          tooltips: [["index", "$index"], ["data (x, y)", "($x, $y)"], ["canvas (x, y)", "($sx, $sy)"]]
-        });
-      };
-
-      return HoverTool;
-
-    })(InspectTool.Model);
-    HoverTools = (function(_super) {
-      __extends(HoverTools, _super);
-
-      function HoverTools() {
-        _ref2 = HoverTools.__super__.constructor.apply(this, arguments);
-        return _ref2;
-      }
-
-      HoverTools.prototype.model = HoverTool;
-
-      return HoverTools;
-
-    })(Collection);
-    return {
-      "Model": HoverTool,
-      "Collection": new HoverTools(),
-      "View": HoverToolView
-    };
-  });
-
-}).call(this);
-
-/*
-//@ sourceMappingURL=hover_tool.js.map
 */;
 /*!
  * numeral.js
@@ -39108,8 +38949,285 @@ define('tool/actions/preview_save_tool_template',[],function(){
   var __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
+  define('tool/inspectors/hover_tool',["underscore", "sprintf", "common/collection", "renderer/annotation/tooltip", "./inspect_tool", "numeral"], function(_, sprintf, Collection, Tooltip, InspectTool, Numeral) {
+    var HoverTool, HoverToolView, HoverTools, _color_to_hex, _format_number, _ref, _ref1, _ref2;
+    _color_to_hex = function(color) {
+      var blue, digits, green, red, rgb;
+      if (color.substr(0, 1) === '#') {
+        return color;
+      }
+      digits = /(.*?)rgb\((\d+), (\d+), (\d+)\)/.exec(color);
+      red = parseInt(digits[2]);
+      green = parseInt(digits[3]);
+      blue = parseInt(digits[4]);
+      rgb = blue | (green << 8) | (red << 16);
+      return digits[1] + '#' + rgb.toString(16);
+    };
+    _format_number = function(number) {
+      if (typeof number === "string") {
+        return number;
+      }
+      if (Math.floor(number) === number) {
+        return sprintf("%d", number);
+      }
+      if (Math.abs(number) > 0.1 && Math.abs(number) < 1000) {
+        return sprintf("%0.3f", number);
+      }
+      return sprintf("%0.3e", number);
+    };
+    HoverToolView = (function(_super) {
+      __extends(HoverToolView, _super);
+
+      function HoverToolView() {
+        _ref = HoverToolView.__super__.constructor.apply(this, arguments);
+        return _ref;
+      }
+
+      HoverToolView.prototype.bind_bokeh_events = function() {
+        var r, _i, _len, _ref1;
+        _ref1 = this.mget('renderers');
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          r = _ref1[_i];
+          this.listenTo(r.get('data_source'), 'inspect', this._update);
+        }
+        return this.plot_view.canvas_view.canvas_wrapper.css('cursor', 'crosshair');
+      };
+
+      HoverToolView.prototype._move = function(e) {
+        var canvas, rid, tt, vx, vy, _ref1;
+        if (!this.mget('active')) {
+          return;
+        }
+        canvas = this.plot_view.canvas;
+        vx = canvas.sx_to_vx(e.bokeh.sx);
+        vy = canvas.sy_to_vy(e.bokeh.sy);
+        if (!this.plot_view.frame.contains(vx, vy)) {
+          _ref1 = this.mget('ttmodels');
+          for (rid in _ref1) {
+            tt = _ref1[rid];
+            tt.clear();
+          }
+          return;
+        }
+        return this._inspect(vx, vy);
+      };
+
+      HoverToolView.prototype._move_exit = function() {
+        var rid, tt, _ref1, _results;
+        _ref1 = this.mget('ttmodels');
+        _results = [];
+        for (rid in _ref1) {
+          tt = _ref1[rid];
+          _results.push(tt.clear());
+        }
+        return _results;
+      };
+
+      HoverToolView.prototype._inspect = function(vx, vy, e) {
+        var geometry, r, sm, _i, _len, _ref1;
+        geometry = {
+          type: 'point',
+          vx: vx,
+          vy: vy
+        };
+        _ref1 = this.mget('renderers');
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          r = _ref1[_i];
+          sm = r.get('data_source').get('selection_manager');
+          sm.inspect(this, this.plot_view.renderers[r.id], geometry, {
+            "geometry": geometry
+          });
+        }
+      };
+
+      HoverToolView.prototype._update = function(indices, tool, renderer, ds, _arg) {
+        var canvas, colname, color, column, frame, geometry, hex, i, label, match, opts, row, rx, ry, span, swatch, sx, sy, table, td, tooltip, value, vx, vy, x, xmapper, y, ymapper, _i, _j, _len, _len1, _ref1, _ref2, _ref3, _ref4, _ref5,
+          _this = this;
+        geometry = _arg.geometry;
+        tooltip = (_ref1 = this.mget('ttmodels')[renderer.model.id]) != null ? _ref1 : null;
+        if (tooltip == null) {
+          return;
+        }
+        tooltip.clear();
+        if (indices.length === 0) {
+          return;
+        }
+        vx = geometry.vx;
+        vy = geometry.vy;
+        canvas = this.plot_model.get('canvas');
+        frame = this.plot_model.get('frame');
+        sx = canvas.vx_to_sx(vx);
+        sy = canvas.vy_to_sy(vy);
+        xmapper = frame.get('x_mappers')[renderer.mget('x_range_name')];
+        ymapper = frame.get('y_mappers')[renderer.mget('y_range_name')];
+        x = xmapper.map_from_target(vx);
+        y = ymapper.map_from_target(vy);
+        for (_i = 0, _len = indices.length; _i < _len; _i++) {
+          i = indices[_i];
+          if (this.mget('snap_to_data') && (renderer.glyph.sx != null) && (renderer.glyph.sy != null)) {
+            rx = canvas.sx_to_vx(renderer.glyph.sx[i]);
+            ry = canvas.sy_to_vy(renderer.glyph.sy[i]);
+          } else {
+            _ref2 = [vx, vy], rx = _ref2[0], ry = _ref2[1];
+          }
+          table = $('<table></table>');
+          _ref3 = this.mget("tooltips");
+          for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+            _ref4 = _ref3[_j], label = _ref4[0], value = _ref4[1];
+            row = $("<tr></tr>");
+            row.append($("<td class='bk-tooltip-row-label'>" + label + ": </td>"));
+            td = $("<td class='bk-tooltip-row-value'></td>");
+            if (value.indexOf("$color") >= 0) {
+              _ref5 = value.match(/\$color(\[.*\])?:(\w*)/), match = _ref5[0], opts = _ref5[1], colname = _ref5[2];
+              column = ds.get_column(colname);
+              if (column == null) {
+                span = $("<span>" + colname + " unknown</span>");
+                td.append(span);
+                continue;
+              }
+              hex = (opts != null ? opts.indexOf("hex") : void 0) >= 0;
+              swatch = (opts != null ? opts.indexOf("swatch") : void 0) >= 0;
+              color = column[i];
+              if (color == null) {
+                span = $("<span>(null)</span>");
+                td.append(span);
+                continue;
+              }
+              if (hex) {
+                color = _color_to_hex(color);
+              }
+              span = $("<span>" + color + "</span>");
+              td.append(span);
+              if (swatch) {
+                span = $("<span class='bk-tooltip-color-block'> </span>");
+                span.css({
+                  backgroundColor: color
+                });
+              }
+              td.append(span);
+            } else {
+              value = value.replace(/(^|[^\$])\$(\w+)/g, function(match, prefix, name) {
+                var replacement;
+                replacement = (function() {
+                  switch (name) {
+                    case "index":
+                      return "" + i;
+                    case "x":
+                      return "" + (_format_number(x));
+                    case "y":
+                      return "" + (_format_number(y));
+                    case "vx":
+                      return "" + vx;
+                    case "vy":
+                      return "" + vy;
+                    case "sx":
+                      return "" + sx;
+                    case "sy":
+                      return "" + sy;
+                  }
+                })();
+                if (replacement != null) {
+                  return "" + prefix + replacement;
+                } else {
+                  return match;
+                }
+              });
+              value = value.replace(/(^|[^@])@(?:(\w+)|{([^{}]+)})(?:{([^{}]+)})?/g, function(match, prefix, name, long_name, format) {
+                var replacement;
+                name = long_name != null ? long_name : name;
+                column = ds.get_column(name);
+                replacement = column == null ? "" + name + " unknown" : (value = column[i], format != null ? Numeral(value).format(format) : _.isNumber(value) ? _format_number(value) : value);
+                return "" + prefix + replacement;
+              });
+              span = $('<span>').text(value);
+              td.append(span);
+            }
+            row.append(td);
+            table.append(row);
+          }
+          tooltip.add(rx, ry, table);
+        }
+        return null;
+      };
+
+      return HoverToolView;
+
+    })(InspectTool.View);
+    HoverTool = (function(_super) {
+      var icon;
+
+      __extends(HoverTool, _super);
+
+      function HoverTool() {
+        _ref1 = HoverTool.__super__.constructor.apply(this, arguments);
+        return _ref1;
+      }
+
+      HoverTool.prototype.default_view = HoverToolView;
+
+      HoverTool.prototype.type = "HoverTool";
+
+      HoverTool.prototype.tool_name = "Hover Tool";
+
+      icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA8ElEQVQ4T42T0Q2CMBCGaQjPxgmMG/jelIQN3ECZQEfADRwBJzBuQCC81wlkBHxvqP8lmhTsUfpSWvp/vfvvKiJn1HVdpml6dPdC38I90DSNxVobYzKMPiSm/z5AZK3t4zjOpJQ6BPECfiKAcqRUzkFmASQEhHzJOUgQ8BWyviwFsL4sBnC+LAE84YMWQnSAVCixdkvMAiB6Q7TCfJtrLq4PHkmSnHHbi0LHvOYa6w/g3kitjSgOYFyUUoWvlCPA9C1gvQfgDmiHNLZBgO8A3geZt+G6chQBA7hi/0QVQBrZ9EwQ0LbtbhgGghQAVFPAB25HmRH8b2/nAAAAAElFTkSuQmCC';
+
+      HoverTool.prototype.initialize = function(attrs, options) {
+        var r, renderers, tooltip, ttmodels, _i, _len, _ref2;
+        HoverTool.__super__.initialize.call(this, attrs, options);
+        ttmodels = {};
+        renderers = this.get('plot').get('renderers');
+        _ref2 = this.get('renderers');
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          r = _ref2[_i];
+          tooltip = new Tooltip.Model();
+          ttmodels[r.id] = tooltip;
+          renderers.push(tooltip);
+        }
+        this.set('ttmodels', ttmodels);
+        this.get('plot').set('renderers', renderers);
+      };
+
+      HoverTool.prototype.defaults = function() {
+        return _.extend({}, HoverTool.__super__.defaults.call(this), {
+          snap_to_data: true,
+          tooltips: [["index", "$index"], ["data (x, y)", "($x, $y)"], ["canvas (x, y)", "($sx, $sy)"]]
+        });
+      };
+
+      return HoverTool;
+
+    })(InspectTool.Model);
+    HoverTools = (function(_super) {
+      __extends(HoverTools, _super);
+
+      function HoverTools() {
+        _ref2 = HoverTools.__super__.constructor.apply(this, arguments);
+        return _ref2;
+      }
+
+      HoverTools.prototype.model = HoverTool;
+
+      return HoverTools;
+
+    })(Collection);
+    return {
+      "Model": HoverTool,
+      "Collection": new HoverTools(),
+      "View": HoverToolView
+    };
+  });
+
+}).call(this);
+
+/*
+//@ sourceMappingURL=hover_tool.js.map
+*/;
+(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
   define('widget/cell_formatters',["underscore", "jquery", "common/has_properties", "common/collection", "numeral"], function(_, $, HasProperties, Collection, Numeral) {
-    var BooleanFormatter, BooleanFormatters, CellFormatter, CellFormatterCollection, NumberFormatter, NumberFormatters, StringFormatter, StringFormatters, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+    var BooleanFormatter, BooleanFormatters, CellFormatter, CellFormatterCollection, DateFormatter, DateFormatters, NumberFormatter, NumberFormatters, StringFormatter, StringFormatters, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     CellFormatter = (function(_super) {
       __extends(CellFormatter, _super);
 
@@ -39126,6 +39244,12 @@ define('tool/actions/preview_save_tool_template',[],function(){
         }
       };
 
+      CellFormatter.prototype.formatterDefaults = {};
+
+      CellFormatter.prototype.defaults = function() {
+        return _.extend({}, CellFormatter.__super__.defaults.call(this), this.formatterDefaults);
+      };
+
       return CellFormatter;
 
     })(HasProperties);
@@ -39136,12 +39260,6 @@ define('tool/actions/preview_save_tool_template',[],function(){
         _ref1 = CellFormatterCollection.__super__.constructor.apply(this, arguments);
         return _ref1;
       }
-
-      CellFormatterCollection.prototype.formatterDefaults = {};
-
-      CellFormatterCollection.prototype.defaults = function() {
-        return _.extend({}, CellFormatterCollection.__super__.defaults.call(this), this.formatterDefaults);
-      };
 
       return CellFormatterCollection;
 
@@ -39155,6 +39273,12 @@ define('tool/actions/preview_save_tool_template',[],function(){
       }
 
       StringFormatter.prototype.type = 'StringFormatter';
+
+      StringFormatter.prototype.formatterDefaults = {
+        font_style: null,
+        text_align: null,
+        text_color: null
+      };
 
       StringFormatter.prototype.format = function(row, cell, value, columnDef, dataContext) {
         var font_style, text, text_align, text_color;
@@ -39195,12 +39319,6 @@ define('tool/actions/preview_save_tool_template',[],function(){
 
       StringFormatters.prototype.model = StringFormatter;
 
-      StringFormatters.prototype.formatterDefaults = {
-        font_style: null,
-        text_align: null,
-        text_color: null
-      };
-
       return StringFormatters;
 
     })(CellFormatterCollection);
@@ -39213,6 +39331,14 @@ define('tool/actions/preview_save_tool_template',[],function(){
       }
 
       NumberFormatter.prototype.type = 'NumberFormatter';
+
+      NumberFormatter.prototype.formatterDefaults = {
+        font_style: null,
+        text_align: null,
+        text_color: null,
+        format: '0,0',
+        language: 'en'
+      };
 
       NumberFormatter.prototype.format = function(row, cell, value, columnDef, dataContext) {
         Numeral.language(this.get("language"));
@@ -39233,14 +39359,6 @@ define('tool/actions/preview_save_tool_template',[],function(){
 
       NumberFormatters.prototype.model = NumberFormatter;
 
-      NumberFormatters.prototype.formatterDefaults = {
-        font_style: null,
-        text_align: null,
-        text_color: null,
-        format: '0,0',
-        language: 'en'
-      };
-
       return NumberFormatters;
 
     })(CellFormatterCollection);
@@ -39253,6 +39371,10 @@ define('tool/actions/preview_save_tool_template',[],function(){
       }
 
       BooleanFormatter.prototype.type = 'BooleanFormatter';
+
+      BooleanFormatter.prototype.formatterDefaults = {
+        icon: 'check'
+      };
 
       BooleanFormatter.prototype.format = function(row, cell, value, columnDef, dataContext) {
         if (!!value) {
@@ -39275,11 +39397,82 @@ define('tool/actions/preview_save_tool_template',[],function(){
 
       BooleanFormatters.prototype.model = BooleanFormatter;
 
-      BooleanFormatters.prototype.formatterDefaults = {
-        icon: 'check'
+      return BooleanFormatters;
+
+    })(CellFormatterCollection);
+    DateFormatter = (function(_super) {
+      __extends(DateFormatter, _super);
+
+      function DateFormatter() {
+        _ref8 = DateFormatter.__super__.constructor.apply(this, arguments);
+        return _ref8;
+      }
+
+      DateFormatter.prototype.type = 'DateFormatter';
+
+      DateFormatter.prototype.formatterDefaults = {
+        format: 'yy M d'
       };
 
-      return BooleanFormatters;
+      DateFormatter.prototype.getFormat = function() {
+        var format, name;
+        format = this.get("format");
+        name = (function() {
+          switch (format) {
+            case "ATOM":
+            case "W3C":
+            case "RFC-3339":
+            case "ISO-8601":
+              return "ISO-8601";
+            case "COOKIE":
+              return "COOKIE";
+            case "RFC-850":
+              return "RFC-850";
+            case "RFC-1036":
+              return "RFC-1036";
+            case "RFC-1123":
+              return "RFC-1123";
+            case "RFC-2822":
+              return "RFC-2822";
+            case "RSS":
+            case "RFC-822":
+              return "RFC-822";
+            case "TICKS":
+              return "TICKS";
+            case "TIMESTAMP":
+              return "TIMESTAMP";
+            default:
+              return null;
+          }
+        })();
+        if (name != null) {
+          return $.datepicker[name];
+        } else {
+          return format;
+        }
+      };
+
+      DateFormatter.prototype.format = function(row, cell, value, columnDef, dataContext) {
+        var date;
+        value = _.isString(value) ? parseInt(value, 10) : value;
+        date = $.datepicker.formatDate(this.getFormat(), new Date(value));
+        return DateFormatter.__super__.format.call(this, row, cell, date, columnDef, dataContext);
+      };
+
+      return DateFormatter;
+
+    })(CellFormatter);
+    DateFormatters = (function(_super) {
+      __extends(DateFormatters, _super);
+
+      function DateFormatters() {
+        _ref9 = DateFormatters.__super__.constructor.apply(this, arguments);
+        return _ref9;
+      }
+
+      DateFormatters.prototype.model = DateFormatter;
+
+      return DateFormatters;
 
     })(CellFormatterCollection);
     return {
@@ -39294,6 +39487,10 @@ define('tool/actions/preview_save_tool_template',[],function(){
       Boolean: {
         Model: BooleanFormatter,
         Collection: new BooleanFormatters()
+      },
+      Date: {
+        Model: DateFormatter,
+        Collection: new DateFormatters()
       }
     };
   });
@@ -42947,11 +43144,11 @@ return $.widget( "ui.spinner", {
       };
 
       CellEditorView.prototype.render = function() {
+        this.$el.appendTo(this.args.container);
         this.$input = $(this.input);
         this.$el.append(this.$input);
         this.renderEditor();
-        this.disableNavigation();
-        return this.$el.appendTo(this.args.container);
+        return this.disableNavigation();
       };
 
       CellEditorView.prototype.renderEditor = function() {};
@@ -43503,6 +43700,69 @@ return $.widget( "ui.spinner", {
         _ref27 = DateEditorView.__super__.constructor.apply(this, arguments);
         return _ref27;
       }
+
+      DateEditorView.prototype.emptyValue = new Date();
+
+      DateEditorView.prototype.input = '<input type="text" />';
+
+      DateEditorView.prototype.renderEditor = function() {
+        var _this = this;
+        this.calendarOpen = false;
+        this.$input.datepicker({
+          showOn: "button",
+          buttonImageOnly: true,
+          beforeShow: function() {
+            return _this.calendarOpen = true;
+          },
+          onClose: function() {
+            return _this.calendarOpen = false;
+          }
+        });
+        this.$input.siblings(".bk-ui-datepicker-trigger").css({
+          "vertical-align": "middle"
+        });
+        this.$input.width(this.$input.width() - (14 + 2 * 4 + 4));
+        return this.$input.focus().select();
+      };
+
+      DateEditorView.prototype.destroy = function() {
+        $.datepicker.dpDiv.stop(true, true);
+        this.$input.datepicker("hide");
+        this.$input.datepicker("destroy");
+        return DateEditorView.__super__.destroy.call(this);
+      };
+
+      DateEditorView.prototype.show = function() {
+        if (this.calendarOpen) {
+          $.datepicker.dpDiv.stop(true, true).show();
+        }
+        return DateEditorView.__super__.show.call(this);
+      };
+
+      DateEditorView.prototype.hide = function() {
+        if (this.calendarOpen) {
+          $.datepicker.dpDiv.stop(true, true).hide();
+        }
+        return DateEditorView.__super__.hide.call(this);
+      };
+
+      DateEditorView.prototype.position = function(position) {
+        if (this.calendarOpen) {
+          $.datepicker.dpDiv.css({
+            top: position.top + 30,
+            left: position.left
+          });
+        }
+        return DateEditorView.__super__.position.call(this);
+      };
+
+      DateEditorView.prototype.getValue = function() {
+        return this.$input.datepicker("getDate").getTime();
+      };
+
+      DateEditorView.prototype.setValue = function(val) {
+        return this.$input.datepicker("setDate", new Date(val));
+      };
 
       return DateEditorView;
 
@@ -50151,7 +50411,9 @@ return $.widget("ui.sortable", $.ui.mouse, {
 
       DataProvider.prototype.getItem = function(index) {
         var field, item, _i, _len, _ref;
-        item = {};
+        item = {
+          index: index
+        };
         _ref = this.fields;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           field = _ref[_i];
@@ -50321,7 +50583,7 @@ return $.widget("ui.sortable", $.ui.mouse, {
           });
           columns.unshift(checkboxSelector.getColumnDefinition());
         }
-        if (this.mget("row_headers")) {
+        if (this.mget("row_headers") && (this.mget("source").get_column("index") != null)) {
           columns.unshift(this.newIndexColumn());
         }
         width = this.mget("width");
@@ -55210,7 +55472,7 @@ define('jqrangeslider/jQRangeSlider',["jquery", "jquery_ui/core", "jquery_ui/wid
 		},
 
 		_getFormatter: function(){
-			if (this.options.formatter === false || this.options.formatter === null){
+			if (this.options.formatter === false || this.options.formatter === null){
 				return this._defaultFormatter;
 			}
 
@@ -55354,7 +55616,7 @@ define('jqrangeslider/jQRangeSlider',["jquery", "jquery_ui/core", "jquery_ui/wid
 		values: function(min, max){
 			var val;
 
-			if (typeof min !== "undefined" && typeof max !== "undefined"){
+			if (typeof min !== "undefined" && typeof max !== "undefined"){
 				if (!this._initialized){
 					this._values.min = min;
 					this._values.max = max;
@@ -55592,7 +55854,7 @@ define('jqrangeslider/jQDateRangeSlider',["jquery", "./jQRangeSlider"], function
 		_getFormatter: function(){
 			var formatter = this.options.formatter;
 
-			if (this.options.formatter === false || this.options.formatter === null){
+			if (this.options.formatter === false || this.options.formatter === null){
 				formatter = this._defaultFormatter;
 			}
 
@@ -60490,6 +60752,7 @@ define('bootstrap/button',["jquery"], function(jQuery) {
       StringFormatter: ['widget/cell_formatters', 'String'],
       NumberFormatter: ['widget/cell_formatters', 'Number'],
       BooleanFormatter: ['widget/cell_formatters', 'Boolean'],
+      DateFormatter: ['widget/cell_formatters', 'Date'],
       StringEditor: ['widget/cell_editors', 'String'],
       TextEditor: ['widget/cell_editors', 'Text'],
       SelectEditor: ['widget/cell_editors', 'Select'],
@@ -61182,291 +61445,215 @@ define('bootstrap/button',["jquery"], function(jQuery) {
 //@ sourceMappingURL=random.js.map
 */;
 (function() {
-  define('palettes/colorbrewer',[], function() {
-    var colorbrewer;
-    return colorbrewer = {
-      YlGn: {
-        3: [0xf7fcb9, 0xaddd8e, 0x31a354],
-        4: [0xffffcc, 0xc2e699, 0x78c679, 0x238443],
-        5: [0xffffcc, 0xc2e699, 0x78c679, 0x31a354, 0x006837],
-        6: [0xffffcc, 0xd9f0a3, 0xaddd8e, 0x78c679, 0x31a354, 0x006837],
-        7: [0xffffcc, 0xd9f0a3, 0xaddd8e, 0x78c679, 0x41ab5d, 0x238443, 0x005a32],
-        8: [0xffffe5, 0xf7fcb9, 0xd9f0a3, 0xaddd8e, 0x78c679, 0x41ab5d, 0x238443, 0x005a32],
-        9: [0xffffe5, 0xf7fcb9, 0xd9f0a3, 0xaddd8e, 0x78c679, 0x41ab5d, 0x238443, 0x006837, 0x004529]
-      },
-      YlGnBu: {
-        3: [0xedf8b1, 0x7fcdbb, 0x2c7fb8],
-        4: [0xffffcc, 0xa1dab4, 0x41b6c4, 0x225ea8],
-        5: [0xffffcc, 0xa1dab4, 0x41b6c4, 0x2c7fb8, 0x253494],
-        6: [0xffffcc, 0xc7e9b4, 0x7fcdbb, 0x41b6c4, 0x2c7fb8, 0x253494],
-        7: [0xffffcc, 0xc7e9b4, 0x7fcdbb, 0x41b6c4, 0x1d91c0, 0x225ea8, 0x0c2c84],
-        8: [0xffffd9, 0xedf8b1, 0xc7e9b4, 0x7fcdbb, 0x41b6c4, 0x1d91c0, 0x225ea8, 0x0c2c84],
-        9: [0xffffd9, 0xedf8b1, 0xc7e9b4, 0x7fcdbb, 0x41b6c4, 0x1d91c0, 0x225ea8, 0x253494, 0x081d58]
-      },
-      GnBu: {
-        3: [0xe0f3db, 0xa8ddb5, 0x43a2ca],
-        4: [0xf0f9e8, 0xbae4bc, 0x7bccc4, 0x2b8cbe],
-        5: [0xf0f9e8, 0xbae4bc, 0x7bccc4, 0x43a2ca, 0x0868ac],
-        6: [0xf0f9e8, 0xccebc5, 0xa8ddb5, 0x7bccc4, 0x43a2ca, 0x0868ac],
-        7: [0xf0f9e8, 0xccebc5, 0xa8ddb5, 0x7bccc4, 0x4eb3d3, 0x2b8cbe, 0x08589e],
-        8: [0xf7fcf0, 0xe0f3db, 0xccebc5, 0xa8ddb5, 0x7bccc4, 0x4eb3d3, 0x2b8cbe, 0x08589e],
-        9: [0xf7fcf0, 0xe0f3db, 0xccebc5, 0xa8ddb5, 0x7bccc4, 0x4eb3d3, 0x2b8cbe, 0x0868ac, 0x084081]
-      },
-      BuGn: {
-        3: [0xe5f5f9, 0x99d8c9, 0x2ca25f],
-        4: [0xedf8fb, 0xb2e2e2, 0x66c2a4, 0x238b45],
-        5: [0xedf8fb, 0xb2e2e2, 0x66c2a4, 0x2ca25f, 0x006d2c],
-        6: [0xedf8fb, 0xccece6, 0x99d8c9, 0x66c2a4, 0x2ca25f, 0x006d2c],
-        7: [0xedf8fb, 0xccece6, 0x99d8c9, 0x66c2a4, 0x41ae76, 0x238b45, 0x005824],
-        8: [0xf7fcfd, 0xe5f5f9, 0xccece6, 0x99d8c9, 0x66c2a4, 0x41ae76, 0x238b45, 0x005824],
-        9: [0xf7fcfd, 0xe5f5f9, 0xccece6, 0x99d8c9, 0x66c2a4, 0x41ae76, 0x238b45, 0x006d2c, 0x00441b]
-      },
-      PuBuGn: {
-        3: [0xece2f0, 0xa6bddb, 0x1c9099],
-        4: [0xf6eff7, 0xbdc9e1, 0x67a9cf, 0x02818a],
-        5: [0xf6eff7, 0xbdc9e1, 0x67a9cf, 0x1c9099, 0x016c59],
-        6: [0xf6eff7, 0xd0d1e6, 0xa6bddb, 0x67a9cf, 0x1c9099, 0x016c59],
-        7: [0xf6eff7, 0xd0d1e6, 0xa6bddb, 0x67a9cf, 0x3690c0, 0x02818a, 0x016450],
-        8: [0xfff7fb, 0xece2f0, 0xd0d1e6, 0xa6bddb, 0x67a9cf, 0x3690c0, 0x02818a, 0x016450],
-        9: [0xfff7fb, 0xece2f0, 0xd0d1e6, 0xa6bddb, 0x67a9cf, 0x3690c0, 0x02818a, 0x016c59, 0x014636]
-      },
-      PuBu: {
-        3: [0xece7f2, 0xa6bddb, 0x2b8cbe],
-        4: [0xf1eef6, 0xbdc9e1, 0x74a9cf, 0x0570b0],
-        5: [0xf1eef6, 0xbdc9e1, 0x74a9cf, 0x2b8cbe, 0x045a8d],
-        6: [0xf1eef6, 0xd0d1e6, 0xa6bddb, 0x74a9cf, 0x2b8cbe, 0x045a8d],
-        7: [0xf1eef6, 0xd0d1e6, 0xa6bddb, 0x74a9cf, 0x3690c0, 0x0570b0, 0x034e7b],
-        8: [0xfff7fb, 0xece7f2, 0xd0d1e6, 0xa6bddb, 0x74a9cf, 0x3690c0, 0x0570b0, 0x034e7b],
-        9: [0xfff7fb, 0xece7f2, 0xd0d1e6, 0xa6bddb, 0x74a9cf, 0x3690c0, 0x0570b0, 0x045a8d, 0x023858]
-      },
-      BuPu: {
-        3: [0xe0ecf4, 0x9ebcda, 0x8856a7],
-        4: [0xedf8fb, 0xb3cde3, 0x8c96c6, 0x88419d],
-        5: [0xedf8fb, 0xb3cde3, 0x8c96c6, 0x8856a7, 0x810f7c],
-        6: [0xedf8fb, 0xbfd3e6, 0x9ebcda, 0x8c96c6, 0x8856a7, 0x810f7c],
-        7: [0xedf8fb, 0xbfd3e6, 0x9ebcda, 0x8c96c6, 0x8c6bb1, 0x88419d, 0x6e016b],
-        8: [0xf7fcfd, 0xe0ecf4, 0xbfd3e6, 0x9ebcda, 0x8c96c6, 0x8c6bb1, 0x88419d, 0x6e016b],
-        9: [0xf7fcfd, 0xe0ecf4, 0xbfd3e6, 0x9ebcda, 0x8c96c6, 0x8c6bb1, 0x88419d, 0x810f7c, 0x4d004b]
-      },
-      RdPu: {
-        3: [0xfde0dd, 0xfa9fb5, 0xc51b8a],
-        4: [0xfeebe2, 0xfbb4b9, 0xf768a1, 0xae017e],
-        5: [0xfeebe2, 0xfbb4b9, 0xf768a1, 0xc51b8a, 0x7a0177],
-        6: [0xfeebe2, 0xfcc5c0, 0xfa9fb5, 0xf768a1, 0xc51b8a, 0x7a0177],
-        7: [0xfeebe2, 0xfcc5c0, 0xfa9fb5, 0xf768a1, 0xdd3497, 0xae017e, 0x7a0177],
-        8: [0xfff7f3, 0xfde0dd, 0xfcc5c0, 0xfa9fb5, 0xf768a1, 0xdd3497, 0xae017e, 0x7a0177],
-        9: [0xfff7f3, 0xfde0dd, 0xfcc5c0, 0xfa9fb5, 0xf768a1, 0xdd3497, 0xae017e, 0x7a0177, 0x49006a]
-      },
-      PuRd: {
-        3: [0xe7e1ef, 0xc994c7, 0xdd1c77],
-        4: [0xf1eef6, 0xd7b5d8, 0xdf65b0, 0xce1256],
-        5: [0xf1eef6, 0xd7b5d8, 0xdf65b0, 0xdd1c77, 0x980043],
-        6: [0xf1eef6, 0xd4b9da, 0xc994c7, 0xdf65b0, 0xdd1c77, 0x980043],
-        7: [0xf1eef6, 0xd4b9da, 0xc994c7, 0xdf65b0, 0xe7298a, 0xce1256, 0x91003f],
-        8: [0xf7f4f9, 0xe7e1ef, 0xd4b9da, 0xc994c7, 0xdf65b0, 0xe7298a, 0xce1256, 0x91003f],
-        9: [0xf7f4f9, 0xe7e1ef, 0xd4b9da, 0xc994c7, 0xdf65b0, 0xe7298a, 0xce1256, 0x980043, 0x67001f]
-      },
-      OrRd: {
-        3: [0xfee8c8, 0xfdbb84, 0xe34a33],
-        4: [0xfef0d9, 0xfdcc8a, 0xfc8d59, 0xd7301f],
-        5: [0xfef0d9, 0xfdcc8a, 0xfc8d59, 0xe34a33, 0xb30000],
-        6: [0xfef0d9, 0xfdd49e, 0xfdbb84, 0xfc8d59, 0xe34a33, 0xb30000],
-        7: [0xfef0d9, 0xfdd49e, 0xfdbb84, 0xfc8d59, 0xef6548, 0xd7301f, 0x990000],
-        8: [0xfff7ec, 0xfee8c8, 0xfdd49e, 0xfdbb84, 0xfc8d59, 0xef6548, 0xd7301f, 0x990000],
-        9: [0xfff7ec, 0xfee8c8, 0xfdd49e, 0xfdbb84, 0xfc8d59, 0xef6548, 0xd7301f, 0xb30000, 0x7f0000]
-      },
-      YlOrRd: {
-        3: [0xffeda0, 0xfeb24c, 0xf03b20],
-        4: [0xffffb2, 0xfecc5c, 0xfd8d3c, 0xe31a1c],
-        5: [0xffffb2, 0xfecc5c, 0xfd8d3c, 0xf03b20, 0xbd0026],
-        6: [0xffffb2, 0xfed976, 0xfeb24c, 0xfd8d3c, 0xf03b20, 0xbd0026],
-        7: [0xffffb2, 0xfed976, 0xfeb24c, 0xfd8d3c, 0xfc4e2a, 0xe31a1c, 0xb10026],
-        8: [0xffffcc, 0xffeda0, 0xfed976, 0xfeb24c, 0xfd8d3c, 0xfc4e2a, 0xe31a1c, 0xb10026],
-        9: [0xffffcc, 0xffeda0, 0xfed976, 0xfeb24c, 0xfd8d3c, 0xfc4e2a, 0xe31a1c, 0xbd0026, 0x800026]
-      },
-      YlOrBr: {
-        3: [0xfff7bc, 0xfec44f, 0xd95f0e],
-        4: [0xffffd4, 0xfed98e, 0xfe9929, 0xcc4c02],
-        5: [0xffffd4, 0xfed98e, 0xfe9929, 0xd95f0e, 0x993404],
-        6: [0xffffd4, 0xfee391, 0xfec44f, 0xfe9929, 0xd95f0e, 0x993404],
-        7: [0xffffd4, 0xfee391, 0xfec44f, 0xfe9929, 0xec7014, 0xcc4c02, 0x8c2d04],
-        8: [0xffffe5, 0xfff7bc, 0xfee391, 0xfec44f, 0xfe9929, 0xec7014, 0xcc4c02, 0x8c2d04],
-        9: [0xffffe5, 0xfff7bc, 0xfee391, 0xfec44f, 0xfe9929, 0xec7014, 0xcc4c02, 0x993404, 0x662506]
-      },
-      Purples: {
-        3: [0xefedf5, 0xbcbddc, 0x756bb1],
-        4: [0xf2f0f7, 0xcbc9e2, 0x9e9ac8, 0x6a51a3],
-        5: [0xf2f0f7, 0xcbc9e2, 0x9e9ac8, 0x756bb1, 0x54278f],
-        6: [0xf2f0f7, 0xdadaeb, 0xbcbddc, 0x9e9ac8, 0x756bb1, 0x54278f],
-        7: [0xf2f0f7, 0xdadaeb, 0xbcbddc, 0x9e9ac8, 0x807dba, 0x6a51a3, 0x4a1486],
-        8: [0xfcfbfd, 0xefedf5, 0xdadaeb, 0xbcbddc, 0x9e9ac8, 0x807dba, 0x6a51a3, 0x4a1486],
-        9: [0xfcfbfd, 0xefedf5, 0xdadaeb, 0xbcbddc, 0x9e9ac8, 0x807dba, 0x6a51a3, 0x54278f, 0x3f007d]
-      },
-      Blues: {
-        3: [0xdeebf7, 0x9ecae1, 0x3182bd],
-        4: [0xeff3ff, 0xbdd7e7, 0x6baed6, 0x2171b5],
-        5: [0xeff3ff, 0xbdd7e7, 0x6baed6, 0x3182bd, 0x08519c],
-        6: [0xeff3ff, 0xc6dbef, 0x9ecae1, 0x6baed6, 0x3182bd, 0x08519c],
-        7: [0xeff3ff, 0xc6dbef, 0x9ecae1, 0x6baed6, 0x4292c6, 0x2171b5, 0x084594],
-        8: [0xf7fbff, 0xdeebf7, 0xc6dbef, 0x9ecae1, 0x6baed6, 0x4292c6, 0x2171b5, 0x084594],
-        9: [0xf7fbff, 0xdeebf7, 0xc6dbef, 0x9ecae1, 0x6baed6, 0x4292c6, 0x2171b5, 0x08519c, 0x08306b]
-      },
-      Greens: {
-        3: [0xe5f5e0, 0xa1d99b, 0x31a354],
-        4: [0xedf8e9, 0xbae4b3, 0x74c476, 0x238b45],
-        5: [0xedf8e9, 0xbae4b3, 0x74c476, 0x31a354, 0x006d2c],
-        6: [0xedf8e9, 0xc7e9c0, 0xa1d99b, 0x74c476, 0x31a354, 0x006d2c],
-        7: [0xedf8e9, 0xc7e9c0, 0xa1d99b, 0x74c476, 0x41ab5d, 0x238b45, 0x005a32],
-        8: [0xf7fcf5, 0xe5f5e0, 0xc7e9c0, 0xa1d99b, 0x74c476, 0x41ab5d, 0x238b45, 0x005a32],
-        9: [0xf7fcf5, 0xe5f5e0, 0xc7e9c0, 0xa1d99b, 0x74c476, 0x41ab5d, 0x238b45, 0x006d2c, 0x00441b]
-      },
-      Oranges: {
-        3: [0xfee6ce, 0xfdae6b, 0xe6550d],
-        4: [0xfeedde, 0xfdbe85, 0xfd8d3c, 0xd94701],
-        5: [0xfeedde, 0xfdbe85, 0xfd8d3c, 0xe6550d, 0xa63603],
-        6: [0xfeedde, 0xfdd0a2, 0xfdae6b, 0xfd8d3c, 0xe6550d, 0xa63603],
-        7: [0xfeedde, 0xfdd0a2, 0xfdae6b, 0xfd8d3c, 0xf16913, 0xd94801, 0x8c2d04],
-        8: [0xfff5eb, 0xfee6ce, 0xfdd0a2, 0xfdae6b, 0xfd8d3c, 0xf16913, 0xd94801, 0x8c2d04],
-        9: [0xfff5eb, 0xfee6ce, 0xfdd0a2, 0xfdae6b, 0xfd8d3c, 0xf16913, 0xd94801, 0xa63603, 0x7f2704]
-      },
-      Reds: {
-        3: [0xfee0d2, 0xfc9272, 0xde2d26],
-        4: [0xfee5d9, 0xfcae91, 0xfb6a4a, 0xcb181d],
-        5: [0xfee5d9, 0xfcae91, 0xfb6a4a, 0xde2d26, 0xa50f15],
-        6: [0xfee5d9, 0xfcbba1, 0xfc9272, 0xfb6a4a, 0xde2d26, 0xa50f15],
-        7: [0xfee5d9, 0xfcbba1, 0xfc9272, 0xfb6a4a, 0xef3b2c, 0xcb181d, 0x99000d],
-        8: [0xfff5f0, 0xfee0d2, 0xfcbba1, 0xfc9272, 0xfb6a4a, 0xef3b2c, 0xcb181d, 0x99000d],
-        9: [0xfff5f0, 0xfee0d2, 0xfcbba1, 0xfc9272, 0xfb6a4a, 0xef3b2c, 0xcb181d, 0xa50f15, 0x67000d]
-      },
-      Greys: {
-        3: [0xf0f0f0, 0xbdbdbd, 0x636363],
-        4: [0xf7f7f7, 0xcccccc, 0x969696, 0x525252],
-        5: [0xf7f7f7, 0xcccccc, 0x969696, 0x636363, 0x252525],
-        6: [0xf7f7f7, 0xd9d9d9, 0xbdbdbd, 0x969696, 0x636363, 0x252525],
-        7: [0xf7f7f7, 0xd9d9d9, 0xbdbdbd, 0x969696, 0x737373, 0x525252, 0x252525],
-        8: [0xffffff, 0xf0f0f0, 0xd9d9d9, 0xbdbdbd, 0x969696, 0x737373, 0x525252, 0x252525],
-        9: [0xffffff, 0xf0f0f0, 0xd9d9d9, 0xbdbdbd, 0x969696, 0x737373, 0x525252, 0x252525, 0x000000]
-      },
-      PuOr: {
-        3: [0xf1a340, 0xf7f7f7, 0x998ec3],
-        4: [0xe66101, 0xfdb863, 0xb2abd2, 0x5e3c99],
-        5: [0xe66101, 0xfdb863, 0xf7f7f7, 0xb2abd2, 0x5e3c99],
-        6: [0xb35806, 0xf1a340, 0xfee0b6, 0xd8daeb, 0x998ec3, 0x542788],
-        7: [0xb35806, 0xf1a340, 0xfee0b6, 0xf7f7f7, 0xd8daeb, 0x998ec3, 0x542788],
-        8: [0xb35806, 0xe08214, 0xfdb863, 0xfee0b6, 0xd8daeb, 0xb2abd2, 0x8073ac, 0x542788],
-        9: [0xb35806, 0xe08214, 0xfdb863, 0xfee0b6, 0xf7f7f7, 0xd8daeb, 0xb2abd2, 0x8073ac, 0x542788],
-        10: [0x7f3b08, 0xb35806, 0xe08214, 0xfdb863, 0xfee0b6, 0xd8daeb, 0xb2abd2, 0x8073ac, 0x542788, 0x2d004b],
-        11: [0x7f3b08, 0xb35806, 0xe08214, 0xfdb863, 0xfee0b6, 0xf7f7f7, 0xd8daeb, 0xb2abd2, 0x8073ac, 0x542788, 0x2d004b]
-      },
-      BrBG: {
-        3: [0xd8b365, 0xf5f5f5, 0x5ab4ac],
-        4: [0xa6611a, 0xdfc27d, 0x80cdc1, 0x018571],
-        5: [0xa6611a, 0xdfc27d, 0xf5f5f5, 0x80cdc1, 0x018571],
-        6: [0x8c510a, 0xd8b365, 0xf6e8c3, 0xc7eae5, 0x5ab4ac, 0x01665e],
-        7: [0x8c510a, 0xd8b365, 0xf6e8c3, 0xf5f5f5, 0xc7eae5, 0x5ab4ac, 0x01665e],
-        8: [0x8c510a, 0xbf812d, 0xdfc27d, 0xf6e8c3, 0xc7eae5, 0x80cdc1, 0x35978f, 0x01665e],
-        9: [0x8c510a, 0xbf812d, 0xdfc27d, 0xf6e8c3, 0xf5f5f5, 0xc7eae5, 0x80cdc1, 0x35978f, 0x01665e],
-        10: [0x543005, 0x8c510a, 0xbf812d, 0xdfc27d, 0xf6e8c3, 0xc7eae5, 0x80cdc1, 0x35978f, 0x01665e, 0x003c30],
-        11: [0x543005, 0x8c510a, 0xbf812d, 0xdfc27d, 0xf6e8c3, 0xf5f5f5, 0xc7eae5, 0x80cdc1, 0x35978f, 0x01665e, 0x003c30]
-      },
-      PRGn: {
-        3: [0xaf8dc3, 0xf7f7f7, 0x7fbf7b],
-        4: [0x7b3294, 0xc2a5cf, 0xa6dba0, 0x008837],
-        5: [0x7b3294, 0xc2a5cf, 0xf7f7f7, 0xa6dba0, 0x008837],
-        6: [0x762a83, 0xaf8dc3, 0xe7d4e8, 0xd9f0d3, 0x7fbf7b, 0x1b7837],
-        7: [0x762a83, 0xaf8dc3, 0xe7d4e8, 0xf7f7f7, 0xd9f0d3, 0x7fbf7b, 0x1b7837],
-        8: [0x762a83, 0x9970ab, 0xc2a5cf, 0xe7d4e8, 0xd9f0d3, 0xa6dba0, 0x5aae61, 0x1b7837],
-        9: [0x762a83, 0x9970ab, 0xc2a5cf, 0xe7d4e8, 0xf7f7f7, 0xd9f0d3, 0xa6dba0, 0x5aae61, 0x1b7837],
-        10: [0x40004b, 0x762a83, 0x9970ab, 0xc2a5cf, 0xe7d4e8, 0xd9f0d3, 0xa6dba0, 0x5aae61, 0x1b7837, 0x00441b],
-        11: [0x40004b, 0x762a83, 0x9970ab, 0xc2a5cf, 0xe7d4e8, 0xf7f7f7, 0xd9f0d3, 0xa6dba0, 0x5aae61, 0x1b7837, 0x00441b]
-      },
-      PiYG: {
-        3: [0xe9a3c9, 0xf7f7f7, 0xa1d76a],
-        4: [0xd01c8b, 0xf1b6da, 0xb8e186, 0x4dac26],
-        5: [0xd01c8b, 0xf1b6da, 0xf7f7f7, 0xb8e186, 0x4dac26],
-        6: [0xc51b7d, 0xe9a3c9, 0xfde0ef, 0xe6f5d0, 0xa1d76a, 0x4d9221],
-        7: [0xc51b7d, 0xe9a3c9, 0xfde0ef, 0xf7f7f7, 0xe6f5d0, 0xa1d76a, 0x4d9221],
-        8: [0xc51b7d, 0xde77ae, 0xf1b6da, 0xfde0ef, 0xe6f5d0, 0xb8e186, 0x7fbc41, 0x4d9221],
-        9: [0xc51b7d, 0xde77ae, 0xf1b6da, 0xfde0ef, 0xf7f7f7, 0xe6f5d0, 0xb8e186, 0x7fbc41, 0x4d9221],
-        10: [0x8e0152, 0xc51b7d, 0xde77ae, 0xf1b6da, 0xfde0ef, 0xe6f5d0, 0xb8e186, 0x7fbc41, 0x4d9221, 0x276419],
-        11: [0x8e0152, 0xc51b7d, 0xde77ae, 0xf1b6da, 0xfde0ef, 0xf7f7f7, 0xe6f5d0, 0xb8e186, 0x7fbc41, 0x4d9221, 0x276419]
-      },
-      RdBu: {
-        3: [0xef8a62, 0xf7f7f7, 0x67a9cf],
-        4: [0xca0020, 0xf4a582, 0x92c5de, 0x0571b0],
-        5: [0xca0020, 0xf4a582, 0xf7f7f7, 0x92c5de, 0x0571b0],
-        6: [0xb2182b, 0xef8a62, 0xfddbc7, 0xd1e5f0, 0x67a9cf, 0x2166ac],
-        7: [0xb2182b, 0xef8a62, 0xfddbc7, 0xf7f7f7, 0xd1e5f0, 0x67a9cf, 0x2166ac],
-        8: [0xb2182b, 0xd6604d, 0xf4a582, 0xfddbc7, 0xd1e5f0, 0x92c5de, 0x4393c3, 0x2166ac],
-        9: [0xb2182b, 0xd6604d, 0xf4a582, 0xfddbc7, 0xf7f7f7, 0xd1e5f0, 0x92c5de, 0x4393c3, 0x2166ac],
-        10: [0x67001f, 0xb2182b, 0xd6604d, 0xf4a582, 0xfddbc7, 0xd1e5f0, 0x92c5de, 0x4393c3, 0x2166ac, 0x053061],
-        11: [0x67001f, 0xb2182b, 0xd6604d, 0xf4a582, 0xfddbc7, 0xf7f7f7, 0xd1e5f0, 0x92c5de, 0x4393c3, 0x2166ac, 0x053061]
-      },
-      RdGy: {
-        3: [0xef8a62, 0xffffff, 0x999999],
-        4: [0xca0020, 0xf4a582, 0xbababa, 0x404040],
-        5: [0xca0020, 0xf4a582, 0xffffff, 0xbababa, 0x404040],
-        6: [0xb2182b, 0xef8a62, 0xfddbc7, 0xe0e0e0, 0x999999, 0x4d4d4d],
-        7: [0xb2182b, 0xef8a62, 0xfddbc7, 0xffffff, 0xe0e0e0, 0x999999, 0x4d4d4d],
-        8: [0xb2182b, 0xd6604d, 0xf4a582, 0xfddbc7, 0xe0e0e0, 0xbababa, 0x878787, 0x4d4d4d],
-        9: [0xb2182b, 0xd6604d, 0xf4a582, 0xfddbc7, 0xffffff, 0xe0e0e0, 0xbababa, 0x878787, 0x4d4d4d],
-        10: [0x67001f, 0xb2182b, 0xd6604d, 0xf4a582, 0xfddbc7, 0xe0e0e0, 0xbababa, 0x878787, 0x4d4d4d, 0x1a1a1a],
-        11: [0x67001f, 0xb2182b, 0xd6604d, 0xf4a582, 0xfddbc7, 0xffffff, 0xe0e0e0, 0xbababa, 0x878787, 0x4d4d4d, 0x1a1a1a]
-      },
-      RdYlBu: {
-        3: [0xfc8d59, 0xffffbf, 0x91bfdb],
-        4: [0xd7191c, 0xfdae61, 0xabd9e9, 0x2c7bb6],
-        5: [0xd7191c, 0xfdae61, 0xffffbf, 0xabd9e9, 0x2c7bb6],
-        6: [0xd73027, 0xfc8d59, 0xfee090, 0xe0f3f8, 0x91bfdb, 0x4575b4],
-        7: [0xd73027, 0xfc8d59, 0xfee090, 0xffffbf, 0xe0f3f8, 0x91bfdb, 0x4575b4],
-        8: [0xd73027, 0xf46d43, 0xfdae61, 0xfee090, 0xe0f3f8, 0xabd9e9, 0x74add1, 0x4575b4],
-        9: [0xd73027, 0xf46d43, 0xfdae61, 0xfee090, 0xffffbf, 0xe0f3f8, 0xabd9e9, 0x74add1, 0x4575b4],
-        10: [0xa50026, 0xd73027, 0xf46d43, 0xfdae61, 0xfee090, 0xe0f3f8, 0xabd9e9, 0x74add1, 0x4575b4, 0x313695],
-        11: [0xa50026, 0xd73027, 0xf46d43, 0xfdae61, 0xfee090, 0xffffbf, 0xe0f3f8, 0xabd9e9, 0x74add1, 0x4575b4, 0x313695]
-      },
-      Spectral: {
-        3: [0xfc8d59, 0xffffbf, 0x99d594],
-        4: [0xd7191c, 0xfdae61, 0xabdda4, 0x2b83ba],
-        5: [0xd7191c, 0xfdae61, 0xffffbf, 0xabdda4, 0x2b83ba],
-        6: [0xd53e4f, 0xfc8d59, 0xfee08b, 0xe6f598, 0x99d594, 0x3288bd],
-        7: [0xd53e4f, 0xfc8d59, 0xfee08b, 0xffffbf, 0xe6f598, 0x99d594, 0x3288bd],
-        8: [0xd53e4f, 0xf46d43, 0xfdae61, 0xfee08b, 0xe6f598, 0xabdda4, 0x66c2a5, 0x3288bd],
-        9: [0xd53e4f, 0xf46d43, 0xfdae61, 0xfee08b, 0xffffbf, 0xe6f598, 0xabdda4, 0x66c2a5, 0x3288bd],
-        10: [0x9e0142, 0xd53e4f, 0xf46d43, 0xfdae61, 0xfee08b, 0xe6f598, 0xabdda4, 0x66c2a5, 0x3288bd, 0x5e4fa2],
-        11: [0x9e0142, 0xd53e4f, 0xf46d43, 0xfdae61, 0xfee08b, 0xffffbf, 0xe6f598, 0xabdda4, 0x66c2a5, 0x3288bd, 0x5e4fa2]
-      },
-      RdYlGn: {
-        3: [0xfc8d59, 0xffffbf, 0x91cf60],
-        4: [0xd7191c, 0xfdae61, 0xa6d96a, 0x1a9641],
-        5: [0xd7191c, 0xfdae61, 0xffffbf, 0xa6d96a, 0x1a9641],
-        6: [0xd73027, 0xfc8d59, 0xfee08b, 0xd9ef8b, 0x91cf60, 0x1a9850],
-        7: [0xd73027, 0xfc8d59, 0xfee08b, 0xffffbf, 0xd9ef8b, 0x91cf60, 0x1a9850],
-        8: [0xd73027, 0xf46d43, 0xfdae61, 0xfee08b, 0xd9ef8b, 0xa6d96a, 0x66bd63, 0x1a9850],
-        9: [0xd73027, 0xf46d43, 0xfdae61, 0xfee08b, 0xffffbf, 0xd9ef8b, 0xa6d96a, 0x66bd63, 0x1a9850],
-        10: [0xa50026, 0xd73027, 0xf46d43, 0xfdae61, 0xfee08b, 0xd9ef8b, 0xa6d96a, 0x66bd63, 0x1a9850, 0x006837],
-        11: [0xa50026, 0xd73027, 0xf46d43, 0xfdae61, 0xfee08b, 0xffffbf, 0xd9ef8b, 0xa6d96a, 0x66bd63, 0x1a9850, 0x006837]
-      }
-    };
-  });
-
-}).call(this);
-
-/*
-//@ sourceMappingURL=colorbrewer.js.map
-*/;
-(function() {
-  define('palettes/palettes',["./colorbrewer"], function(colorbrewer) {
-    var all_palettes, items, name, num, pal;
-    all_palettes = {};
-    for (name in colorbrewer) {
-      items = colorbrewer[name];
-      for (num in items) {
-        pal = items[num];
-        all_palettes["" + name + "-" + num] = pal.reverse();
-      }
-    }
+  define('palettes/palettes',[], function() {
     return {
-      "all_palettes": all_palettes
+      YlGn3: [0x31a354, 0xaddd8e, 0xf7fcb9],
+      YlGn4: [0x238443, 0x78c679, 0xc2e699, 0xffffcc],
+      YlGn5: [0x006837, 0x31a354, 0x78c679, 0xc2e699, 0xffffcc],
+      YlGn6: [0x006837, 0x31a354, 0x78c679, 0xaddd8e, 0xd9f0a3, 0xffffcc],
+      YlGn7: [0x005a32, 0x238443, 0x41ab5d, 0x78c679, 0xaddd8e, 0xd9f0a3, 0xffffcc],
+      YlGn8: [0x005a32, 0x238443, 0x41ab5d, 0x78c679, 0xaddd8e, 0xd9f0a3, 0xf7fcb9, 0xffffe5],
+      YlGn9: [0x004529, 0x006837, 0x238443, 0x41ab5d, 0x78c679, 0xaddd8e, 0xd9f0a3, 0xf7fcb9, 0xffffe5],
+      YlGnBu3: [0x2c7fb8, 0x7fcdbb, 0xedf8b1],
+      YlGnBu4: [0x225ea8, 0x41b6c4, 0xa1dab4, 0xffffcc],
+      YlGnBu5: [0x253494, 0x2c7fb8, 0x41b6c4, 0xa1dab4, 0xffffcc],
+      YlGnBu6: [0x253494, 0x2c7fb8, 0x41b6c4, 0x7fcdbb, 0xc7e9b4, 0xffffcc],
+      YlGnBu7: [0x0c2c84, 0x225ea8, 0x1d91c0, 0x41b6c4, 0x7fcdbb, 0xc7e9b4, 0xffffcc],
+      YlGnBu8: [0x0c2c84, 0x225ea8, 0x1d91c0, 0x41b6c4, 0x7fcdbb, 0xc7e9b4, 0xedf8b1, 0xffffd9],
+      YlGnBu9: [0x081d58, 0x253494, 0x225ea8, 0x1d91c0, 0x41b6c4, 0x7fcdbb, 0xc7e9b4, 0xedf8b1, 0xffffd9],
+      GnBu3: [0x43a2ca, 0xa8ddb5, 0xe0f3db],
+      GnBu4: [0x2b8cbe, 0x7bccc4, 0xbae4bc, 0xf0f9e8],
+      GnBu5: [0x0868ac, 0x43a2ca, 0x7bccc4, 0xbae4bc, 0xf0f9e8],
+      GnBu6: [0x0868ac, 0x43a2ca, 0x7bccc4, 0xa8ddb5, 0xccebc5, 0xf0f9e8],
+      GnBu7: [0x08589e, 0x2b8cbe, 0x4eb3d3, 0x7bccc4, 0xa8ddb5, 0xccebc5, 0xf0f9e8],
+      GnBu8: [0x08589e, 0x2b8cbe, 0x4eb3d3, 0x7bccc4, 0xa8ddb5, 0xccebc5, 0xe0f3db, 0xf7fcf0],
+      GnBu9: [0x084081, 0x0868ac, 0x2b8cbe, 0x4eb3d3, 0x7bccc4, 0xa8ddb5, 0xccebc5, 0xe0f3db, 0xf7fcf0],
+      BuGn3: [0x2ca25f, 0x99d8c9, 0xe5f5f9],
+      BuGn4: [0x238b45, 0x66c2a4, 0xb2e2e2, 0xedf8fb],
+      BuGn5: [0x006d2c, 0x2ca25f, 0x66c2a4, 0xb2e2e2, 0xedf8fb],
+      BuGn6: [0x006d2c, 0x2ca25f, 0x66c2a4, 0x99d8c9, 0xccece6, 0xedf8fb],
+      BuGn7: [0x005824, 0x238b45, 0x41ae76, 0x66c2a4, 0x99d8c9, 0xccece6, 0xedf8fb],
+      BuGn8: [0x005824, 0x238b45, 0x41ae76, 0x66c2a4, 0x99d8c9, 0xccece6, 0xe5f5f9, 0xf7fcfd],
+      BuGn9: [0x00441b, 0x006d2c, 0x238b45, 0x41ae76, 0x66c2a4, 0x99d8c9, 0xccece6, 0xe5f5f9, 0xf7fcfd],
+      PuBuGn3: [0x1c9099, 0xa6bddb, 0xece2f0],
+      PuBuGn4: [0x02818a, 0x67a9cf, 0xbdc9e1, 0xf6eff7],
+      PuBuGn5: [0x016c59, 0x1c9099, 0x67a9cf, 0xbdc9e1, 0xf6eff7],
+      PuBuGn6: [0x016c59, 0x1c9099, 0x67a9cf, 0xa6bddb, 0xd0d1e6, 0xf6eff7],
+      PuBuGn7: [0x016450, 0x02818a, 0x3690c0, 0x67a9cf, 0xa6bddb, 0xd0d1e6, 0xf6eff7],
+      PuBuGn8: [0x016450, 0x02818a, 0x3690c0, 0x67a9cf, 0xa6bddb, 0xd0d1e6, 0xece2f0, 0xfff7fb],
+      PuBuGn9: [0x014636, 0x016c59, 0x02818a, 0x3690c0, 0x67a9cf, 0xa6bddb, 0xd0d1e6, 0xece2f0, 0xfff7fb],
+      PuBu3: [0x2b8cbe, 0xa6bddb, 0xece7f2],
+      PuBu4: [0x0570b0, 0x74a9cf, 0xbdc9e1, 0xf1eef6],
+      PuBu5: [0x045a8d, 0x2b8cbe, 0x74a9cf, 0xbdc9e1, 0xf1eef6],
+      PuBu6: [0x045a8d, 0x2b8cbe, 0x74a9cf, 0xa6bddb, 0xd0d1e6, 0xf1eef6],
+      PuBu7: [0x034e7b, 0x0570b0, 0x3690c0, 0x74a9cf, 0xa6bddb, 0xd0d1e6, 0xf1eef6],
+      PuBu8: [0x034e7b, 0x0570b0, 0x3690c0, 0x74a9cf, 0xa6bddb, 0xd0d1e6, 0xece7f2, 0xfff7fb],
+      PuBu9: [0x023858, 0x045a8d, 0x0570b0, 0x3690c0, 0x74a9cf, 0xa6bddb, 0xd0d1e6, 0xece7f2, 0xfff7fb],
+      BuPu3: [0x8856a7, 0x9ebcda, 0xe0ecf4],
+      BuPu4: [0x88419d, 0x8c96c6, 0xb3cde3, 0xedf8fb],
+      BuPu5: [0x810f7c, 0x8856a7, 0x8c96c6, 0xb3cde3, 0xedf8fb],
+      BuPu6: [0x810f7c, 0x8856a7, 0x8c96c6, 0x9ebcda, 0xbfd3e6, 0xedf8fb],
+      BuPu7: [0x6e016b, 0x88419d, 0x8c6bb1, 0x8c96c6, 0x9ebcda, 0xbfd3e6, 0xedf8fb],
+      BuPu8: [0x6e016b, 0x88419d, 0x8c6bb1, 0x8c96c6, 0x9ebcda, 0xbfd3e6, 0xe0ecf4, 0xf7fcfd],
+      BuPu9: [0x4d004b, 0x810f7c, 0x88419d, 0x8c6bb1, 0x8c96c6, 0x9ebcda, 0xbfd3e6, 0xe0ecf4, 0xf7fcfd],
+      RdPu3: [0xc51b8a, 0xfa9fb5, 0xfde0dd],
+      RdPu4: [0xae017e, 0xf768a1, 0xfbb4b9, 0xfeebe2],
+      RdPu5: [0x7a0177, 0xc51b8a, 0xf768a1, 0xfbb4b9, 0xfeebe2],
+      RdPu6: [0x7a0177, 0xc51b8a, 0xf768a1, 0xfa9fb5, 0xfcc5c0, 0xfeebe2],
+      RdPu7: [0x7a0177, 0xae017e, 0xdd3497, 0xf768a1, 0xfa9fb5, 0xfcc5c0, 0xfeebe2],
+      RdPu8: [0x7a0177, 0xae017e, 0xdd3497, 0xf768a1, 0xfa9fb5, 0xfcc5c0, 0xfde0dd, 0xfff7f3],
+      RdPu9: [0x49006a, 0x7a0177, 0xae017e, 0xdd3497, 0xf768a1, 0xfa9fb5, 0xfcc5c0, 0xfde0dd, 0xfff7f3],
+      PuRd3: [0xdd1c77, 0xc994c7, 0xe7e1ef],
+      PuRd4: [0xce1256, 0xdf65b0, 0xd7b5d8, 0xf1eef6],
+      PuRd5: [0x980043, 0xdd1c77, 0xdf65b0, 0xd7b5d8, 0xf1eef6],
+      PuRd6: [0x980043, 0xdd1c77, 0xdf65b0, 0xc994c7, 0xd4b9da, 0xf1eef6],
+      PuRd7: [0x91003f, 0xce1256, 0xe7298a, 0xdf65b0, 0xc994c7, 0xd4b9da, 0xf1eef6],
+      PuRd8: [0x91003f, 0xce1256, 0xe7298a, 0xdf65b0, 0xc994c7, 0xd4b9da, 0xe7e1ef, 0xf7f4f9],
+      PuRd9: [0x67001f, 0x980043, 0xce1256, 0xe7298a, 0xdf65b0, 0xc994c7, 0xd4b9da, 0xe7e1ef, 0xf7f4f9],
+      OrRd3: [0xe34a33, 0xfdbb84, 0xfee8c8],
+      OrRd4: [0xd7301f, 0xfc8d59, 0xfdcc8a, 0xfef0d9],
+      OrRd5: [0xb30000, 0xe34a33, 0xfc8d59, 0xfdcc8a, 0xfef0d9],
+      OrRd6: [0xb30000, 0xe34a33, 0xfc8d59, 0xfdbb84, 0xfdd49e, 0xfef0d9],
+      OrRd7: [0x990000, 0xd7301f, 0xef6548, 0xfc8d59, 0xfdbb84, 0xfdd49e, 0xfef0d9],
+      OrRd8: [0x990000, 0xd7301f, 0xef6548, 0xfc8d59, 0xfdbb84, 0xfdd49e, 0xfee8c8, 0xfff7ec],
+      OrRd9: [0x7f0000, 0xb30000, 0xd7301f, 0xef6548, 0xfc8d59, 0xfdbb84, 0xfdd49e, 0xfee8c8, 0xfff7ec],
+      YlOrRd3: [0xf03b20, 0xfeb24c, 0xffeda0],
+      YlOrRd4: [0xe31a1c, 0xfd8d3c, 0xfecc5c, 0xffffb2],
+      YlOrRd5: [0xbd0026, 0xf03b20, 0xfd8d3c, 0xfecc5c, 0xffffb2],
+      YlOrRd6: [0xbd0026, 0xf03b20, 0xfd8d3c, 0xfeb24c, 0xfed976, 0xffffb2],
+      YlOrRd7: [0xb10026, 0xe31a1c, 0xfc4e2a, 0xfd8d3c, 0xfeb24c, 0xfed976, 0xffffb2],
+      YlOrRd8: [0xb10026, 0xe31a1c, 0xfc4e2a, 0xfd8d3c, 0xfeb24c, 0xfed976, 0xffeda0, 0xffffcc],
+      YlOrRd9: [0x800026, 0xbd0026, 0xe31a1c, 0xfc4e2a, 0xfd8d3c, 0xfeb24c, 0xfed976, 0xffeda0, 0xffffcc],
+      YlOrBr3: [0xd95f0e, 0xfec44f, 0xfff7bc],
+      YlOrBr4: [0xcc4c02, 0xfe9929, 0xfed98e, 0xffffd4],
+      YlOrBr5: [0x993404, 0xd95f0e, 0xfe9929, 0xfed98e, 0xffffd4],
+      YlOrBr6: [0x993404, 0xd95f0e, 0xfe9929, 0xfec44f, 0xfee391, 0xffffd4],
+      YlOrBr7: [0x8c2d04, 0xcc4c02, 0xec7014, 0xfe9929, 0xfec44f, 0xfee391, 0xffffd4],
+      YlOrBr8: [0x8c2d04, 0xcc4c02, 0xec7014, 0xfe9929, 0xfec44f, 0xfee391, 0xfff7bc, 0xffffe5],
+      YlOrBr9: [0x662506, 0x993404, 0xcc4c02, 0xec7014, 0xfe9929, 0xfec44f, 0xfee391, 0xfff7bc, 0xffffe5],
+      Purples3: [0x756bb1, 0xbcbddc, 0xefedf5],
+      Purples4: [0x6a51a3, 0x9e9ac8, 0xcbc9e2, 0xf2f0f7],
+      Purples5: [0x54278f, 0x756bb1, 0x9e9ac8, 0xcbc9e2, 0xf2f0f7],
+      Purples6: [0x54278f, 0x756bb1, 0x9e9ac8, 0xbcbddc, 0xdadaeb, 0xf2f0f7],
+      Purples7: [0x4a1486, 0x6a51a3, 0x807dba, 0x9e9ac8, 0xbcbddc, 0xdadaeb, 0xf2f0f7],
+      Purples8: [0x4a1486, 0x6a51a3, 0x807dba, 0x9e9ac8, 0xbcbddc, 0xdadaeb, 0xefedf5, 0xfcfbfd],
+      Purples9: [0x3f007d, 0x54278f, 0x6a51a3, 0x807dba, 0x9e9ac8, 0xbcbddc, 0xdadaeb, 0xefedf5, 0xfcfbfd],
+      Blues3: [0x3182bd, 0x9ecae1, 0xdeebf7],
+      Blues4: [0x2171b5, 0x6baed6, 0xbdd7e7, 0xeff3ff],
+      Blues5: [0x08519c, 0x3182bd, 0x6baed6, 0xbdd7e7, 0xeff3ff],
+      Blues6: [0x08519c, 0x3182bd, 0x6baed6, 0x9ecae1, 0xc6dbef, 0xeff3ff],
+      Blues7: [0x084594, 0x2171b5, 0x4292c6, 0x6baed6, 0x9ecae1, 0xc6dbef, 0xeff3ff],
+      Blues8: [0x084594, 0x2171b5, 0x4292c6, 0x6baed6, 0x9ecae1, 0xc6dbef, 0xdeebf7, 0xf7fbff],
+      Blues9: [0x08306b, 0x08519c, 0x2171b5, 0x4292c6, 0x6baed6, 0x9ecae1, 0xc6dbef, 0xdeebf7, 0xf7fbff],
+      Greens3: [0x31a354, 0xa1d99b, 0xe5f5e0],
+      Greens4: [0x238b45, 0x74c476, 0xbae4b3, 0xedf8e9],
+      Greens5: [0x006d2c, 0x31a354, 0x74c476, 0xbae4b3, 0xedf8e9],
+      Greens6: [0x006d2c, 0x31a354, 0x74c476, 0xa1d99b, 0xc7e9c0, 0xedf8e9],
+      Greens7: [0x005a32, 0x238b45, 0x41ab5d, 0x74c476, 0xa1d99b, 0xc7e9c0, 0xedf8e9],
+      Greens8: [0x005a32, 0x238b45, 0x41ab5d, 0x74c476, 0xa1d99b, 0xc7e9c0, 0xe5f5e0, 0xf7fcf5],
+      Greens9: [0x00441b, 0x006d2c, 0x238b45, 0x41ab5d, 0x74c476, 0xa1d99b, 0xc7e9c0, 0xe5f5e0, 0xf7fcf5],
+      Oranges3: [0xe6550d, 0xfdae6b, 0xfee6ce],
+      Oranges4: [0xd94701, 0xfd8d3c, 0xfdbe85, 0xfeedde],
+      Oranges5: [0xa63603, 0xe6550d, 0xfd8d3c, 0xfdbe85, 0xfeedde],
+      Oranges6: [0xa63603, 0xe6550d, 0xfd8d3c, 0xfdae6b, 0xfdd0a2, 0xfeedde],
+      Oranges7: [0x8c2d04, 0xd94801, 0xf16913, 0xfd8d3c, 0xfdae6b, 0xfdd0a2, 0xfeedde],
+      Oranges8: [0x8c2d04, 0xd94801, 0xf16913, 0xfd8d3c, 0xfdae6b, 0xfdd0a2, 0xfee6ce, 0xfff5eb],
+      Oranges9: [0x7f2704, 0xa63603, 0xd94801, 0xf16913, 0xfd8d3c, 0xfdae6b, 0xfdd0a2, 0xfee6ce, 0xfff5eb],
+      Reds3: [0xde2d26, 0xfc9272, 0xfee0d2],
+      Reds4: [0xcb181d, 0xfb6a4a, 0xfcae91, 0xfee5d9],
+      Reds5: [0xa50f15, 0xde2d26, 0xfb6a4a, 0xfcae91, 0xfee5d9],
+      Reds6: [0xa50f15, 0xde2d26, 0xfb6a4a, 0xfc9272, 0xfcbba1, 0xfee5d9],
+      Reds7: [0x99000d, 0xcb181d, 0xef3b2c, 0xfb6a4a, 0xfc9272, 0xfcbba1, 0xfee5d9],
+      Reds8: [0x99000d, 0xcb181d, 0xef3b2c, 0xfb6a4a, 0xfc9272, 0xfcbba1, 0xfee0d2, 0xfff5f0],
+      Reds9: [0x67000d, 0xa50f15, 0xcb181d, 0xef3b2c, 0xfb6a4a, 0xfc9272, 0xfcbba1, 0xfee0d2, 0xfff5f0],
+      Greys3: [0x636363, 0xbdbdbd, 0xf0f0f0],
+      Greys4: [0x525252, 0x969696, 0xcccccc, 0xf7f7f7],
+      Greys5: [0x252525, 0x636363, 0x969696, 0xcccccc, 0xf7f7f7],
+      Greys6: [0x252525, 0x636363, 0x969696, 0xbdbdbd, 0xd9d9d9, 0xf7f7f7],
+      Greys7: [0x252525, 0x525252, 0x737373, 0x969696, 0xbdbdbd, 0xd9d9d9, 0xf7f7f7],
+      Greys8: [0x252525, 0x525252, 0x737373, 0x969696, 0xbdbdbd, 0xd9d9d9, 0xf0f0f0, 0xffffff],
+      Greys9: [0x000000, 0x252525, 0x525252, 0x737373, 0x969696, 0xbdbdbd, 0xd9d9d9, 0xf0f0f0, 0xffffff],
+      PuOr3: [0x998ec3, 0xf7f7f7, 0xf1a340],
+      PuOr4: [0x5e3c99, 0xb2abd2, 0xfdb863, 0xe66101],
+      PuOr5: [0x5e3c99, 0xb2abd2, 0xf7f7f7, 0xfdb863, 0xe66101],
+      PuOr6: [0x542788, 0x998ec3, 0xd8daeb, 0xfee0b6, 0xf1a340, 0xb35806],
+      PuOr7: [0x542788, 0x998ec3, 0xd8daeb, 0xf7f7f7, 0xfee0b6, 0xf1a340, 0xb35806],
+      PuOr8: [0x542788, 0x8073ac, 0xb2abd2, 0xd8daeb, 0xfee0b6, 0xfdb863, 0xe08214, 0xb35806],
+      PuOr9: [0x542788, 0x8073ac, 0xb2abd2, 0xd8daeb, 0xf7f7f7, 0xfee0b6, 0xfdb863, 0xe08214, 0xb35806],
+      PuOr10: [0x2d004b, 0x542788, 0x8073ac, 0xb2abd2, 0xd8daeb, 0xfee0b6, 0xfdb863, 0xe08214, 0xb35806, 0x7f3b08],
+      PuOr11: [0x2d004b, 0x542788, 0x8073ac, 0xb2abd2, 0xd8daeb, 0xf7f7f7, 0xfee0b6, 0xfdb863, 0xe08214, 0xb35806, 0x7f3b08],
+      BrBG3: [0x5ab4ac, 0xf5f5f5, 0xd8b365],
+      BrBG4: [0x018571, 0x80cdc1, 0xdfc27d, 0xa6611a],
+      BrBG5: [0x018571, 0x80cdc1, 0xf5f5f5, 0xdfc27d, 0xa6611a],
+      BrBG6: [0x01665e, 0x5ab4ac, 0xc7eae5, 0xf6e8c3, 0xd8b365, 0x8c510a],
+      BrBG7: [0x01665e, 0x5ab4ac, 0xc7eae5, 0xf5f5f5, 0xf6e8c3, 0xd8b365, 0x8c510a],
+      BrBG8: [0x01665e, 0x35978f, 0x80cdc1, 0xc7eae5, 0xf6e8c3, 0xdfc27d, 0xbf812d, 0x8c510a],
+      BrBG9: [0x01665e, 0x35978f, 0x80cdc1, 0xc7eae5, 0xf5f5f5, 0xf6e8c3, 0xdfc27d, 0xbf812d, 0x8c510a],
+      BrBG10: [0x003c30, 0x01665e, 0x35978f, 0x80cdc1, 0xc7eae5, 0xf6e8c3, 0xdfc27d, 0xbf812d, 0x8c510a, 0x543005],
+      BrBG11: [0x003c30, 0x01665e, 0x35978f, 0x80cdc1, 0xc7eae5, 0xf5f5f5, 0xf6e8c3, 0xdfc27d, 0xbf812d, 0x8c510a, 0x543005],
+      PRGn3: [0x7fbf7b, 0xf7f7f7, 0xaf8dc3],
+      PRGn4: [0x008837, 0xa6dba0, 0xc2a5cf, 0x7b3294],
+      PRGn5: [0x008837, 0xa6dba0, 0xf7f7f7, 0xc2a5cf, 0x7b3294],
+      PRGn6: [0x1b7837, 0x7fbf7b, 0xd9f0d3, 0xe7d4e8, 0xaf8dc3, 0x762a83],
+      PRGn7: [0x1b7837, 0x7fbf7b, 0xd9f0d3, 0xf7f7f7, 0xe7d4e8, 0xaf8dc3, 0x762a83],
+      PRGn8: [0x1b7837, 0x5aae61, 0xa6dba0, 0xd9f0d3, 0xe7d4e8, 0xc2a5cf, 0x9970ab, 0x762a83],
+      PRGn9: [0x1b7837, 0x5aae61, 0xa6dba0, 0xd9f0d3, 0xf7f7f7, 0xe7d4e8, 0xc2a5cf, 0x9970ab, 0x762a83],
+      PRGn10: [0x00441b, 0x1b7837, 0x5aae61, 0xa6dba0, 0xd9f0d3, 0xe7d4e8, 0xc2a5cf, 0x9970ab, 0x762a83, 0x40004b],
+      PRGn11: [0x00441b, 0x1b7837, 0x5aae61, 0xa6dba0, 0xd9f0d3, 0xf7f7f7, 0xe7d4e8, 0xc2a5cf, 0x9970ab, 0x762a83, 0x40004b],
+      PiYG3: [0xa1d76a, 0xf7f7f7, 0xe9a3c9],
+      PiYG4: [0x4dac26, 0xb8e186, 0xf1b6da, 0xd01c8b],
+      PiYG5: [0x4dac26, 0xb8e186, 0xf7f7f7, 0xf1b6da, 0xd01c8b],
+      PiYG6: [0x4d9221, 0xa1d76a, 0xe6f5d0, 0xfde0ef, 0xe9a3c9, 0xc51b7d],
+      PiYG7: [0x4d9221, 0xa1d76a, 0xe6f5d0, 0xf7f7f7, 0xfde0ef, 0xe9a3c9, 0xc51b7d],
+      PiYG8: [0x4d9221, 0x7fbc41, 0xb8e186, 0xe6f5d0, 0xfde0ef, 0xf1b6da, 0xde77ae, 0xc51b7d],
+      PiYG9: [0x4d9221, 0x7fbc41, 0xb8e186, 0xe6f5d0, 0xf7f7f7, 0xfde0ef, 0xf1b6da, 0xde77ae, 0xc51b7d],
+      PiYG10: [0x276419, 0x4d9221, 0x7fbc41, 0xb8e186, 0xe6f5d0, 0xfde0ef, 0xf1b6da, 0xde77ae, 0xc51b7d, 0x8e0152],
+      PiYG11: [0x276419, 0x4d9221, 0x7fbc41, 0xb8e186, 0xe6f5d0, 0xf7f7f7, 0xfde0ef, 0xf1b6da, 0xde77ae, 0xc51b7d, 0x8e0152],
+      RdBu3: [0x67a9cf, 0xf7f7f7, 0xef8a62],
+      RdBu4: [0x0571b0, 0x92c5de, 0xf4a582, 0xca0020],
+      RdBu5: [0x0571b0, 0x92c5de, 0xf7f7f7, 0xf4a582, 0xca0020],
+      RdBu6: [0x2166ac, 0x67a9cf, 0xd1e5f0, 0xfddbc7, 0xef8a62, 0xb2182b],
+      RdBu7: [0x2166ac, 0x67a9cf, 0xd1e5f0, 0xf7f7f7, 0xfddbc7, 0xef8a62, 0xb2182b],
+      RdBu8: [0x2166ac, 0x4393c3, 0x92c5de, 0xd1e5f0, 0xfddbc7, 0xf4a582, 0xd6604d, 0xb2182b],
+      RdBu9: [0x2166ac, 0x4393c3, 0x92c5de, 0xd1e5f0, 0xf7f7f7, 0xfddbc7, 0xf4a582, 0xd6604d, 0xb2182b],
+      RdBu10: [0x053061, 0x2166ac, 0x4393c3, 0x92c5de, 0xd1e5f0, 0xfddbc7, 0xf4a582, 0xd6604d, 0xb2182b, 0x67001f],
+      RdBu11: [0x053061, 0x2166ac, 0x4393c3, 0x92c5de, 0xd1e5f0, 0xf7f7f7, 0xfddbc7, 0xf4a582, 0xd6604d, 0xb2182b, 0x67001f],
+      RdGy3: [0x999999, 0xffffff, 0xef8a62],
+      RdGy4: [0x404040, 0xbababa, 0xf4a582, 0xca0020],
+      RdGy5: [0x404040, 0xbababa, 0xffffff, 0xf4a582, 0xca0020],
+      RdGy6: [0x4d4d4d, 0x999999, 0xe0e0e0, 0xfddbc7, 0xef8a62, 0xb2182b],
+      RdGy7: [0x4d4d4d, 0x999999, 0xe0e0e0, 0xffffff, 0xfddbc7, 0xef8a62, 0xb2182b],
+      RdGy8: [0x4d4d4d, 0x878787, 0xbababa, 0xe0e0e0, 0xfddbc7, 0xf4a582, 0xd6604d, 0xb2182b],
+      RdGy9: [0x4d4d4d, 0x878787, 0xbababa, 0xe0e0e0, 0xffffff, 0xfddbc7, 0xf4a582, 0xd6604d, 0xb2182b],
+      RdGy10: [0x1a1a1a, 0x4d4d4d, 0x878787, 0xbababa, 0xe0e0e0, 0xfddbc7, 0xf4a582, 0xd6604d, 0xb2182b, 0x67001f],
+      RdGy11: [0x1a1a1a, 0x4d4d4d, 0x878787, 0xbababa, 0xe0e0e0, 0xffffff, 0xfddbc7, 0xf4a582, 0xd6604d, 0xb2182b, 0x67001f],
+      RdYlBu3: [0x91bfdb, 0xffffbf, 0xfc8d59],
+      RdYlBu4: [0x2c7bb6, 0xabd9e9, 0xfdae61, 0xd7191c],
+      RdYlBu5: [0x2c7bb6, 0xabd9e9, 0xffffbf, 0xfdae61, 0xd7191c],
+      RdYlBu6: [0x4575b4, 0x91bfdb, 0xe0f3f8, 0xfee090, 0xfc8d59, 0xd73027],
+      RdYlBu7: [0x4575b4, 0x91bfdb, 0xe0f3f8, 0xffffbf, 0xfee090, 0xfc8d59, 0xd73027],
+      RdYlBu8: [0x4575b4, 0x74add1, 0xabd9e9, 0xe0f3f8, 0xfee090, 0xfdae61, 0xf46d43, 0xd73027],
+      RdYlBu9: [0x4575b4, 0x74add1, 0xabd9e9, 0xe0f3f8, 0xffffbf, 0xfee090, 0xfdae61, 0xf46d43, 0xd73027],
+      RdYlBu10: [0x313695, 0x4575b4, 0x74add1, 0xabd9e9, 0xe0f3f8, 0xfee090, 0xfdae61, 0xf46d43, 0xd73027, 0xa50026],
+      RdYlBu11: [0x313695, 0x4575b4, 0x74add1, 0xabd9e9, 0xe0f3f8, 0xffffbf, 0xfee090, 0xfdae61, 0xf46d43, 0xd73027, 0xa50026],
+      Spectral3: [0x99d594, 0xffffbf, 0xfc8d59],
+      Spectral4: [0x2b83ba, 0xabdda4, 0xfdae61, 0xd7191c],
+      Spectral5: [0x2b83ba, 0xabdda4, 0xffffbf, 0xfdae61, 0xd7191c],
+      Spectral6: [0x3288bd, 0x99d594, 0xe6f598, 0xfee08b, 0xfc8d59, 0xd53e4f],
+      Spectral7: [0x3288bd, 0x99d594, 0xe6f598, 0xffffbf, 0xfee08b, 0xfc8d59, 0xd53e4f],
+      Spectral8: [0x3288bd, 0x66c2a5, 0xabdda4, 0xe6f598, 0xfee08b, 0xfdae61, 0xf46d43, 0xd53e4f],
+      Spectral9: [0x3288bd, 0x66c2a5, 0xabdda4, 0xe6f598, 0xffffbf, 0xfee08b, 0xfdae61, 0xf46d43, 0xd53e4f],
+      Spectral10: [0x5e4fa2, 0x3288bd, 0x66c2a5, 0xabdda4, 0xe6f598, 0xfee08b, 0xfdae61, 0xf46d43, 0xd53e4f, 0x9e0142],
+      Spectral11: [0x5e4fa2, 0x3288bd, 0x66c2a5, 0xabdda4, 0xe6f598, 0xffffbf, 0xfee08b, 0xfdae61, 0xf46d43, 0xd53e4f, 0x9e0142],
+      RdYlGn3: [0x91cf60, 0xffffbf, 0xfc8d59],
+      RdYlGn4: [0x1a9641, 0xa6d96a, 0xfdae61, 0xd7191c],
+      RdYlGn5: [0x1a9641, 0xa6d96a, 0xffffbf, 0xfdae61, 0xd7191c],
+      RdYlGn6: [0x1a9850, 0x91cf60, 0xd9ef8b, 0xfee08b, 0xfc8d59, 0xd73027],
+      RdYlGn7: [0x1a9850, 0x91cf60, 0xd9ef8b, 0xffffbf, 0xfee08b, 0xfc8d59, 0xd73027],
+      RdYlGn8: [0x1a9850, 0x66bd63, 0xa6d96a, 0xd9ef8b, 0xfee08b, 0xfdae61, 0xf46d43, 0xd73027],
+      RdYlGn9: [0x1a9850, 0x66bd63, 0xa6d96a, 0xd9ef8b, 0xffffbf, 0xfee08b, 0xfdae61, 0xf46d43, 0xd73027],
+      RdYlGn10: [0x006837, 0x1a9850, 0x66bd63, 0xa6d96a, 0xd9ef8b, 0xfee08b, 0xfdae61, 0xf46d43, 0xd73027, 0xa50026],
+      RdYlGn11: [0x006837, 0x1a9850, 0x66bd63, 0xa6d96a, 0xd9ef8b, 0xffffbf, 0xfee08b, 0xfdae61, 0xf46d43, 0xd73027, 0xa50026]
     };
   });
 
@@ -62346,6 +62533,9 @@ define('server/usercontext/wrappertemplate',[],function(){
       };
 
       PolySelectToolView.prototype._doubletap = function(e) {
+        var append, _ref1;
+        append = (_ref1 = e.srcEvent.shiftKey) != null ? _ref1 : false;
+        this._select(this.data.vx, this.data.vy, true, append);
         return this._clear_data();
       };
 
@@ -62355,7 +62545,7 @@ define('server/usercontext/wrappertemplate',[],function(){
       };
 
       PolySelectToolView.prototype._tap = function(e) {
-        var append, canvas, new_data, overlay, vx, vy, _ref1;
+        var canvas, new_data, overlay, vx, vy;
         canvas = this.plot_view.canvas;
         vx = canvas.sx_to_vx(e.bokeh.sx);
         vy = canvas.sy_to_vy(e.bokeh.sy);
@@ -62372,12 +62562,10 @@ define('server/usercontext/wrappertemplate',[],function(){
         new_data = {};
         new_data.vx = _.clone(this.data.vx);
         new_data.vy = _.clone(this.data.vy);
-        overlay.set('data', new_data);
-        append = (_ref1 = e.srcEvent.shiftKey) != null ? _ref1 : false;
-        return this._select(this.data.vx, this.data.vy, append);
+        return overlay.set('data', new_data);
       };
 
-      PolySelectToolView.prototype._select = function(vx, vy, append) {
+      PolySelectToolView.prototype._select = function(vx, vy, final, append) {
         var ds, geometry, r, sm, _i, _len, _ref1;
         geometry = {
           type: 'poly',
@@ -62389,9 +62577,9 @@ define('server/usercontext/wrappertemplate',[],function(){
           r = _ref1[_i];
           ds = r.get('data_source');
           sm = ds.get('selection_manager');
-          sm.select(this, this.plot_view.renderers[r.id], geometry, true, append);
+          sm.select(this, this.plot_view.renderers[r.id], geometry, final, append);
         }
-        this._save_geometry(geometry, true, append);
+        this._save_geometry(geometry, final, append);
         return null;
       };
 
@@ -62460,7 +62648,7 @@ define('server/usercontext/wrappertemplate',[],function(){
     var Bokeh, logging, _oldJQ;
     Bokeh = {};
     Bokeh.require = require;
-    Bokeh.version = '0.7.0';
+    Bokeh.version = '0.7.1';
     Bokeh.index = require("common/base").index;
     logging = require("common/logging");
     Bokeh.logger = logging.logger;
