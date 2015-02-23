@@ -103,6 +103,10 @@ includejs(ijs::Bool) = (global INCLUDE_JS = ijs)
 FILE_WARNINGS = true
 filewarnings(warn::Bool) = (global FILE_WARNINGS = warn)
 
+# if we're in IJulia call setupnotebook to load js and css
+if isdefined(Main, :IJulia) && Main.IJulia.inited
+    setupnotebook()
+end
 
 export plot,
        setupnotebook,
