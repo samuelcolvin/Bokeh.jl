@@ -152,7 +152,7 @@ function _gettemplate(template::String, path::Union(String, Nothing)=nothing)
 end
 
 function _bokehjs_paths(minified::Bool=true)
-    dir = Pkg.dir("Bokeh", "deps", "bokehjs")
+    dir = joinpath(dirname(@__FILE__), "..", "deps", "bokehjs")
     jspath = joinpath(dir, minified ? "bokeh.min.js" : "bokeh.js")
     csspath = joinpath(dir, minified ? "bokeh.min.css" : "bokeh.css")
     (jspath, csspath)
