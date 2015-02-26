@@ -3,7 +3,7 @@
 
 # function getfile(fname)
 # 	url = "http://cdn.pydata.org/" * fname
-# 	path = Pkg.dir("Bokeh", "deps", "bokehjs", fname)
+# 	path = joinpath(dirname(@__FILE__), "bokehjs", fname))
 # 	println("downloading from $url to $path")
 # 	download(url, path)
 # end

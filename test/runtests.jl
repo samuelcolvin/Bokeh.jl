@@ -2,7 +2,7 @@ using Bokeh
 using Base.Test
 
 # check js and css files are there (in case they've been downloaded)
-bkfiles = readdir(Pkg.dir("Bokeh", "deps", "bokehjs"))
+bkfiles = readdir(joinpath(dirname(@__FILE__), "..", "deps", "bokehjs"))
 @test length(filter(x -> endswith(x, ".js"), bkfiles))  == 2
 @test length(filter(x -> endswith(x, ".css"), bkfiles)) == 2
 
