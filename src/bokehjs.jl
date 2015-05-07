@@ -56,10 +56,8 @@ type Plot <: PlotObject
     uuid::UUID
     title::String
     tools::Vector{BkAny}
-    outer_height::Int
-    canvas_height::Int
-    outer_width::Int
-    canvas_width::Int
+    plot_height::Int
+    plot_width::Int
     x_range::TypeID
     y_range::TypeID
     # could be Vector{TypeID}?:
@@ -232,8 +230,6 @@ function Plot()
          "",
          Nothing[],
          _DEFAULT_HEIGHT,
-         _DEFAULT_HEIGHT,
-         _DEFAULT_WIDTH,
          _DEFAULT_WIDTH,
          TypeID(),
          TypeID(),
@@ -262,8 +258,6 @@ function Plot(plot::Plot,
          title,
          map(TypeID, tools),
          height,
-         height,
-         width,
          width,
          TypeID(xrange),
          TypeID(yrange),
