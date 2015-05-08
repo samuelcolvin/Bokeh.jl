@@ -1,16 +1,13 @@
-language: cpp
-compiler:
-  - clang
+language: julia
+julia:
+    - release
+    - nightly
+matrix:
+  allow_failures:
+    - julia: nightly
 notifications:
-  email: false
-env:
-  - JULIAVERSION="juliareleases"
-  - JULIAVERSION="julianightlies"
+    email: false
 before_install:
-  - sudo add-apt-repository ppa:staticfloat/julia-deps -y
-  - sudo add-apt-repository ppa:staticfloat/${JULIAVERSION} -y
-  - sudo apt-get update -qq -y
-  - sudo apt-get install libpcre3-dev julia -y
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - npm install -g casperjs # install casperjs and requirements (inc. phantomjs)
   - phantomjs --version; casperjs --version
