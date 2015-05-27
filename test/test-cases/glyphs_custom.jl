@@ -23,7 +23,7 @@ high= maximum(y)
 y_ints = Int64[floor(9.99*(x-low)/(high-low)) + 1 for x in y]  # round to nearest value in range 1:11
 y_colours = [palette[i] for i in y_ints]
 
-data = @compat Dict{Symbol, Vector}(:x => x, :y => y, :y_colours => y_colours, :y_sizes => y)
+data = @compat Dict{Symbol, Vector}(:x => collect(x), :y => y, :y_colours => y_colours, :y_sizes => y)
 fields = @compat Dict{Symbol, Symbol}(:fillcolor=>:y_colours, :size=>:y_sizes)
 varying_glyph = Glyph(:Circle, size=30, linewidth=3, fields=fields)
 plot([BokehDataSet(data, varying_glyph)])

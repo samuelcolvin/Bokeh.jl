@@ -124,7 +124,7 @@ end
 function _obdict(ob::Bokehjs.PlotObject, doc::Bokehjs.UUID)
     d = @compat Dict{String, BkAny}()
     d["id"] = ob.uuid
-    extra_attrs = typeof(ob).names
+    @compat extra_attrs = fieldnames(ob)
     d["type"] = in(:_type_name, extra_attrs) ? ob._type_name : typeof(ob)
     attrs = @compat Dict{String, Any}()
     attrs["id"] = d["id"]

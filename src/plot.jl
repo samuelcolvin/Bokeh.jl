@@ -14,13 +14,13 @@ const EPOCH = DateTime(1970, 1, 1)
 
 unixtime(d::Date) = unixtime(convert(DateTime, d))
 
-unixtime(d::DateTime) = int(d - EPOCH)
+@compat unixtime(d::DateTime) = Int(d - EPOCH)
 
 getglyphs(styles::String, count::Int64) = getglyphs(convert(Vector{Glyph}, styles), count)
 
 getglyphs(glyph::Glyph, count::Int64) = getglyphs([glyph], count)
 
-getglyphs(glyphs::Vector{Glyph}, count::Int64) = repmat(glyphs, int(ceil(count / length(glyphs))))
+@compat getglyphs(glyphs::Vector{Glyph}, count::Int64) = repmat(glyphs, ceil(Int, count / length(glyphs)))
 
 function plot(f::Function, args...;kwargs...)
     plot([f], args...; kwargs...)
@@ -51,7 +51,7 @@ function plot(x::RealArray, y::DTArray, args...; kwargs...)
 end
 
 function plot(y::Vector{Vector}, styles::GlyphTypes=DEFAULT_GLYPHS_STR; kwargs...)
-    x = [[1:length(yv)] for yv in y]
+    x = [collect(1:length(yv)) for yv in y]
     plot(x, y, styles; kwargs...)
 end
 

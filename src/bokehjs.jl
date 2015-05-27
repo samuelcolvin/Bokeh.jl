@@ -296,7 +296,7 @@ end
 
 function JSON._print(io::IO, state::JSON.State, tid::Bokehjs.TypeID)
     tid.plotob == nothing && (return JSON._print(io, state, nothing))
-    attrs = typeof(tid.plotob).names
+    @compat attrs = fieldnames(tid.plotob)
     obtype = in(:_type_name, attrs) ? tid.plotob._type_name : typeof(tid.plotob)
     d = @compat Dict{String, BkAny}(
         "type" => obtype,
