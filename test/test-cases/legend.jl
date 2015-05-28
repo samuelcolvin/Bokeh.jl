@@ -8,6 +8,6 @@ autoopen(true)
 # if you dont set this the default name "bokeh_plot.html" is used
 plotfile("legend.html")
 
-y = [1:10].^2
+y = collect(1:10).^2
 # autoopen is set to true so `plot` will try to open a browser to show the plot 
 plot(y, legends=["This is the Legend"])  # , legendsgo=:top_left
