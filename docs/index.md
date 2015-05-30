@@ -5,11 +5,11 @@
 Build by Samuel Colvin.
 
 Released under [MIT License](https://github.com/bokeh/Bokeh.jl/blob/master/LICENSE.md), 
-note Bokeh has a [seperate license](https://github.com/bokeh/bokeh/blob/master/LICENSE.txt).
+note Bokeh has a [separate license](https://github.com/bokeh/bokeh/blob/master/LICENSE.txt).
 
 # Installation
 
-Once you're installed julia simple run 
+Once you've installed julia, simply run 
 
     Pkg.add("Bokeh")
 
@@ -25,7 +25,7 @@ Bokeh.jl's usage and capacities are best demonstrated with examples.
 
 [![view](examples/hello_world.png)](examples/hello_world.html)
 
-This is about the simplest example. By default autoopen is false so we set it to `true` here
+This is about the simplest example. By default autoopen is `false`. We set it to `true` here
 so the plot is opened in your default browser as soon as we call `plot`.
 
     using Bokeh
