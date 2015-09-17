@@ -1,12 +1,15 @@
+VERSION >= v"0.4.0-dev+6641" && __precompile__()
+
 module Bokeh
+
 include("bokehjs.jl")
 include("glyphs.jl")
 include("display.jl")
 include("generate.jl")
 include("plot.jl")
-import Base: display
 
-# displays indented JSON, uses unminified js and saves the raw JSON to "bokeh_models.json" if true
+# if DEBUG == true, displays indented JSON, uses unminified js and saves the raw
+# JSON to "bokeh_models.json" if true
 DEBUG = false
 debug(b::Bool) = (global DEBUG = b)
 debug() = DEBUG
@@ -20,6 +23,7 @@ autoopen() = AUTOOPEN
 WIDTH = 800
 width(w::Int) = (global WIDTH = w)
 width() = WIDTH
+
 # default height of plot
 HEIGHT = 600
 height(h::Int) = (global HEIGHT = h)
@@ -35,19 +39,29 @@ DEFAULT_GLYPHS = convert(Vector{Glyph}, DEFAULT_GLYPHS_STR)
 glyphs(gs::Vector{Glyph}) = (global DEFAULT_GLYPHS = gs)
 glyphs(s::String) = (global DEFAULT_GLYPHS = convert(Vector{Glyph},s))
 glyphs() = DEFAULT_GLYPHS
+
 # default glyph size
 DEFAULT_SIZE = 6
 glyphsize(gs::Int) = (global DEFAULT_SIZE = gs)
 glyphsize() = DEFAULT_SIZE
+
 # default alpha value for filled glyphs
 DEFAULT_FILL_ALPHA = 0.7
 
-# default filename 
+# default filename
 PLOTFILE = "bokeh_plot.html"
-warn_overwrite() = ispath(PLOTFILE) && isinteractive() && !isdefined(Main, :IJulia) && warn(
-"$PLOTFILE already exists, it will be overwritten when a plot is generated.\nChange the output file with plotfile(<new file name>)")
+function warn_overwrite()
+    if ispath(PLOTFILE) && isinteractive() && !isdefined(Main, :IJulia)
+        warn("""
+        $PLOTFILE already exists, it will be overwritten when a plot is generated
+        Change the output file with plotfile(<new file name>)
+        """)
+    end
+end
+
 warn_overwrite()
-function plotfile(fn::String) 
+
+function plotfile(fn::String)
     global PLOTFILE = fn
     warn_overwrite()
     nothing
@@ -66,13 +80,15 @@ counteval() = COUNTEVAL
 
 # hold on to plots
 HOLD = false
+
 function hold(h::Bool, clear::Union(Bool, Nothing)=nothing)
     if (!h && clear == nothing) || clear == true
         global CURPLOT = nothing
     end
     global HOLD = h
 end
-hold() = hold(!HOLD)
+
+hold() = hold(!HOLD)  # method to flip hold status
 
 # current plot object
 CURPLOT = nothing
@@ -88,14 +104,14 @@ tools() = TOOLS
 # just warned about overwriting
 WARN_FILE = nothing
 
-# this overrides autoopen and disables opening html files
-# used for travis CI, shouldn't be necessary elsewhere
+# this overrides autoopen and disables opening html files used for travis CI,
+# shouldn't be necessary elsewhere
 NOSHOW = false
 noshow(b::Bool) = (global NOSHOW = b)
 
-# generally js and css is not copied into HTML pages but rather the 
-# files referenced, the only common exception is IJulia plots, this 
-# allows that to be ovwritten so js and css are always included in pages
+# generally js and css is not copied into HTML pages but rather the files
+# referenced, the only common exception is IJulia plots, this allows that to be
+# ovwritten so js and css are always included in pages
 INCLUDE_JS = false
 includejs(ijs::Bool) = (global INCLUDE_JS = ijs)
 
@@ -116,7 +132,7 @@ export plot,
        renderplot,
        genplot,
        showplot,
-       autoopen, 
+       autoopen,
        width,
        height,
        glyphs,
@@ -127,4 +143,5 @@ export plot,
        hold,
        curplot,
        tools
-end
+
+end  # module
