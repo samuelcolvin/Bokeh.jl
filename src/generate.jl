@@ -1,6 +1,4 @@
 using Mustache
-using Compat
-
 
 # TODO: currently auto and log aren't implemented properly
 _axis_type(s::Symbol) = s == :auto ? (:BasicTicker, :BasicTickFormatter) :
@@ -12,7 +10,7 @@ _axis_type(s::Symbol) = s == :auto ? (:BasicTicker, :BasicTickFormatter) :
 function _genmodels(p::Plot)
     bkplot = Bokehjs.Plot()
     doc = Bokehjs.uuid4()
-    obs = Dict{String, BkAny}[]
+    obs = Dict{AbstractString, BkAny}[]
 
     cdss = Bokehjs.ColumnDataSource[]
     renderers = Bokehjs.PlotObject[]
@@ -42,16 +40,16 @@ function _genmodels(p::Plot)
         pushdict!(obs, legend, doc)
     end
 
-    dr1x = Bokehjs.DataRange1d(cdss, String["x"])
-    dr1y = Bokehjs.DataRange1d(cdss, String["y"])
+    dr1x = Bokehjs.DataRange1d(cdss, AbstractString["x"])
+    dr1y = Bokehjs.DataRange1d(cdss, AbstractString["y"])
     pushdict!(obs, dr1x, doc)
     pushdict!(obs, dr1y, doc)
 
-    axes = @compat Dict{Symbol, Vector}(:above => [],
-                                        :below => Bokehjs.LinearAxis[],
-                                        :left => Bokehjs.LinearAxis[],
-                                        :right => []
-                                       )
+    axes = Dict{Symbol, Vector}(:above => [],
+                                :below => Bokehjs.LinearAxis[],
+                                :left => Bokehjs.LinearAxis[],
+                                :right => []
+                               )
 
     for (i, loc, sym) in [(0, :below, :x), (1, :left, :y)]
         @eval begin
@@ -74,12 +72,14 @@ function _genmodels(p::Plot)
 
     tools = Bokehjs.PlotObject[]
     if in(:pan, p.tools)
-        pantool = Bokehjs.Metatool("PanTool", bkplot, String["width", "height"])
+        pantool = Bokehjs.Metatool("PanTool", bkplot,
+                                   AbstractString["width", "height"])
         pushdict!(obs, pantool, doc)
         push!(tools, pantool)
     end
     if in(:wheelzoom, p.tools)
-        wheelzoomtool = Bokehjs.Metatool("WheelZoomTool", bkplot, String["width", "height"])
+        wheelzoomtool = Bokehjs.Metatool("WheelZoomTool", bkplot,
+                                         AbstractString["width", "height"])
         pushdict!(obs, wheelzoomtool, doc)
         push!(tools, wheelzoomtool)
     end
@@ -112,12 +112,12 @@ function _genmodels(p::Plot)
 end
 
 function _obdict(ob::Bokehjs.PlotObject, doc::Bokehjs.UUID)
-    d = @compat Dict{String, BkAny}()
+    d = Dict{AbstractString, BkAny}()
     d["id"] = ob.uuid
-    @compat extra_attrs = fieldnames(ob)
+    extra_attrs = fieldnames(ob)
     d["type"] = in(:_type_name, extra_attrs) ? ob._type_name : typeof(ob)
 
-    attrs = @compat Dict{String, Any}()
+    attrs = Dict{AbstractString, Any}()
     attrs["id"] = d["id"]
     attrs["doc"] = doc
 
@@ -141,7 +141,8 @@ pushdict!(obs::Any, ob::Bokehjs.PlotObject, doc::Bokehjs.UUID) =
 
 _get_resources_dir() = Pkg.dir("Bokeh", "templates")
 
-function _gettemplate(template::String, path::Union(String, Nothing)=nothing)
+function _gettemplate(template::AbstractString,
+                      path::Union(AbstractString, Void)=nothing)
     path = path == nothing ? _get_resources_dir() : path
     fname = joinpath(path, template)
     open(readall, fname, "r")
@@ -154,7 +155,8 @@ function _bokehjs_paths(minified::Bool=true)
     (jspath, csspath)
 end
 
-function _render_jscss(jspath::String, csspath::String, buildin::Bool)
+function _render_jscss(jspath::AbstractString, csspath::AbstractString,
+                       buildin::Bool)
     if buildin
         css = open(readall, csspath, "r")
         js = open(readall, jspath, "r")
@@ -165,7 +167,8 @@ function _render_jscss(jspath::String, csspath::String, buildin::Bool)
     end
 end
 
-function _rendertemplate(models::String, plotcon::Bokehjs.PlotContext, isijulia::Bool)
+function _rendertemplate(models::AbstractString, plotcon::Bokehjs.PlotContext,
+                         isijulia::Bool)
     base = isijulia ? _gettemplate("ijulia.html") :
                       _gettemplate("standalone.html")
 
@@ -182,7 +185,7 @@ function _rendertemplate(models::String, plotcon::Bokehjs.PlotContext, isijulia:
         end
     end
 
-    context = @compat Dict{String, String}(
+    context = Dict{AbstractString, AbstractString}(
         "model_id" => string(plotcon.uuid),
         "all_models" => models,
         "div_id" => string(Bokehjs.uuid4())
@@ -191,12 +194,12 @@ function _rendertemplate(models::String, plotcon::Bokehjs.PlotContext, isijulia:
     main = render(main, context)
     body = render(body, context)
 
-    maincontext = @compat Dict{String, String}(
+    maincontext = Dict{AbstractString, AbstractString}(
         "jscss" => jscss,
         "main" => main,
         "body" => body,
     )
-    
+
     result = render(base, maincontext)
 end
 
@@ -222,4 +225,4 @@ function genplot(p::Plot, filename::NullString=nothing)
 end
 
 genplot() = genplot(CURPLOT)
-genplot(filename::String) = genplot(CURPLOT, filename)
+genplot(filename::AbstractString) = genplot(CURPLOT, filename)

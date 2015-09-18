@@ -1,5 +1,3 @@
-using Compat
-
 # Glyph has to be a Bokehjs type as it's defined directly in Bokeh's JSON, but these methods are
 # more porcelain than plumbing, so are defined here.
 function Bokehjs.Glyph(glyphtype::Symbol,
@@ -9,22 +7,22 @@ function Bokehjs.Glyph(glyphtype::Symbol,
                        fillcolor::NullString,
                        fillalpha::NullFloat,
                        size::NullInt,
-                       dash::Union(Nothing, Vector{Int64}),
-                       fields::Union(Nothing, Dict{Symbol, Symbol}))
-    props = @compat Dict(
-        :linecolor => linecolor == nothing ? omit : @compat(Dict{Symbol, BkAny}(:value => linecolor)),
-        :linewidth => linewidth == nothing ? omit : @compat(Dict{Symbol, BkAny}(:units => :data, :value =>linewidth)),
-        :linealpha => linealpha == nothing ? omit : @compat(Dict{Symbol, BkAny}(:units => :data, :value =>linealpha)),
-        :fillalpha => fillalpha == nothing ? omit : @compat(Dict{Symbol, BkAny}(:units => :data, :value =>fillalpha)),
-        :size => size == nothing ? omit : @compat(Dict{Symbol, BkAny}(:units => :screen, :value =>size)),
-        :fillcolor => fillcolor == nothing ? omit : @compat(Dict{Symbol, BkAny}(:value =>fillcolor)),
+                       dash::Union(Void, Vector{Int64}),
+                       fields::Union(Void, Dict{Symbol, Symbol}))
+    props = Dict(
+        :linecolor => linecolor == nothing ? omit : Dict{Symbol, BkAny}(:value => linecolor),
+        :linewidth => linewidth == nothing ? omit : Dict{Symbol, BkAny}(:units => :data, :value =>linewidth),
+        :linealpha => linealpha == nothing ? omit : Dict{Symbol, BkAny}(:units => :data, :value =>linealpha),
+        :fillalpha => fillalpha == nothing ? omit : Dict{Symbol, BkAny}(:units => :data, :value =>fillalpha),
+        :size => size == nothing ? omit : Dict{Symbol, BkAny}(:units => :screen, :value =>size),
+        :fillcolor => fillcolor == nothing ? omit : Dict{Symbol, BkAny}(:value =>fillcolor),
     )
     if fields != nothing
         for (field, val) in fields
             if !haskey(props, field)
                 error("unknown field $(field) passed to Glyph")
             end
-            props[field] = @compat Dict{Symbol,BkAny}(:field => val, :units => :data)
+            props[field] = Dict{Symbol,BkAny}(:field => val, :units => :data)
         end
     end
     Glyph(Bokehjs.uuid4(),
@@ -36,8 +34,8 @@ function Bokehjs.Glyph(glyphtype::Symbol,
           props[:fillalpha],
           props[:size],
           dash == nothing ? omit : dash,
-          @compat(Dict(:units =>:data, :field => :x)),
-          @compat(Dict(:units =>:data, :field => :y)))
+          Dict(:units =>:data, :field => :x),
+          Dict(:units =>:data, :field => :y))
 end
 
 function Bokehjs.Glyph(;glyphtype=nothing,
@@ -60,7 +58,7 @@ end
 
 function Base.show(io::IO, g::Bokehjs.Glyph)
     names = Glyph.names
-    features = String[]
+    features = AbstractString[]
     for field in fieldnames(Glyph)
         showname = field == :_type_name ? :type : field
         g.(field) != nothing && push!(features, "$showname: $(g.(field))")
@@ -80,15 +78,15 @@ type BokehDataSet
 end
 
 function BokehDataSet(xdata::RealVect, ydata::RealVect, args...)
-    data = @compat Dict{Symbol, Vector}(:x => xdata, :y => ydata)
+    data = Dict{Symbol, Vector}(:x => xdata, :y => ydata)
     BokehDataSet(data, args...)
 end
 
 type Plot
     datacolumns::Vector{BokehDataSet}
     tools::Vector{Symbol}
-    filename::String
-    title::String
+    filename::AbstractString
+    title::AbstractString
     width::Int
     height::Int
     x_axis_type::NullSymbol
@@ -115,39 +113,39 @@ const STRINGTOKENS = let
 end
 
 # heavily borrowed from Winston, thanks Winston!
-const CHARTOKENS = @compat Dict(
-    '-'=>@compat(Dict(:dash=>nothing)),
-    ':'=>@compat(Dict(:dash=>[1, 4])),
-    ';'=>@compat(Dict(:dash=>[1, 4, 2])),
-    '+'=>@compat(Dict(:glyphtype=>:Cross)),
-    'o'=>@compat(Dict(:glyphtype=>:Circle)),
-    '*'=>@compat(Dict(:glyphtype=>:Asterisk)),
-    '.'=>@compat(Dict(:glyphtype=>:Circle, :size=>2)),
-    'x'=>@compat(Dict(:glyphtype=>:X)),
-    's'=>@compat(Dict(:glyphtype=>:Square)),
-    'd'=>@compat(Dict(:glyphtype=>:Diamond)),
-    '^'=>@compat(Dict(:glyphtype=>:Triangle)),
-    'v'=>@compat(Dict(:glyphtype=>:InvertedTriangle)),
-    'y'=>@compat(Dict(:linecolor=>"yellow")),
-    'm'=>@compat(Dict(:linecolor=>"magenta")),
-    'c'=>@compat(Dict(:linecolor=>"cyan")),
-    'r'=>@compat(Dict(:linecolor=>"red")),
-    'g'=>@compat(Dict(:linecolor=>"green")),
-    'b'=>@compat(Dict(:linecolor=>"blue")),
-    'w'=>@compat(Dict(:linecolor=>"white")),
-    'k'=>@compat(Dict(:linecolor=>"black")),
+const CHARTOKENS = Dict(
+    '-'=> Dict(:dash=>nothing),
+    ':'=> Dict(:dash=>[1, 4]),
+    ';'=> Dict(:dash=>[1, 4, 2]),
+    '+'=> Dict(:glyphtype=>:Cross),
+    'o'=> Dict(:glyphtype=>:Circle),
+    '*'=> Dict(:glyphtype=>:Asterisk),
+    '.'=> Dict(:glyphtype=>:Circle, :size=>2),
+    'x'=> Dict(:glyphtype=>:X),
+    's'=> Dict(:glyphtype=>:Square),
+    'd'=> Dict(:glyphtype=>:Diamond),
+    '^'=> Dict(:glyphtype=>:Triangle),
+    'v'=> Dict(:glyphtype=>:InvertedTriangle),
+    'y'=> Dict(:linecolor=>"yellow"),
+    'm'=> Dict(:linecolor=>"magenta"),
+    'c'=> Dict(:linecolor=>"cyan"),
+    'r'=> Dict(:linecolor=>"red"),
+    'g'=> Dict(:linecolor=>"green"),
+    'b'=> Dict(:linecolor=>"blue"),
+    'w'=> Dict(:linecolor=>"white"),
+    'k'=> Dict(:linecolor=>"black"),
 )
 
 Base.convert(::Type{Array{Glyph, 1}}, glyph::Glyph) = [glyph]
 
-function Base.convert(::Type{Array{Glyph, 1}}, styles::String)
+function Base.convert(::Type{Array{Glyph, 1}}, styles::AbstractString)
     map(style -> convert(Glyph, style), split(styles, '|'))
 end
 
-function Base.convert(::Type{Glyph}, style::String)
+function Base.convert(::Type{Glyph}, style::AbstractString)
     # start wil default style
-    styd = @compat Dict(:glyphtype=>:Line, :linecolor=>"blue", :linewidth=>1,
-                        :linealpha=>1.0)
+    styd = Dict(:glyphtype=>:Line, :linecolor=>"blue", :linewidth=>1,
+                :linealpha=>1.0)
 
     # loop over all string tokens
     for key in keys(STRINGTOKENS)
@@ -185,7 +183,7 @@ function Base.convert(::Type{Glyph}, style::String)
             styd[:size] = DEFAULT_SIZE
         end
     end
-    
+
     emptyglyphs = [:CircleX, :CircleCross, :SquareX, :SquareCross]
     if in(styd[:glyphtype], emptyglyphs)
         styd[:fillcolor] = "transparent"

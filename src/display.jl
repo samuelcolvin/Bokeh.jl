@@ -1,4 +1,4 @@
-function openhtmldoc(filepath::String)
+function openhtmldoc(filepath::AbstractString)
     NOSHOW && return
     @linux_only run(`xdg-open $filepath`)
     @osx_only run(`open $filepath`)
@@ -31,7 +31,7 @@ function showplot(p::Plot, filename::NullString=nothing)
 end
 
 showplot() = showplot(CURPLOT)
-showplot(filename::String) = showplot(CURPLOT, filename)
+showplot(filename::AbstractString) = showplot(CURPLOT, filename)
 
 function setupnotebook()
     jspath, csspath = _bokehjs_paths(!DEBUG)

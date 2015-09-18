@@ -1,8 +1,6 @@
 using JSON
-using Compat
 
 module Bokehjs
-using Compat
 
 typealias RealVect Union(AbstractVector{Int}, AbstractVector{Float64})
 typealias RealMat Union(AbstractMatrix{Int}, AbstractMatrix{Float64})
@@ -12,21 +10,21 @@ typealias RealArray Union(RealMat, RealVect)
 
 # like nothing except omitted from json rather than being null
 type Omit
-    v::String
+    v::AbstractString
     Omit() = new("__omitted from json__")
 end
 const omit = Omit()
 
 # in case we want to restrict value types in future:
-typealias BkAny Any # Union(Dict, Array, String, Number, Bool, Nothing, UUID)
-typealias NullDict Union(Nothing, Dict{String, BkAny})
+typealias BkAny Any # Union(Dict, Array, AbstractString, Number, Bool, Void, UUID)
+typealias NullDict Union(Void, Dict{AbstractString, BkAny})
 typealias OmitDict Union(Omit, Dict{Symbol, BkAny})
-typealias NullString Union(Nothing, String)
-typealias OmitString Union(Omit, String)
-typealias NullSymbol Union(Nothing, Symbol)
+typealias NullString Union(Void, AbstractString)
+typealias OmitString Union(Omit, AbstractString)
+typealias NullSymbol Union(Void, Symbol)
 typealias OmitSymbol Union(Omit, Symbol)
-typealias NullFloat Union(Float64, Nothing)
-typealias NullInt Union(Int, Nothing)
+typealias NullFloat Union(Float64, Void)
+typealias NullInt Union(Int, Void)
 
 uuid4 = Base.Random.uuid4
 UUID = Base.Random.UUID
@@ -35,14 +33,14 @@ abstract PlotObject
 
 abstract BkRange <: PlotObject
 
-typealias NullBkRange Union(Nothing, BkRange)
+typealias NullBkRange Union(Void, BkRange)
 
 abstract Renderer <: PlotObject
 
 abstract Axis <: PlotObject
 
 type TypeID
-    plotob::Union(PlotObject, Nothing)
+    plotob::Union(PlotObject, Void)
 end
 
 function TypeID()
@@ -51,7 +49,7 @@ end
 
 type Plot <: PlotObject
     uuid::UUID
-    title::String
+    title::AbstractString
     tools::Vector{BkAny}
     plot_height::Int
     plot_width::Int
@@ -89,9 +87,9 @@ type DataRange1d <: BkRange
     sources::Vector{BkAny}
 end
 
-function DataRange1d(cdss::Vector{ColumnDataSource}, columns::Vector{String})
-    source(cds) = @compat Dict{String, BkAny}("columns" => columns,
-                                              "source" => TypeID(cds))
+function DataRange1d(cdss::Vector{ColumnDataSource}, columns::Vector{AbstractString})
+    source(cds) = Dict{AbstractString, BkAny}("columns" => columns,
+                                      "source" => TypeID(cds))
     sources = map(source, cdss)
     DataRange1d(uuid4(), sources)
 end
@@ -119,8 +117,8 @@ end
 type LinearAxis <: Axis
     uuid::UUID
     dimension::Int
-    bounds::String
-    location::String
+    bounds::AbstractString
+    location::AbstractString
     formatter::TypeID
     ticker::TypeID
     plot::TypeID
@@ -189,11 +187,11 @@ type GlyphRenderer <: Renderer
     nonselection_glyph::TypeID
     selection_glyph::TypeID
     glyph::TypeID
-    name::Union(Nothing, String)
+    name::Union(Void, AbstractString)
     server_data_source::NullDict
 end
 
-typealias NullGlyph Union(Nothing, Glyph)
+typealias NullGlyph Union(Void, Glyph)
 
 function GlyphRenderer(coldata::ColumnDataSource, nonsel_g::NullGlyph,
                        sel_g::NullGlyph, glyph::Glyph)
@@ -209,17 +207,17 @@ end
 
 type Metatool <: PlotObject
     uuid::UUID
-    _type_name::String
+    _type_name::AbstractString
     plot::TypeID
-    dimensions::Union(Vector{String}, Nothing, Omit)
+    dimensions::Union(Vector{AbstractString}, Void, Omit)
 end
 
-function Metatool(typename::String, plot::Plot, dimensions)
+function Metatool(typename::AbstractString, plot::Plot, dimensions)
     plot = TypeID(plot)
     Metatool(uuid4(), typename, plot, dimensions)
 end
 
-function Metatool(typename::String, plot::Plot)
+function Metatool(typename::AbstractString, plot::Plot)
     Metatool(typename, plot, omit)
 end
 
@@ -230,19 +228,19 @@ _DEFAULT_WIDTH = 600
 function Plot()
     Plot(uuid4(),
          "",
-         Nothing[],
+         Void[],
          _DEFAULT_HEIGHT,
          _DEFAULT_WIDTH,
          TypeID(),
          TypeID(),
-         Nothing[],
+         Void[],
 
-         Nothing[],
-         Nothing[],
-         Nothing[],
-         Nothing[],
+         Void[],
+         Void[],
+         Void[],
+         Void[],
 
-         Nothing[]
+         Void[]
         )
 end
 
@@ -252,7 +250,7 @@ function Plot(plot::Plot,
               renderers::Array{PlotObject,1},
               axes,#::Dict{Symbol, Array{PlotObject,1}},
               tools::Array{PlotObject,1},
-              title::String="Bokeh Plot",
+              title::AbstractString="Bokeh Plot",
               height::Int=_DEFAULT_HEIGHT,
               width::Int=_DEFAULT_WIDTH)
     data_sources = BkAny[]# [TypeID(coldata)]
@@ -301,12 +299,9 @@ JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID) =
 
 function JSON._print(io::IO, state::JSON.State, tid::Bokehjs.TypeID)
     tid.plotob == nothing && (return JSON._print(io, state, nothing))
-    @compat attrs = fieldnames(tid.plotob)
+    attrs = fieldnames(tid.plotob)
     obtype = in(:_type_name, attrs) ? tid.plotob._type_name : typeof(tid.plotob)
-    d = @compat Dict{String, BkAny}(
-        "type" => obtype,
-        "id" => tid.plotob.uuid
-    )
+    d = Dict{AbstractString, BkAny}("type" => obtype, "id" => tid.plotob.uuid)
     JSON._print(io, state, d)
 end
 

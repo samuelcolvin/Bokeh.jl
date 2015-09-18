@@ -37,7 +37,7 @@ Y_AXIS_TYPE = :auto
 DEFAULT_GLYPHS_STR = "b|r|g|k|y|c|m|b--|r--|g--|k--|y--|c--|m--|--"
 DEFAULT_GLYPHS = convert(Vector{Glyph}, DEFAULT_GLYPHS_STR)
 glyphs(gs::Vector{Glyph}) = (global DEFAULT_GLYPHS = gs)
-glyphs(s::String) = (global DEFAULT_GLYPHS = convert(Vector{Glyph},s))
+glyphs(s::AbstractString) = (global DEFAULT_GLYPHS = convert(Vector{Glyph},s))
 glyphs() = DEFAULT_GLYPHS
 
 # default glyph size
@@ -61,7 +61,7 @@ end
 
 warn_overwrite()
 
-function plotfile(fn::String)
+function plotfile(fn::AbstractString)
     global PLOTFILE = fn
     warn_overwrite()
     nothing
@@ -70,7 +70,7 @@ plotfile() = PLOTFILE
 
 # default plot title
 TITLE = "Bokeh Plot"
-title(t::String) = (global TITLE = t)
+title(t::AbstractString) = (global TITLE = t)
 title() = TITLE
 
 # number of points at which to evaluate functions
@@ -81,7 +81,7 @@ counteval() = COUNTEVAL
 # hold on to plots
 HOLD = false
 
-function hold(h::Bool, clear::Union(Bool, Nothing)=nothing)
+function hold(h::Bool, clear::Union(Bool, Void)=nothing)
     if (!h && clear == nothing) || clear == true
         global CURPLOT = nothing
     end
