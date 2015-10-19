@@ -107,8 +107,7 @@ function _genmodels(p::Plot)
     pushdict!(obs, plotcontext, doc)
 
     indent = DEBUG ? 2 : 0
-    method_exists(json, (Dict, Int)) ? (json(obs, indent), plotcontext):
-                                       (json(obs), plotcontext)
+    json(obs, indent), plotcontext)
 end
 
 function _obdict(ob::Bokehjs.PlotObject, doc::Bokehjs.UUID)
