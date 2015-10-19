@@ -4,12 +4,12 @@ else
     using Base.Dates
 end
 
-typealias URange Union(Union(Range, UnitRange))
+typealias URange Union{Union{Range, UnitRange}}
 
-typealias DTArray Union(AbstractMatrix{DateTime}, AbstractMatrix{Date},
-                        AbstractVector{DateTime}, AbstractVector{Date})
+typealias DTArray Union{AbstractMatrix{DateTime}, AbstractMatrix{Date},
+                        AbstractVector{DateTime}, AbstractVector{Date}}
 
-typealias GlyphTypes Union(AbstractString, Glyph, Vector{Glyph})
+typealias GlyphTypes Union{AbstractString, Glyph, Vector{Glyph}}
 
 const EPOCH = DateTime(1970, 1, 1)
 
@@ -110,7 +110,7 @@ function plot(x::RealVect, y::RealVect, args...; kwargs...)
 end
 
 function plot(x::RealMat, y::RealMat, styles::GlyphTypes=DEFAULT_GLYPHS_STR;
-              legends::Union(Void, Vector)=nothing, kwargs...)
+              legends::Union{Void, Vector}=nothing, kwargs...)
     if size(x) != size(y)
         error("size of x and y are not equal: x: $(size(x)), y: $(size(y))")
     end
@@ -127,12 +127,12 @@ end
 # set the default to WIDTH, HEIGHT etc.: its because we wouldn't be able to specify a new width
 # or height on an extending plot if the new value happened to be the same as WIDTH or HEIGHT
 function plot(columns::Array{BokehDataSet, 1};
-              extend::Union(Void, Plot)=nothing,
+              extend::Union{Void, Plot}=nothing,
               title::NullString=nothing, width::NullInt=nothing,
               height::NullInt=nothing, x_axis_type::NullSymbol=nothing,
               y_axis_type::NullSymbol=nothing, legendsgo::NullSymbol=nothing,
               plotfile::NullString=nothing,
-              tools::Union(Void, Array{Symbol, 1})=nothing,
+              tools::Union{Void, Array{Symbol, 1}}=nothing,
               autoopen::Bool=AUTOOPEN)
     extend == nothing && !HOLD && (global CURPLOT = nothing)
 

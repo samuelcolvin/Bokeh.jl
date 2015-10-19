@@ -81,7 +81,7 @@ counteval() = COUNTEVAL
 # hold on to plots
 HOLD = false
 
-function hold(h::Bool, clear::Union(Bool, Void)=nothing)
+function hold(h::Bool, clear::Union{Bool, Void}=nothing)
     if (!h && clear == nothing) || clear == true
         global CURPLOT = nothing
     end

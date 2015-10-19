@@ -107,7 +107,7 @@ function _genmodels(p::Plot)
     pushdict!(obs, plotcontext, doc)
 
     indent = DEBUG ? 2 : 0
-    json(obs, indent), plotcontext)
+    json(obs, indent), plotcontext
 end
 
 function _obdict(ob::Bokehjs.PlotObject, doc::Bokehjs.UUID)
@@ -141,7 +141,7 @@ pushdict!(obs::Any, ob::Bokehjs.PlotObject, doc::Bokehjs.UUID) =
 _get_resources_dir() = Pkg.dir("Bokeh", "templates")
 
 function _gettemplate(template::AbstractString,
-                      path::Union(AbstractString, Void)=nothing)
+                      path::Union{AbstractString, Void}=nothing)
     path = path == nothing ? _get_resources_dir() : path
     fname = joinpath(path, template)
     open(readall, fname, "r")

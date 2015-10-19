@@ -7,8 +7,8 @@ function Bokehjs.Glyph(glyphtype::Symbol,
                        fillcolor::NullString,
                        fillalpha::NullFloat,
                        size::NullInt,
-                       dash::Union(Void, Vector{Int64}),
-                       fields::Union(Void, Dict{Symbol, Symbol}))
+                       dash::Union{Void, Vector{Int64}},
+                       fields::Union{Void, Dict{Symbol, Symbol}})
     props = Dict(
         :linecolor => linecolor == nothing ? omit : Dict{Symbol, BkAny}(:value => linecolor),
         :linewidth => linewidth == nothing ? omit : Dict{Symbol, BkAny}(:units => :data, :value =>linewidth),

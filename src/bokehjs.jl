@@ -2,11 +2,11 @@ using JSON
 
 module Bokehjs
 
-typealias RealVect Union(AbstractVector{Int}, AbstractVector{Float64})
-typealias RealMat Union(AbstractMatrix{Int}, AbstractMatrix{Float64})
-typealias RealArray Union(RealMat, RealVect)
+typealias RealVect Union{AbstractVector{Int}, AbstractVector{Float64}}
+typealias RealMat Union{AbstractMatrix{Int}, AbstractMatrix{Float64}}
+typealias RealArray Union{RealMat, RealVect}
 # would be nice to parameterize, but more important to constrain dims to 1 or 2
-# typealias RealArray{N} Union(AbstractArray{Int, N}, AbstractArray{Float64, N})
+# typealias RealArray{N} Union{AbstractArray{Int, N}, AbstractArray{Float64, N}}
 
 # like nothing except omitted from json rather than being null
 type Omit
@@ -16,15 +16,15 @@ end
 const omit = Omit()
 
 # in case we want to restrict value types in future:
-typealias BkAny Any # Union(Dict, Array, AbstractString, Number, Bool, Void, UUID)
-typealias NullDict Union(Void, Dict{AbstractString, BkAny})
-typealias OmitDict Union(Omit, Dict{Symbol, BkAny})
-typealias NullString Union(Void, AbstractString)
-typealias OmitString Union(Omit, AbstractString)
-typealias NullSymbol Union(Void, Symbol)
-typealias OmitSymbol Union(Omit, Symbol)
-typealias NullFloat Union(Float64, Void)
-typealias NullInt Union(Int, Void)
+typealias BkAny Any # Union{Dict, Array, AbstractString, Number, Bool, Void, UUID}
+typealias NullDict Union{Void, Dict{AbstractString, BkAny}}
+typealias OmitDict Union{Omit, Dict{Symbol, BkAny}}
+typealias NullString Union{Void, AbstractString}
+typealias OmitString Union{Omit, AbstractString}
+typealias NullSymbol Union{Void, Symbol}
+typealias OmitSymbol Union{Omit, Symbol}
+typealias NullFloat Union{Float64, Void}
+typealias NullInt Union{Int, Void}
 
 uuid4 = Base.Random.uuid4
 UUID = Base.Random.UUID
@@ -33,14 +33,14 @@ abstract PlotObject
 
 abstract BkRange <: PlotObject
 
-typealias NullBkRange Union(Void, BkRange)
+typealias NullBkRange Union{Void, BkRange}
 
 abstract Renderer <: PlotObject
 
 abstract Axis <: PlotObject
 
 type TypeID
-    plotob::Union(PlotObject, Void)
+    plotob::Union{PlotObject, Void}
 end
 
 function TypeID()
@@ -176,7 +176,7 @@ type Glyph <: PlotObject
     fill_color::OmitDict
     fill_alpha::OmitDict
     size::OmitDict
-    line_dash::Union(Omit, Vector{Int64})
+    line_dash::Union{Omit, Vector{Int64}}
     x::Dict{Symbol, Symbol}
     y::Dict{Symbol, Symbol}
 end
@@ -187,11 +187,11 @@ type GlyphRenderer <: Renderer
     nonselection_glyph::TypeID
     selection_glyph::TypeID
     glyph::TypeID
-    name::Union(Void, AbstractString)
+    name::Union{Void, AbstractString}
     server_data_source::NullDict
 end
 
-typealias NullGlyph Union(Void, Glyph)
+typealias NullGlyph Union{Void, Glyph}
 
 function GlyphRenderer(coldata::ColumnDataSource, nonsel_g::NullGlyph,
                        sel_g::NullGlyph, glyph::Glyph)
@@ -209,7 +209,7 @@ type Metatool <: PlotObject
     uuid::UUID
     _type_name::AbstractString
     plot::TypeID
-    dimensions::Union(Vector{AbstractString}, Void, Omit)
+    dimensions::Union{Vector{AbstractString}, Void, Omit}
 end
 
 function Metatool(typename::AbstractString, plot::Plot, dimensions)
