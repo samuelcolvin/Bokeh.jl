@@ -34,8 +34,7 @@ showplot() = showplot(CURPLOT)
 showplot(filename::AbstractString) = showplot(CURPLOT, filename)
 
 function setupnotebook()
-    jspath, csspath = _bokehjs_paths(!DEBUG)
-    jscss = _render_jscss(jspath, csspath, true)
+    jscss = _render_jscss(true, true, true)
     display("text/html", jscss)
     display("text/html", "<p>BokehJS successfully loaded.</p>")
 end

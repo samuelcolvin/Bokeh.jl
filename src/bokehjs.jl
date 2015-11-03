@@ -64,6 +64,8 @@ type Plot <: PlotObject
     data_sources::Vector{BkAny}
 end
 
+modeltype(::Plot) = "Plot"
+
 type ColumnDataSource <: PlotObject
     uuid::UUID
     column_names::Vector{Symbol}
@@ -279,6 +281,8 @@ end
 function PlotContext(plot::Plot)
     PlotContext(uuid4(),[TypeID(plot)])
 end
+
+modeltype(::PlotContext) = "PlotContext"
 
 end  # module
 

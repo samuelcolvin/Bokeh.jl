@@ -9,8 +9,8 @@ _axis_type(s::Symbol) = s == :auto ? (:BasicTicker, :BasicTickFormatter) :
 
 function _genmodels(p::Plot)
     bkplot = Bokehjs.Plot()
-    doc = Bokehjs.uuid4()
-    obs = Dict{AbstractString, BkAny}[]
+    doc = Bokehjs.uuid4()  # The document id
+    obs = Dict{AbstractString, BkAny}[]  # vector of PlotObject in Dict form
 
     cdss = Bokehjs.ColumnDataSource[]
     renderers = Bokehjs.PlotObject[]
@@ -31,8 +31,6 @@ function _genmodels(p::Plot)
             push!(legends, (datacolumn.legend, glyphrenderer))
         end
     end
-
-    cdss, renderers, legends
 
     if length(legends) > 0
         legend = Bokehjs.Legend(bkplot, legends, p.legendsgo)
@@ -103,13 +101,23 @@ function _genmodels(p::Plot)
                           p.height, p.width)
     pushdict!(obs, bkplot, doc)
 
-    plotcontext = Bokehjs.PlotContext(bkplot)
-    pushdict!(obs, plotcontext, doc)
-
-    indent = DEBUG ? 2 : 0
-    json(obs, indent), plotcontext
+    obs, bkplot
 end
 
+"""
+```julia
+_obdict(ob::Bokehjs.PlotObject, doc::Bokehjs.UUID)
+```
+
+Returns a Dict with three key-value pairs:
+
+1. `attributes::Dict`: all fields of the type are put into a `Dict` where
+the fieldname is the key and the value is the value
+2. `doc::UUID`: the UUID for the document
+3. `type`: If not a special Bokeh.js type name (e.g. the name of a glyph
+like Circle) then the `DataType` of the `ob`. Otherwise a `Symbol` containing
+the special Bokeh.js name.
+"""
 function _obdict(ob::Bokehjs.PlotObject, doc::Bokehjs.UUID)
     d = Dict{AbstractString, BkAny}()
     d["id"] = ob.uuid
@@ -147,26 +155,33 @@ function _gettemplate(template::AbstractString,
     open(readall, fname, "r")
 end
 
-function _bokehjs_paths(minified::Bool=true)
+function _render_jscss(buildin::Bool, minified::Bool=true, widgets::Bool=true)
     dir = joinpath(dirname(@__FILE__), "..", "deps", "bokehjs")
-    jspath = joinpath(dir, minified ? "bokeh.min.js" : "bokeh.js")
-    csspath = joinpath(dir, minified ? "bokeh.min.css" : "bokeh.css")
-    (jspath, csspath)
-end
+    min_suffix = minified ?  ".min" : ""
+    base_names = widgets ? ["bokeh", "bokeh-widgets"] : ["bokeh"]
+    csspath = [joinpath(dir, string(nm, min_suffix, ".css")) for nm in base_names]
+    jspath = [joinpath(dir, string(nm, min_suffix, ".js")) for nm in base_names]
 
-function _render_jscss(jspath::AbstractString, csspath::AbstractString,
-                       buildin::Bool)
     if buildin
-        css = open(readall, csspath, "r")
-        js = open(readall, jspath, "r")
-        return "<style>\n$css\n</style>\n<script type=\"text/javascript\">\n$js\n</script>\n"
+        css = join(map(x-> string("<style>", open(readall, x, "r"), "</style>"),
+                       csspath),
+                   '\n')
+        js = join(map(x-> string("<script type=\"text/javascript\">",
+                                 open(readall, x, "r"), "</script>"),
+                      jspath),
+                  '\n')
     else
-        return "<link rel=\"stylesheet\" href=\"$csspath\" type=\"text/css\" />\n"*
-               "<script type=\"text/javascript\" src=\"$jspath\"></script>\n"
+        css = join(map(x-> "<link rel=\"stylesheet\" href=\"$x\" type=\"text/css\" />\n",
+                       csspath),
+                   '\n')
+        js = join(map(x-> "<script type=\"text/javascript\" src=\"$x\"></script>\n",
+                      jspath),
+                  '\n')
     end
+    return string(css, "\n", js)
 end
 
-function _rendertemplate(models::AbstractString, plotcon::Bokehjs.PlotContext,
+function _rendertemplate(modelsjson::AbstractString, model_obj::Bokehjs.PlotObject,
                          isijulia::Bool)
     base = isijulia ? _gettemplate("ijulia.html") :
                       _gettemplate("standalone.html")
@@ -174,20 +189,22 @@ function _rendertemplate(models::AbstractString, plotcon::Bokehjs.PlotContext,
     main = _gettemplate("main.html")
     body = _gettemplate("body.html")
 
-    jspath, csspath = _bokehjs_paths(!DEBUG)
+    # render the javascript and css
+    minified = !DEBUG
     builtin = isijulia || INCLUDE_JS
-    jscss = _render_jscss(jspath, csspath, builtin)
+    jscss = _render_jscss(builtin, !DEBUG)
 
     if DEBUG
         open(replace(PLOTFILE, ".html", "") * ".json", "w") do f
-            print(f, models)
+            print(f, modelsjson)
         end
     end
 
     context = Dict{AbstractString, AbstractString}(
-        "model_id" => string(plotcon.uuid),
-        "all_models" => models,
-        "div_id" => string(Bokehjs.uuid4())
+        "model_id" => string(model_obj.uuid),
+        "all_models" => modelsjson,
+        "div_id" => string(Bokehjs.uuid4()),
+        "modeltype" => Bokehjs.modeltype(model_obj)
     )
 
     main = render(main, context)
@@ -199,19 +216,20 @@ function _rendertemplate(models::AbstractString, plotcon::Bokehjs.PlotContext,
         "body" => body,
     )
 
-    result = render(base, maincontext)
+    render(base, maincontext)
 end
 
-function renderplot(plot::Plot, isijulia::Bool=false)
-    modelsjson, plotcontext = _genmodels(plot)
-    _rendertemplate(modelsjson, plotcontext, isijulia)
+function renderplot(p::Plot, isijulia::Bool=false)
+    models, bkplot = _genmodels(p)
+    modelsjson = json(models, DEBUG ? 2 : 0)
+    _rendertemplate(modelsjson, bkplot, isijulia)
 end
 
 renderplot() = renderplot(CURPLOT)
 
 function genplot(p::Plot, filename::NullString=nothing)
     filename = filename == nothing ? p.filename : filename
-    html = renderplot(p)
+    @show html = renderplot(p)
     if ispath(filename) && FILE_WARNINGS
         if WARN_FILE != filename
             println("$(filename) already exists, overwriting")
