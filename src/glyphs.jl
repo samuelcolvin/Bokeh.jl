@@ -57,7 +57,6 @@ function Bokehjs.Glyph(glyphtype::Symbol; kwargs...)
 end
 
 function Base.show(io::IO, g::Bokehjs.Glyph)
-    names = Glyph.names
     features = AbstractString[]
     for field in fieldnames(Glyph)
         showname = field == :_type_name ? :type : field
