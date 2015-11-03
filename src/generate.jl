@@ -3,7 +3,7 @@ using Mustache
 # TODO: currently auto and log aren't implemented properly
 _axis_type(s::Symbol) = s == :auto ? (:BasicTicker, :BasicTickFormatter) :
                         s == :linear ? (:BasicTicker, :BasicTickFormatter) :
-                        s == :log ? (:BasicTicker, :BasicTickFormatter) :
+                        s == :log ? (:LogTicker, :LogTickFormatter) :
                         s == :datetime ? (:DatetimeTicker, :DatetimeTickFormatter) :
                         error("Unknown axis type")
 
