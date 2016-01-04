@@ -1,4 +1,4 @@
-function openhtmldoc(filepath::String)
+function openhtmldoc(filepath::AbstractString)
     NOSHOW && return
     @linux_only run(`xdg-open $filepath`)
     @osx_only run(`open $filepath`)
@@ -12,13 +12,9 @@ function Base.writemime(io::IO, ::MIME"text/html", p::Plot)
     print(io, "<p>", _basic(p), "</p>")
 end
 
-function Base.writemime(io::IO, ::MIME"text/plain", p::Plot)
-    print(io, _basic(p))
-end
+Base.writemime(io::IO, ::MIME"text/plain", p::Plot) = print(io, _basic(p))
 
-# seems we have to override show as well as writemime
-Base.show(io::IO, p::Plot) = print(io, _basic(p))
-
+# If in the notebook, activate a notebook display
 if !isdefined(Main, :IJulia)
     type BokehDisplay <: Display; end
     pushdisplay(BokehDisplay())
@@ -35,7 +31,7 @@ function showplot(p::Plot, filename::NullString=nothing)
 end
 
 showplot() = showplot(CURPLOT)
-showplot(filename::String) = showplot(CURPLOT, filename)
+showplot(filename::AbstractString) = showplot(CURPLOT, filename)
 
 function setupnotebook()
     jspath, csspath = _bokehjs_paths(!DEBUG)
