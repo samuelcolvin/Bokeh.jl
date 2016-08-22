@@ -294,17 +294,13 @@ typealias NullSymbol Bokehjs.NullSymbol
 typealias NullFloat Bokehjs.NullFloat
 typealias NullInt Bokehjs.NullInt
 
-JSON._print(io::IO, state::JSON.State, uuid::Bokehjs.UUID) =
-    JSON._print(io, state, string(uuid))
+JSON.lower(uuid::Bokehjs.UUID) = string(uuid)
 
-function JSON._print(io::IO, state::JSON.State, tid::Bokehjs.TypeID)
-    tid.plotob == nothing && (return JSON._print(io, state, nothing))
+function JSON.lower(tid::Bokehjs.TypeID)
+    tid.plotob == nothing && return nothing
     attrs = fieldnames(tid.plotob)
     obtype = in(:_type_name, attrs) ? tid.plotob._type_name : typeof(tid.plotob)
-    d = Dict{AbstractString, BkAny}("type" => obtype, "id" => tid.plotob.uuid)
-    JSON._print(io, state, d)
+    Dict{AbstractString, BkAny}("type" => obtype, "id" => tid.plotob.uuid)
 end
 
-function JSON._print{T<:Bokehjs.PlotObject}(io::IO, state::JSON.State, d::Type{T})
-    Base.print(io, "\"", d.name.name, "\"")
-end
+JSON.lower{T<:Bokehjs.PlotObject}(::Type{T}) = string(T.name.name)
